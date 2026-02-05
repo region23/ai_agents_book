@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИИ-агенты для самых маленьких — Интерактивный учебник</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a26;
+            --bg-code: #0d1117;
+            --border: #222233;
+            --border-active: #4f46e5;
+            --text: #e2e2ef;
+            --text-dim: #8888a0;
+            --text-bright: #ffffff;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --green: #22c55e;
+            --green-dim: rgba(34, 197, 94, 0.12);
+            --orange: #f59e0b;
+            --orange-dim: rgba(245, 158, 11, 0.12);
+            --red: #ef4444;
+            --red-dim: rgba(239, 68, 68, 0.08);
+            --cyan: #06b6d4;
+            --pink: #ec4899;
+            --step-connector: #222233;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ====== HERO ====== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.04) 0%, transparent 60%);
+            animation: heroBgDrift 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes heroBgDrift {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-3%, 2%) rotate(2deg); }
+        }
+
+        .hero-content { position: relative; z-index: 1; max-width: 800px; }
+
+        .hero-emoji {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text-bright) 0%, var(--accent) 50%, var(--cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            font-weight: 300;
+            color: var(--text-dim);
+            margin-bottom: 0.8rem;
+        }
+
+        .hero-description {
+            font-size: 1.05rem;
+            color: var(--text-dim);
+            max-width: 550px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2.5rem;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 50px var(--accent-glow), 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .hero-meta {
+            margin-top: 3rem;
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .hero-meta-item span:first-child { font-size: 1.1rem; }
+
+        /* ====== CONCEPT SECTION ====== */
+        .concept-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+        }
+
+        .concept-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .concept-header h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .concept-header p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .loop-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .loop-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.75rem, 2vw, 1rem);
+        }
+
+        .loop-node {
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .loop-node.llm { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(99,102,241,0.3); }
+        .loop-node.output { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+        .loop-node.tool { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(245,158,11,0.3); }
+        .loop-node.context { background: rgba(6,182,212,0.1); color: var(--cyan); border: 1px solid rgba(6,182,212,0.3); }
+
+        .loop-arrow {
+            color: var(--text-dim);
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .loop-label {
+            font-family: 'Caveat', cursive;
+            font-size: 1.3rem;
+            color: var(--pink);
+            margin-top: 1.5rem;
+            display: block;
+        }
+
+        /* ====== STEPS ====== */
+        .steps-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 2rem 6rem;
+        }
+
+        .step {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 0;
+            opacity: 1;
+        }
+
+        /* Vertical connector line */
+        .step::before {
+            content: '';
+            position: absolute;
+            left: 1.15rem;
+            top: 3.5rem;
+            bottom: -1px;
+            width: 2px;
+            background: var(--step-connector);
+        }
+
+        .step:last-child::before { display: none; }
+
+        .step-number {
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 2.4rem;
+            height: 2.4rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text-dim);
+            z-index: 1;
+            transition: all 0.4s;
+        }
+
+        .step.active .step-number {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .step.done .step-number {
+            border-color: var(--green);
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .step-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            background: var(--bg-card-hover);
+        }
+
+        .step.active .step-card {
+            border-color: var(--accent);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-bright);
+        }
+
+        .step-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+
+        .step-badge.beginner { background: var(--green-dim); color: var(--green); }
+        .step-badge.intermediate { background: var(--orange-dim); color: var(--orange); }
+        .step-badge.advanced { background: var(--red-dim); color: var(--red); }
+
+        .step-intro {
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+            font-size: 1.02rem;
+        }
+
+        .step-content { display: none; }
+        .step.active .step-content { display: block; }
+
+        .step-detail {
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            font-size: 0.98rem;
+        }
+
+        .step-detail p { margin-bottom: 0.75rem; }
+
+        .key-insight {
+            background: var(--accent-glow);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 10px 10px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .key-insight strong { color: var(--accent); }
+
+        .what-happens {
+            background: rgba(6, 182, 212, 0.06);
+            border-left: 3px solid var(--cyan);
+            border-radius: 0 10px 10px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .what-happens strong { color: var(--cyan); }
+
+        .terminal-output {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: #aaa;
+            overflow-x: auto;
+        }
+
+        .terminal-output .t-green { color: #4ade80; }
+        .terminal-output .t-yellow { color: #facc15; }
+        .terminal-output .t-blue { color: #60a5fa; }
+        .terminal-output .t-dim { color: #555; }
+        .terminal-output .t-cyan { color: #22d3ee; }
+        .terminal-output .t-bold { color: #fff; font-weight: 600; }
+
+        .run-command {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(34, 197, 94, 0.06);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            margin: 1.25rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .run-command .run-icon { font-size: 1rem; }
+        .run-command code { color: var(--green); }
+
+        /* Code blocks */
+        .code-block {
+            position: relative;
+            margin: 1.25rem 0;
+        }
+
+        .code-filename {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            padding: 0.4rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .code-filename .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--cyan);
+        }
+
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 0 12px 12px 12px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.7;
+            color: #c9d1d9;
+            tab-size: 4;
+        }
+
+        .code-block:not(:has(.code-filename)) pre {
+            border-radius: 12px;
+        }
+
+        pre .kw { color: #ff7b72; }
+        pre .str { color: #a5d6ff; }
+        pre .fn { color: #d2a8ff; }
+        pre .cm { color: #555e6b; font-style: italic; }
+        pre .num { color: #79c0ff; }
+        pre .type { color: #7ee787; }
+        pre .op { color: #ff7b72; }
+        pre .prop { color: #c9d1d9; }
+        pre .param { color: #ffa657; }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 0.35rem 0.6rem;
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .copy-btn:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+        .copy-btn.copied { background: var(--green-dim); color: var(--green); border-color: rgba(34,197,94,0.3); }
+
+        /* Handwritten annotations */
+        .handnote {
+            font-family: 'Caveat', cursive;
+            color: var(--pink);
+            font-size: 1.15rem;
+        }
+
+        /* Architecture diagram */
+        .arch-diagram {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .arch-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* ====== PROGRESS MAP ====== */
+        .progress-map {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.75rem;
+        }
+
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .progress-dot.done { border-color: var(--green); background: var(--green); }
+        .progress-dot.current { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+
+        /* ====== FOOTER ====== */
+        .footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .footer p {
+            color: var(--text-dim);
+            max-width: 500px;
+            margin: 0 auto 2rem;
+        }
+
+        .footer-steps {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .footer-steps span { opacity: 0.5; }
+
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 640px) {
+            .step { padding-left: 2.5rem; }
+            .step-card { padding: 1.25rem; }
+            pre { font-size: 0.72rem; padding: 1rem; }
+            .progress-map { display: none; }
+            .loop-flow { font-size: 0.7rem; }
+            .hero-meta { flex-direction: column; align-items: center; gap: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ====== HERO ====== -->
+<section class="hero">
+    <div class="hero-content">
+        <span class="hero-emoji">🤖</span>
+        <h1>ИИ-агенты для самых маленьких</h1>
+        <p class="hero-subtitle">Интерактивный учебник на TypeScript</p>
+        <p class="hero-description">
+            8 шагов от «привет, LLM» до полноценного интерактивного агента
+            с планированием, tools и human-in-the-loop.
+            Никакой магии — только код, который ты напишешь сам.
+        </p>
+        <a href="#step-0" class="hero-cta">
+            Начать обучение ↓
+        </a>
+        <div class="hero-meta">
+            <div class="hero-meta-item">
+                <span>⏱</span> <span>~2 часа</span>
+            </div>
+            <div class="hero-meta-item">
+                <span>📦</span> <span>TypeScript + OpenRouter</span>
+            </div>
+            <div class="hero-meta-item">
+                <span>🎯</span> <span>От нуля до агента</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ====== CONCEPT ====== -->
+<section class="concept-section" id="step-0">
+    <div class="concept-header">
+        <h2>Что такое ИИ-агент?</h2>
+        <p>Прежде чем писать код — разберёмся в главной идее. Она на удивление простая.</p>
+    </div>
+
+    <div class="loop-diagram">
+        <div class="loop-flow">
+            <span class="loop-node llm">LLM</span>
+            <span class="loop-arrow">→</span>
+            <span class="loop-node output">structured output</span>
+            <span class="loop-arrow">→</span>
+            <span class="loop-node tool">execute tool</span>
+            <span class="loop-arrow">→</span>
+            <span class="loop-node context">add to context</span>
+            <span class="loop-arrow">→</span>
+            <span class="loop-node llm">LLM</span>
+            <span class="loop-arrow">→ …</span>
+        </div>
+        <span class="loop-label">↑ вот и весь агент — это цикл</span>
+    </div>
+
+    <div style="max-width: 680px; margin: 0 auto;">
+        <p style="color: var(--text); margin-bottom: 1rem;">
+            Агент — это LLM в цикле. Модель получает запрос, решает какой инструмент вызвать (или не вызвать),
+            мы выполняем этот инструмент, добавляем результат в контекст и отправляем обратно в LLM.
+            И так до тех пор, пока модель сама не решит, что пора остановиться.
+        </p>
+        <p style="color: var(--text-dim); margin-bottom: 1rem;">
+            Современные LLM API (Anthropic, OpenAI) уже имеют <strong style="color: var(--text);">нативную поддержку tools</strong> —
+            ты описываешь доступные инструменты в запросе, и модель сама возвращает <code style="color: var(--cyan);">tool_calls</code>
+            в структурированном виде. Не нужно просить «верни JSON» — это уже встроено.
+        </p>
+        <p style="color: var(--text-dim);">
+            Claude Code, Cursor, GitHub Copilot — все работают на этом же фундаменте. Разница в количестве tools,
+            quality of prompts и UX вокруг. Ядро — одно и то же. Давай построим его с нуля.
+        </p>
+    </div>
+</section>
+
+<!-- ====== STEPS ====== -->
+<div class="steps-container">
+
+<!-- ======== STEP 1 ======== -->
+<div class="step active" data-step="1" id="step-1">
+    <div class="step-number">01</div>
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-title">Базовый LLM-вызов</div>
+            <span class="step-badge beginner">Начало</span>
+        </div>
+        <p class="step-intro">
+            Отправляем запрос в LLM, получаем ответ. Просто чтобы убедиться что всё работает.
+        </p>
+
+        <div class="step-content">
+            <div class="step-detail">
+                <p>Сначала создаём проект и ставим зависимости:</p>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>mkdir simple-agent && cd simple-agent && npm init -y && npm install openai typescript tsx @types/node dotenv</code>
+            </div>
+
+            <div class="step-detail">
+                <p>Создай файл <code>.env</code> с ключом от OpenRouter:</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>.env</div>
+                <pre>OPENROUTER_API_KEY=sk-or-v1-ваш-ключ-от-openrouter</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="step-detail">
+                <p>Теперь — первый вызов:</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>src/01-basic-call.ts</div>
+                <pre><span class="kw">import</span> OpenAI <span class="kw">from</span> <span class="str">"openai"</span>;
+<span class="kw">import</span> dotenv <span class="kw">from</span> <span class="str">"dotenv"</span>;
+
+dotenv.<span class="fn">config</span>();
+
+<span class="kw">const</span> client = <span class="kw">new</span> <span class="type">OpenAI</span>({
+    <span class="prop">baseURL</span>: <span class="str">"https://openrouter.ai/api/v1"</span>,
+    <span class="prop">apiKey</span>: process.env.<span class="prop">OPENROUTER_API_KEY</span> ?? <span class="str">""</span>,
+});
+
+<span class="kw">async function</span> <span class="fn">main</span>() {
+    <span class="kw">const</span> response = <span class="kw">await</span> client.chat.completions.<span class="fn">create</span>({
+        <span class="prop">model</span>: <span class="str">"anthropic/claude-sonnet-4.5"</span>,
+        <span class="prop">messages</span>: [
+            { <span class="prop">role</span>: <span class="str">"user"</span>, <span class="prop">content</span>: <span class="str">"Сколько будет 2 + 2?"</span> }
+        ],
+    });
+
+    console.<span class="fn">log</span>(response.choices[<span class="num">0</span>].message.content);
+}
+
+<span class="fn">main</span>();</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/01-basic-call.ts</code>
+            </div>
+
+            <div class="terminal-output">
+<span class="t-bold">4</span>
+            </div>
+
+            <div class="key-insight">
+                <strong>💡 Что произошло:</strong> Мы отправили запрос через OpenRouter (универсальный прокси ко всем LLM-провайдерам),
+                получили ответ. Используем библиотеку <code>openai</code> — она совместима с любым API, поддерживающим OpenAI-формат.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== STEP 2 ======== -->
+<div class="step" data-step="2" id="step-2">
+    <div class="step-number">02</div>
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-title">Добавляем первый Tool</div>
+            <span class="step-badge beginner">Начало</span>
+        </div>
+        <p class="step-intro">
+            Даём модели возможность «действовать» — вызывать функции. Ключевой момент: модель не выдумывает данные, а просит нас выполнить функцию.
+        </p>
+
+        <div class="step-content">
+            <div class="step-detail">
+                <p>
+                    Tool описывается JSON Schema прямо в запросе к API. Модель видит описание и решает сама — нужно ли вызывать tool или ответить текстом.
+                </p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>src/02-with-tool.ts</div>
+                <pre><span class="kw">import</span> OpenAI <span class="kw">from</span> <span class="str">"openai"</span>;
+<span class="kw">import</span> dotenv <span class="kw">from</span> <span class="str">"dotenv"</span>;
+
+dotenv.<span class="fn">config</span>();
+
+<span class="kw">const</span> client = <span class="kw">new</span> <span class="type">OpenAI</span>({
+    <span class="prop">baseURL</span>: <span class="str">"https://openrouter.ai/api/v1"</span>,
+    <span class="prop">apiKey</span>: process.env.<span class="prop">OPENROUTER_API_KEY</span> ?? <span class="str">""</span>,
+});
+
+<span class="cm">// 1. Описываем tools — это JSON Schema</span>
+<span class="kw">const</span> tools: <span class="type">OpenAI.ChatCompletionTool</span>[] = [
+    {
+        <span class="prop">type</span>: <span class="str">"function"</span>,
+        <span class="prop">function</span>: {
+            <span class="prop">name</span>: <span class="str">"get_weather"</span>,
+            <span class="prop">description</span>: <span class="str">"Получить текущую погоду в городе"</span>,
+            <span class="prop">parameters</span>: {
+                <span class="prop">type</span>: <span class="str">"object"</span>,
+                <span class="prop">properties</span>: {
+                    <span class="prop">city</span>: {
+                        <span class="prop">type</span>: <span class="str">"string"</span>,
+                        <span class="prop">description</span>: <span class="str">"Название города"</span>,
+                    },
+                },
+                <span class="prop">required</span>: [<span class="str">"city"</span>],
+            },
+        },
+    },
+];
+
+<span class="cm">// 2. Реализация tool — обычная функция</span>
+<span class="kw">function</span> <span class="fn">get_weather</span>(<span class="param">city</span>: <span class="type">string</span>): <span class="type">string</span> {
+    <span class="kw">const</span> data: <span class="type">Record</span>&lt;<span class="type">string</span>, <span class="type">string</span>&gt; = {
+        <span class="str">"Москва"</span>: <span class="str">"−5°C, снег"</span>,
+        <span class="str">"Анапа"</span>: <span class="str">"+8°C, облачно"</span>,
+    };
+    <span class="kw">return</span> data[city] ?? <span class="str">`Нет данных для </span>${city}<span class="str">`</span>;
+}
+
+<span class="kw">async function</span> <span class="fn">main</span>() {
+    <span class="kw">const</span> response = <span class="kw">await</span> client.chat.completions.<span class="fn">create</span>({
+        <span class="prop">model</span>: <span class="str">"anthropic/claude-sonnet-4.5"</span>,
+        <span class="prop">messages</span>: [
+            { <span class="prop">role</span>: <span class="str">"user"</span>, <span class="prop">content</span>: <span class="str">"Какая погода в Анапе?"</span> }
+        ],
+        tools,
+    });
+
+    <span class="kw">const</span> message = response.choices[<span class="num">0</span>].message;
+
+    <span class="cm">// 3. Смотрим что вернула модель</span>
+    console.<span class="fn">log</span>(<span class="str">"Content:"</span>, message.content);
+    console.<span class="fn">log</span>(<span class="str">"Tool calls:"</span>, JSON.<span class="fn">stringify</span>(message.tool_calls, <span class="num">null</span>, <span class="num">2</span>));
+}
+
+<span class="fn">main</span>();</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/02-with-tool.ts</code>
+            </div>
+
+            <div class="terminal-output">
+<span class="t-dim">Content:</span>
+<span class="t-bold">Tool calls:</span> [
+  {
+    <span class="t-blue">"type"</span>: <span class="t-green">"function"</span>,
+    <span class="t-blue">"id"</span>: <span class="t-green">"toolu_vrtx_01WeGmRZbe85apvYG8zVhFJd"</span>,
+    <span class="t-blue">"function"</span>: {
+      <span class="t-blue">"name"</span>: <span class="t-green">"get_weather"</span>,
+      <span class="t-blue">"arguments"</span>: <span class="t-green">"{\"city\": \"Анапа\"}"</span>
+    }
+  }
+]</div>
+
+            <div class="key-insight">
+                <strong>💡 Обрати внимание:</strong> Content пустой! Модель не стала выдумывать погоду.
+                Она вернула <code>tool_calls</code> с именем функции и аргументами — попросила <em>нас</em> выполнить <code>get_weather</code>.
+                Вот это и есть structured output — нативный, не нужно просить «верни JSON».
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== STEP 3 ======== -->
+<div class="step" data-step="3" id="step-3">
+    <div class="step-number">03</div>
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-title">Agent Loop — замыкаем петлю</div>
+            <span class="step-badge beginner">Ключевой момент</span>
+        </div>
+        <p class="step-intro">
+            Вот это и делает агента агентом. Модель вызывает tool → мы выполняем → результат обратно в LLM → repeat.
+        </p>
+
+        <div class="step-content">
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>src/03-agent-loop.ts</div>
+                <pre><span class="kw">import</span> OpenAI <span class="kw">from</span> <span class="str">"openai"</span>;
+<span class="kw">import</span> dotenv <span class="kw">from</span> <span class="str">"dotenv"</span>;
+
+dotenv.<span class="fn">config</span>();
+
+<span class="kw">const</span> client = <span class="kw">new</span> <span class="type">OpenAI</span>({
+    <span class="prop">baseURL</span>: <span class="str">"https://openrouter.ai/api/v1"</span>,
+    <span class="prop">apiKey</span>: process.env.<span class="prop">OPENROUTER_API_KEY</span> ?? <span class="str">""</span>,
+});
+
+<span class="kw">const</span> tools: <span class="type">OpenAI.ChatCompletionTool</span>[] = [
+    {
+        <span class="prop">type</span>: <span class="str">"function"</span>,
+        <span class="prop">function</span>: {
+            <span class="prop">name</span>: <span class="str">"get_weather"</span>,
+            <span class="prop">description</span>: <span class="str">"Получить текущую погоду в городе"</span>,
+            <span class="prop">parameters</span>: {
+                <span class="prop">type</span>: <span class="str">"object"</span>,
+                <span class="prop">properties</span>: {
+                    <span class="prop">city</span>: { <span class="prop">type</span>: <span class="str">"string"</span>, <span class="prop">description</span>: <span class="str">"Название города"</span> },
+                },
+                <span class="prop">required</span>: [<span class="str">"city"</span>],
+            },
+        },
+    },
+    {
+        <span class="prop">type</span>: <span class="str">"function"</span>,
+        <span class="prop">function</span>: {
+            <span class="prop">name</span>: <span class="str">"get_time"</span>,
+            <span class="prop">description</span>: <span class="str">"Получить текущее время в городе"</span>,
+            <span class="prop">parameters</span>: {
+                <span class="prop">type</span>: <span class="str">"object"</span>,
+                <span class="prop">properties</span>: {
+                    <span class="prop">city</span>: { <span class="prop">type</span>: <span class="str">"string"</span>, <span class="prop">description</span>: <span class="str">"Название города"</span> },
+                },
+                <span class="prop">required</span>: [<span class="str">"city"</span>],
+            },
+        },
+    },
+];
+
+<span class="cm">// Реестр функций — маппинг имя → реализация</span>
+<span class="kw">const</span> toolHandlers: <span class="type">Record</span>&lt;<span class="type">string</span>, (<span class="param">args</span>: <span class="type">any</span>) =&gt; <span class="type">string</span>&gt; = {
+    <span class="fn">get_weather</span>: ({ city }) =&gt; {
+        <span class="kw">const</span> data: <span class="type">Record</span>&lt;<span class="type">string</span>, <span class="type">string</span>&gt; = {
+            <span class="str">"Москва"</span>: <span class="str">"−5°C, снег"</span>,
+            <span class="str">"Анапа"</span>: <span class="str">"+8°C, облачно"</span>,
+        };
+        <span class="kw">return</span> data[city] ?? <span class="str">`Нет данных для ${city}`</span>;
+    },
+    <span class="fn">get_time</span>: ({ city }) =&gt; {
+        <span class="kw">return</span> <span class="str">`Сейчас в ${city}: ${</span><span class="kw">new</span> <span class="type">Date</span>().<span class="fn">toLocaleTimeString</span>(<span class="str">"ru-RU"</span>)<span class="str">}`</span>;
+    },
+};
+
+<span class="kw">async function</span> <span class="fn">agentLoop</span>(<span class="param">userMessage</span>: <span class="type">string</span>) {
+    <span class="kw">const</span> messages: <span class="type">OpenAI.ChatCompletionMessageParam</span>[] = [
+        { <span class="prop">role</span>: <span class="str">"system"</span>, <span class="prop">content</span>: <span class="str">"Ты полезный ассистент. Используй tools когда нужно."</span> },
+        { <span class="prop">role</span>: <span class="str">"user"</span>, <span class="prop">content</span>: userMessage },
+    ];
+
+    <span class="kw">let</span> iteration = <span class="num">0</span>;
+    <span class="kw">const</span> MAX_ITERATIONS = <span class="num">10</span>; <span class="cm">// защита от бесконечного цикла</span>
+
+    <span class="kw">while</span> (iteration &lt; MAX_ITERATIONS) {
+        iteration++;
+        console.<span class="fn">log</span>(<span class="str">`\n--- Итерация ${iteration} ---`</span>);
+
+        <span class="kw">const</span> response = <span class="kw">await</span> client.chat.completions.<span class="fn">create</span>({
+            <span class="prop">model</span>: <span class="str">"anthropic/claude-sonnet-4.5"</span>,
+            messages,
+            tools,
+        });
+
+        <span class="kw">const</span> message = response.choices[<span class="num">0</span>].message;
+        messages.<span class="fn">push</span>(message); <span class="cm">// Добавляем ответ модели в контекст</span>
+
+        <span class="cm">// Если нет tool_calls — модель решила остановиться</span>
+        <span class="kw">if</span> (!message.tool_calls || message.tool_calls.length === <span class="num">0</span>) {
+            console.<span class="fn">log</span>(<span class="str">"Ответ:"</span>, message.content);
+            <span class="kw">return</span>;
+        }
+
+        <span class="cm">// Выполняем каждый tool call</span>
+        <span class="kw">for</span> (<span class="kw">const</span> toolCall <span class="kw">of</span> message.tool_calls) {
+            <span class="kw">const</span> name = toolCall.function.name;
+            <span class="kw">const</span> args = JSON.<span class="fn">parse</span>(toolCall.function.arguments);
+
+            console.<span class="fn">log</span>(<span class="str">`Tool: ${name}(${</span>JSON.<span class="fn">stringify</span>(args)<span class="str">})`</span>);
+
+            <span class="kw">const</span> result = toolHandlers[name]?.(args)
+                ?? <span class="str">`Tool "${name}" не найден`</span>;
+            console.<span class="fn">log</span>(<span class="str">`Результат: ${result}`</span>);
+
+            <span class="cm">// Добавляем результат в контекст</span>
+            messages.<span class="fn">push</span>({
+                <span class="prop">role</span>: <span class="str">"tool"</span>,
+                <span class="prop">tool_call_id</span>: toolCall.id,
+                <span class="prop">content</span>: result,
+            });
+        }
+        <span class="cm">// Цикл продолжается — отправляем обратно в LLM</span>
+    }
+}
+
+<span class="fn">agentLoop</span>(<span class="str">"Какая погода в Москве и Анапе? И сколько сейчас времени?"</span>);</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/03-agent-loop.ts</code>
+            </div>
+
+            <div class="terminal-output">
+<span class="t-dim">--- Итерация 1 ---</span>
+<span class="t-yellow">Tool: get_weather({"city":"Москва"})</span>
+Результат: −5°C, снег
+<span class="t-yellow">Tool: get_weather({"city":"Анапа"})</span>
+Результат: +8°C, облачно
+<span class="t-yellow">Tool: get_time({"city":"Москва"})</span>
+Результат: Сейчас в Москва: 09:39:53
+
+<span class="t-dim">--- Итерация 2 ---</span>
+<span class="t-bold">Ответ: Погода: Москва −5°C, снег | Анапа +8°C, облачно. Время: 09:39:53</span></div>
+
+            <div class="what-happens">
+                <strong>🔍 Что произошло:</strong>
+                <strong>Итерация 1</strong> — модель вернула сразу 3 tool_calls (поняла, что нужны все три). Мы выполнили, добавили результаты в контекст.
+                <strong>Итерация 2</strong> — модель получила все данные, решила что хватит, и ответила текстом. Цикл завершился.
+            </div>
+
+            <div class="key-insight">
+                <strong>💡 Ключевые моменты:</strong>
+                <code>while</code> loop — крутимся пока модель не перестанет возвращать <code>tool_calls</code>.
+                <code>messages</code> массив растёт — каждый tool result добавляется, модель видит всю историю.
+                Модель <em>сама решает</em> когда остановиться.
+                <code>MAX_ITERATIONS</code> — защита, чтобы агент не ушёл в бесконечность.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== STEP 4 ======== -->
+<div class="step" data-step="4" id="step-4">
+    <div class="step-number">04</div>
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-title">Реальные Tools — bash и файловая система</div>
+            <span class="step-badge intermediate">Практика</span>
+        </div>
+        <p class="step-intro">
+            Заменяем фейковые данные настоящими инструментами. Агент теперь может выполнять команды и читать файлы.
+        </p>
+
+        <div class="step-content">
+            <div class="step-detail">
+                <p>Структура та же — agent loop. Но tools теперь взаимодействуют с реальной системой:</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>src/04-real-tools.ts (ключевые части)</div>
+                <pre><span class="kw">import</span> { execSync } <span class="kw">from</span> <span class="str">"child_process"</span>;
+<span class="kw">import</span> { readFileSync } <span class="kw">from</span> <span class="str">"fs"</span>;
+
+<span class="kw">const</span> toolHandlers: <span class="type">Record</span>&lt;<span class="type">string</span>, (<span class="param">args</span>: <span class="type">any</span>) =&gt; <span class="type">string</span>&gt; = {
+    <span class="fn">run_bash</span>: ({ command }) =&gt; {
+        <span class="kw">try</span> {
+            <span class="kw">return</span> <span class="fn">execSync</span>(command, {
+                <span class="prop">encoding</span>: <span class="str">"utf-8"</span>,
+                <span class="prop">timeout</span>: <span class="num">5000</span>,
+            }).<span class="fn">trim</span>();
+        } <span class="kw">catch</span> (e: <span class="type">any</span>) {
+            <span class="kw">return</span> <span class="str">`Ошибка: ${e.message}`</span>;
+        }
+    },
+    <span class="fn">read_file</span>: ({ path }) =&gt; {
+        <span class="kw">try</span> {
+            <span class="kw">return</span> <span class="fn">readFileSync</span>(path, <span class="str">"utf-8"</span>);
+        } <span class="kw">catch</span> (e: <span class="type">any</span>) {
+            <span class="kw">return</span> <span class="str">`Ошибка: ${e.message}`</span>;
+        }
+    },
+};
+
+<span class="cm">// Агент реально исследует вашу файловую систему</span>
+<span class="fn">agentLoop</span>(<span class="str">"Посмотри что за проект лежит в текущей директории"</span>);</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="terminal-output">
+<span class="t-dim">--- Итерация 1 ---</span>
+<span class="t-yellow">Tool: run_bash({"command":"ls -la"})</span>
+→ total 72, drwxr-xr-x 10 ...
+
+<span class="t-dim">--- Итерация 2 ---</span>
+<span class="t-yellow">Tool: run_bash({"command":"cat package.json"})</span>
+→ { "name": "simple-agent", ...
+
+<span class="t-dim">--- Итерация 3 ---</span>
+<span class="t-yellow">Tool: run_bash({"command":"ls -la src/"})</span>
+→ 01-basic-call.ts, 02-with-tool.ts ...
+
+<span class="t-dim">--- Итерация 4 ---</span>
+<span class="t-bold">Ответ: Проект simple-agent — учебный проект для AI-агентов...</span></div>
+
+            <div class="key-insight">
+                <strong>💡 Resilience агента:</strong> Если tool возвращает ошибку — агент не ломается.
+                Он адаптируется, ищет обходной путь (например, вместо <code>read_file</code> использует <code>cat</code> через bash).
+                LLM умеет работать с ошибками — это одно из его суперспособностей.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== STEP 5 ======== -->
+<div class="step" data-step="5" id="step-5">
+    <div class="step-number">05</div>
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-title">Skills — модульная архитектура</div>
+            <span class="step-badge intermediate">Архитектура</span>
+        </div>
+        <p class="step-intro">
+            Skill — это tool + инструкция. Набор связанных capabilities под конкретную задачу. Агент не меняется — меняются skills.
+        </p>
+
+        <div class="step-content">
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>src/05-skills.ts (архитектура)</div>
+                <pre><span class="cm">// Skill — это интерфейс: описание + tools + handlers</span>
+<span class="kw">interface</span> <span class="type">Skill</span> {
+    <span class="prop">name</span>: <span class="type">string</span>;
+    <span class="prop">description</span>: <span class="type">string</span>;           <span class="cm">// для system prompt</span>
+    <span class="prop">tools</span>: <span class="type">OpenAI.ChatCompletionTool</span>[];
+    <span class="prop">handlers</span>: <span class="type">Record</span>&lt;<span class="type">string</span>, (<span class="param">args</span>: <span class="type">any</span>) =&gt; <span class="type">string</span>&gt;;
+}
+
+<span class="cm">// Пример: filesystem skill</span>
+<span class="kw">const</span> filesystemSkill: <span class="type">Skill</span> = {
+    <span class="prop">name</span>: <span class="str">"filesystem"</span>,
+    <span class="prop">description</span>: <span class="str">"Умеешь читать, писать, просматривать файлы."</span>,
+    <span class="prop">tools</span>: [<span class="cm">/* read_file, write_file, list_dir */</span>],
+    <span class="prop">handlers</span>: {<span class="cm">/* реализации */</span>},
+};
+
+<span class="cm">// Агент собирается из подключаемых skills</span>
+<span class="kw">function</span> <span class="fn">createAgent</span>(<span class="param">skills</span>: <span class="type">Skill</span>[]) {
+    <span class="cm">// Собираем tools и handlers из ВСЕХ skills</span>
+    <span class="kw">const</span> allTools = skills.<span class="fn">flatMap</span>(s =&gt; s.tools);
+    <span class="kw">const</span> allHandlers = Object.<span class="fn">assign</span>({}, ...skills.<span class="fn">map</span>(s =&gt; s.handlers));
+
+    <span class="cm">// System prompt собирается из описаний skills</span>
+    <span class="kw">const</span> systemPrompt = <span class="str">`У тебя есть навыки:\n${
+        skills.map(s => `- ${s.name}: ${s.description}`).join('\n')
+    }`</span>;
+
+    <span class="kw">return async function</span> <span class="fn">run</span>(<span class="param">userMessage</span>: <span class="type">string</span>) {
+        <span class="cm">// тот же agent loop, но с allTools и allHandlers</span>
+    };
+}
+
+<span class="cm">// Использование — подключай что нужно</span>
+<span class="kw">const</span> agent = <span class="fn">createAgent</span>([filesystemSkill, bashSkill, mathSkill]);
+<span class="kw">await</span> <span class="fn">agent</span>(<span class="str">"Посчитай строки кода и создай отчёт"</span>);</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="terminal-output">
+<span class="t-dim">--- Итерация 1 ---</span>  <span class="t-yellow">list_dir(".")</span>
+<span class="t-dim">--- Итерация 2 ---</span>  <span class="t-yellow">list_dir("src")</span>
+<span class="t-dim">--- Итерация 3 ---</span>  <span class="t-yellow">read_file × 5 файлов</span>
+<span class="t-dim">--- Итерация 4 ---</span>  <span class="t-yellow">run_bash("wc -l src/*.ts")</span> → 542 строки
+<span class="t-dim">--- Итерация 5 ---</span>  <span class="t-yellow">write_file("STATS.md")</span> → ✅
+<span class="t-dim">--- Итерация 6 ---</span>  <span class="t-bold">Готово! STATS.md создан с полным анализом.</span></div>
+
+            <div class="key-insight">
+                <strong>💡 Ключевая идея:</strong>
+                <code>createAgent([...skills])</code> — и готово. Хочешь добавить работу с API — создаёшь новый Skill.
+                Хочешь убрать bash — просто не подключаешь. Агент автоматически комбинирует tools из разных skills для решения задачи.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== STEP 6 ======== -->
+<div class="step" data-step="6" id="step-6">
+    <div class="step-number">06</div>
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-title">Multi-step Planning</div>
+            <span class="step-badge advanced">Продвинутый</span>
+        </div>
+        <p class="step-intro">
+            Перед тем как действовать, агент составляет план. Два подхода: Plan-then-Execute и ReAct.
+        </p>
+
+        <div class="step-content">
+            <div class="arch-diagram">
+                <div class="arch-row">
+                    <span class="loop-node llm">Plan-then-Execute</span>
+                </div>
+                <div style="color: var(--text-dim); margin: 0.5rem 0;">Отдельный LLM-вызов для плана → потом выполнение</div>
+                <div class="arch-row" style="margin-top: 1rem;">
+                    <span class="loop-node output">ReAct</span>
+                </div>
+                <div style="color: var(--text-dim); margin: 0.5rem 0;">Think → Act → Think → Act на каждом шаге</div>
+            </div>
+
+            <div class="step-detail">
+                <p><strong>Plan-then-Execute</strong> — два этапа. Сначала LLM (без tools) создаёт JSON-план. Потом другой вызов получает план и выполняет по шагам.</p>
+                <p><strong>ReAct</strong> — один цикл, но с <code>think</code> tool. Перед каждым действием агент «думает вслух»: что знаю, что делать, почему.</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>think tool — хитрый приём</div>
+                <pre><span class="cm">// Think tool ничего не делает! Просто возвращает "OK".</span>
+<span class="cm">// Но заставляет модель ВЕРБАЛИЗОВАТЬ рассуждение</span>
+<span class="cm">// перед действием — и это сильно повышает качество.</span>
+{
+    <span class="prop">name</span>: <span class="str">"think"</span>,
+    <span class="prop">description</span>: <span class="str">"Внутренний блокнот для рассуждений"</span>,
+}
+
+<span class="cm">// Handler:</span>
+<span class="fn">think</span>: () =&gt; <span class="str">"OK"</span>  <span class="cm">// вот и всё</span></pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="terminal-output">
+<span class="t-cyan">📋 ПЛАН: Анализ дублирования кода</span>
+<span class="t-dim">─────────────────────────────────────</span>
+  1. [run_bash] Получить список .ts файлов
+  2. [read_file] Прочитать каждый файл
+  3. [run_bash] Найти общие паттерны
+  4. [write_file] Создать REFACTORING.md
+
+<span class="t-cyan">⚡ ВЫПОЛНЕНИЕ</span>
+  <span class="t-dim">💭 Начну с просмотра файлов, чтобы понять масштаб...</span>
+  <span class="t-yellow">🔧 run_bash("ls src/*.ts")</span>
+  <span class="t-dim">💭 5 файлов. Прочитаю каждый и найду паттерны...</span>
+  <span class="t-yellow">🔧 read_file("src/01-basic-call.ts")</span>
+  ...</pre>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/06-planning.ts plan &nbsp;# или "react"</code>
+            </div>
+
+            <div class="key-insight">
+                <strong>💡 Plan-then-Execute</strong> — предсказуемо, можно показать план юзеру. Минус: план может быть неточным.
+                <br><strong>💡 ReAct</strong> — адаптивно, агент видит реальные данные. Минус: менее предсказуемо, больше итераций.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== STEP 7 ======== -->
+<div class="step" data-step="7" id="step-7">
+    <div class="step-number">07</div>
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-title">Adaptive Agent — Plan + ReAct + Replan</div>
+            <span class="step-badge advanced">Продвинутый</span>
+        </div>
+        <p class="step-intro">
+            Объединяем оба подхода: агент планирует, выполняет с рассуждениями, и может пересмотреть план если реальность не совпала с ожиданиями.
+        </p>
+
+        <div class="step-content">
+            <div class="arch-diagram">
+                <div class="loop-flow">
+                    <span class="loop-node llm">Plan</span>
+                    <span class="loop-arrow">→</span>
+                    <span class="loop-node output">ReAct Execute</span>
+                    <span class="loop-arrow">→</span>
+                    <span class="loop-node tool">Replan?</span>
+                    <span class="loop-arrow">→</span>
+                    <span class="loop-node context">Execute</span>
+                    <span class="loop-arrow">→</span>
+                    <span class="loop-node llm">Done</span>
+                </div>
+            </div>
+
+            <div class="step-detail">
+                <p>Ключевая новинка — <code>request_replan</code> tool. Агент сам решает когда план сломался настолько, что нужно переосмыслить стратегию.</p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>request_replan tool</div>
+                <pre>{
+    <span class="prop">name</span>: <span class="str">"request_replan"</span>,
+    <span class="prop">description</span>: <span class="str">"Вызови когда план нужно пересмотреть"</span>,
+    <span class="prop">parameters</span>: {
+        <span class="prop">reason</span>: <span class="str">"Почему нужен новый план"</span>,
+        <span class="prop">completed_steps</span>: [<span class="str">"Что уже сделано"</span>],
+        <span class="prop">discoveries</span>: [<span class="str">"Что нового узнали"</span>],
+    }
+}
+
+<span class="cm">// Главный цикл:</span>
+<span class="kw">while</span> (replanCount &lt;= MAX_REPLANS) {
+    <span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">executeWithReact</span>(task, plan);
+    <span class="kw">if</span> (result.status === <span class="str">"completed"</span>) <span class="kw">return</span>;
+
+    <span class="cm">// Реплан с контекстом того, что уже сделано</span>
+    plan = <span class="kw">await</span> <span class="fn">createPlan</span>(task, {
+        <span class="prop">previousPlan</span>: plan,
+        <span class="prop">completedSteps</span>: result.replanContext.completedSteps,
+        <span class="prop">discoveries</span>: result.replanContext.discoveries,
+    });
+}</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/07-adaptive-agent.ts</code>
+            </div>
+
+            <div class="key-insight">
+                <strong>💡 Это отличает адаптивного агента от тупого исполнителя:</strong>
+                он не будет продолжать неактуальный план, но и не будет реплэнить на каждый чих.
+                Планировщик при реплане знает: что уже сделано, что нового узнали, почему старый план не подходит.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======== STEP 8 ======== -->
+<div class="step" data-step="8" id="step-8">
+    <div class="step-number">08</div>
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-title">Human-in-the-Loop + Wizard</div>
+            <span class="step-badge advanced">Финал</span>
+        </div>
+        <p class="step-intro">
+            Агент управляет потоком, но человек принимает решения. Три интерактивных tool'а превращают агент в умного помощника-визарда.
+        </p>
+
+        <div class="step-content">
+            <div class="step-detail">
+                <p>Два связанных паттерна в одном:</p>
+                <p>
+                    <strong>Human-in-the-loop</strong> — агент останавливается и спрашивает подтверждение перед опасными действиями (запись файлов).
+                </p>
+                <p>
+                    <strong>Wizard/Guide</strong> — агент анализирует, генерирует варианты, предлагает выбор, и так несколько шагов.
+                </p>
+            </div>
+
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>Три интерактивных tool'а</div>
+                <pre><span class="cm">// Модель сама решает какой тип взаимодействия нужен:</span>
+
+<span class="cm">// 1. Выбор из вариантов (wizard-стиль)</span>
+{
+    <span class="prop">name</span>: <span class="str">"ask_user_choice"</span>,
+    <span class="prop">description</span>: <span class="str">"Предложить пользователю выбор из вариантов"</span>,
+    <span class="prop">parameters</span>: {
+        <span class="prop">question</span>: <span class="str">"Описание ситуации"</span>,
+        <span class="prop">options</span>: [
+            { <span class="prop">label</span>: <span class="str">"Вариант A"</span>, <span class="prop">description</span>: <span class="str">"Плюсы, минусы"</span> },
+            { <span class="prop">label</span>: <span class="str">"Вариант B"</span>, <span class="prop">description</span>: <span class="str">"Плюсы, минусы"</span> },
+        ],
+        <span class="prop">allow_custom</span>: <span class="num">true</span>
+    }
+}
+
+<span class="cm">// 2. Текстовый ввод</span>
+{ <span class="prop">name</span>: <span class="str">"ask_user_input"</span> }    <span class="cm">// "Как назвать проект?"</span>
+
+<span class="cm">// 3. Подтверждение да/нет</span>
+{ <span class="prop">name</span>: <span class="str">"ask_user_confirm"</span> }  <span class="cm">// "Записать файл?"</span></pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="step-detail">
+                <p>Главная хитрость: модель не знает что эти tool'ы интерактивные. Для неё <code>ask_user_choice</code> — обычный tool, который возвращает строку <code>"Пользователь выбрал: ..."</code>. Вся магия в handlers — они блокируют выполнение и ждут ввод через <code>readline</code>.</p>
+            </div>
+
+            <div class="terminal-output">
+<span class="t-dim">💭 Нужно выяснить тип проекта...</span>
+
+<span class="t-bold">══════════════════════════════════════</span>
+<span class="t-cyan">🤔 Какой тип проекта вы хотите создать?</span>
+<span class="t-dim">──────────────────────────────────────</span>
+  <span class="t-bold">1)</span> CLI-утилита
+     <span class="t-dim">Инструмент для терминала</span>
+  <span class="t-bold">2)</span> REST API
+     <span class="t-dim">Бэкенд-сервис с Express/Fastify</span>
+  <span class="t-bold">3)</span> Telegram-бот
+     <span class="t-dim">Бот с grammY/Telegraf</span>
+  <span class="t-bold">4)</span> Свой вариант...
+<span class="t-dim">──────────────────────────────────────</span>
+<span class="t-green">Выбор [1-4]: </span><span class="t-bold">2</span>
+
+<span class="t-dim">💭 REST API. Нужно уточнить фреймворк...</span>
+
+<span class="t-bold">══════════════════════════════════════</span>
+<span class="t-cyan">📝 Как назвать проект?</span>
+   <span class="t-dim">💡 Например: my-cool-api</span>
+<span class="t-dim">──────────────────────────────────────</span>
+<span class="t-green">&gt; </span><span class="t-bold">todo-api</span>
+
+<span class="t-dim">💭 Генерирую структуру проекта...</span>
+
+<span class="t-bold">══════════════════════════════════════</span>
+<span class="t-yellow">⚠️  Агент хочет создать файл: package.json</span>
+<span class="t-dim">──────────────────────────────────────</span>
+{ "name": "todo-api", "version": "1.0.0" ...}
+<span class="t-dim">──────────────────────────────────────</span>
+<span class="t-green">Разрешить? [y/n/edit]: </span><span class="t-bold">y</span>
+<span class="t-green">✅ Файл package.json записан</span></div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/08-interactive-agent.ts project</code>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/08-interactive-agent.ts refactor</code>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/08-interactive-agent.ts free</code>
+            </div>
+
+            <div class="key-insight">
+                <strong>💡 Итог:</strong> Модель управляет флоу, но человек на каждом шаге может скорректировать курс.
+                Агент подумал за пользователя, предложил оптимальные варианты — пользователю осталось только выбрать.
+                Это паттерн, который используют все современные AI-продукты.
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /steps-container -->
+
+<!-- ====== FOOTER ====== -->
+<section class="footer">
+    <div class="footer-title">Что ты построил 🎉</div>
+    <p>8 шагов — от простого API-вызова до адаптивного агента с планированием и интерактивным wizard'ом.</p>
+    <div class="footer-steps">
+        <span>01 → LLM-вызов</span>
+        <span>02 → + tools (модель вызывает функции)</span>
+        <span>03 → + agent loop (цикл выполнения)</span>
+        <span>04 → + реальные tools (bash, файлы)</span>
+        <span>05 → + skills (модульная архитектура)</span>
+        <span>06 → + planning (think before act)</span>
+        <span>07 → + adaptive replan (коррекция курса)</span>
+        <span>08 → + human-in-the-loop + wizard</span>
+    </div>
+    <p style="margin-top: 2rem; color: var(--text-dim); font-size: 0.85rem;">
+        Весь код — рабочий TypeScript, запускается через <code style="color: var(--cyan);">npx tsx</code>.<br>
+        Claude Code, Cursor, GitHub Copilot — работают на этих же принципах.
+    </p>
+</section>
+
+<!-- ====== PROGRESS MAP ====== -->
+<nav class="progress-map" id="progressMap">
+    <div class="progress-dot current" data-target="step-1" title="01: Basic Call"></div>
+    <div class="progress-dot" data-target="step-2" title="02: First Tool"></div>
+    <div class="progress-dot" data-target="step-3" title="03: Agent Loop"></div>
+    <div class="progress-dot" data-target="step-4" title="04: Real Tools"></div>
+    <div class="progress-dot" data-target="step-5" title="05: Skills"></div>
+    <div class="progress-dot" data-target="step-6" title="06: Planning"></div>
+    <div class="progress-dot" data-target="step-7" title="07: Adaptive"></div>
+    <div class="progress-dot" data-target="step-8" title="08: Interactive"></div>
+</nav>
+
+<script>
+    // ====== Step Toggle ======
+    document.querySelectorAll('.step-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Don't toggle if clicking inside code or buttons
+            if (e.target.closest('pre, button, .run-command, a')) return;
+
+            const step = card.closest('.step');
+            const wasActive = step.classList.contains('active');
+
+            // Close all
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+
+            // Toggle clicked
+            if (!wasActive) {
+                step.classList.add('active');
+                updateProgress(step.dataset.step);
+            }
+        });
+    });
+
+    // ====== Progress Map ======
+    function updateProgress(activeStep) {
+        const dots = document.querySelectorAll('.progress-dot');
+        dots.forEach((dot, i) => {
+            dot.classList.remove('current', 'done');
+            if (i + 1 < activeStep) dot.classList.add('done');
+            if (i + 1 == activeStep) dot.classList.add('current');
+        });
+    }
+
+    document.querySelectorAll('.progress-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+            const targetId = dot.dataset.target;
+            const target = document.getElementById(targetId);
+            if (target) {
+                document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+                target.classList.add('active');
+                updateProgress(target.dataset.step);
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // ====== Copy Button ======
+    function copyCode(btn) {
+        const pre = btn.closest('.code-block').querySelector('pre');
+        const text = pre.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = '✓ Copied';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = 'Copy';
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    }
+
+    // ====== Smooth Scroll for CTA ======
+    document.querySelector('.hero-cta')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('step-0')?.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // ====== Scroll-based step activation ======
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const step = entry.target;
+                if (step.dataset.step) {
+                    updateProgress(step.dataset.step);
+                }
+            }
+        });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('.step').forEach(step => observer.observe(step));
+</script>
+
+</body>
+</html>
