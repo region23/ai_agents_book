@@ -1,103 +1,1146 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Урок 02 · Добавляем первый Tool</title>
-    <meta name="description" content="Подключаем функцию как tool, чтобы модель могла не только отвечать текстом, но и запрашивать выполнение действия.">
-    <meta name="color-scheme" content="dark">
+    <title>Урок 02 — Добавляем первый Tool</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/ocean.min.css" />
-    <link rel="stylesheet" href="assets/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a26;
+            --bg-code: #0d1117;
+            --border: #222233;
+            --border-active: #4f46e5;
+            --text: #e2e2ef;
+            --text-dim: #8888a0;
+            --text-bright: #ffffff;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --green: #22c55e;
+            --green-dim: rgba(34, 197, 94, 0.12);
+            --orange: #f59e0b;
+            --orange-dim: rgba(245, 158, 11, 0.12);
+            --red: #ef4444;
+            --red-dim: rgba(239, 68, 68, 0.08);
+            --cyan: #06b6d4;
+            --pink: #ec4899;
+            --step-connector: #222233;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ====== HERO ====== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.04) 0%, transparent 60%);
+            animation: heroBgDrift 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes heroBgDrift {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-3%, 2%) rotate(2deg); }
+        }
+
+        .hero-content { position: relative; z-index: 1; max-width: 800px; }
+
+        .hero-emoji {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text-bright) 0%, var(--accent) 50%, var(--cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            font-weight: 300;
+            color: var(--text-dim);
+            margin-bottom: 0.8rem;
+        }
+
+        .hero-description {
+            font-size: 1.05rem;
+            color: var(--text-dim);
+            max-width: 550px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2.5rem;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 50px var(--accent-glow), 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .hero-meta {
+            margin-top: 3rem;
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .hero-meta-item span:first-child { font-size: 1.1rem; }
+
+        /* ====== CONCEPT SECTION ====== */
+        .concept-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+        }
+
+        .concept-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .concept-header h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .concept-header p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .loop-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .loop-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.75rem, 2vw, 1rem);
+        }
+
+        .loop-node {
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .loop-node.llm { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(99,102,241,0.3); }
+        .loop-node.output { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+        .loop-node.tool { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(245,158,11,0.3); }
+        .loop-node.context { background: rgba(6,182,212,0.1); color: var(--cyan); border: 1px solid rgba(6,182,212,0.3); }
+
+        .loop-arrow {
+            color: var(--text-dim);
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .loop-label {
+            font-family: 'Caveat', cursive;
+            font-size: 1.3rem;
+            color: var(--pink);
+            margin-top: 1.5rem;
+            display: block;
+        }
+
+        /* ====== STEPS ====== */
+        .steps-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 2rem 6rem;
+        }
+
+        .step {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 0;
+            opacity: 1;
+        }
+
+        /* Vertical connector line */
+        .step::before {
+            content: '';
+            position: absolute;
+            left: 1.15rem;
+            top: 3.5rem;
+            bottom: -1px;
+            width: 2px;
+            background: var(--step-connector);
+        }
+
+        .step:last-child::before { display: none; }
+
+        .step-number {
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 2.4rem;
+            height: 2.4rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text-dim);
+            z-index: 1;
+            transition: all 0.4s;
+        }
+
+        .step.active .step-number {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .step.done .step-number {
+            border-color: var(--green);
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .step-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            background: var(--bg-card-hover);
+        }
+
+        .step.active .step-card {
+            border-color: var(--accent);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-bright);
+        }
+
+        .step-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+
+        .step-badge.beginner { background: var(--green-dim); color: var(--green); }
+        .step-badge.intermediate { background: var(--orange-dim); color: var(--orange); }
+        .step-badge.advanced { background: var(--red-dim); color: var(--red); }
+
+        .step-intro {
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+            font-size: 1.02rem;
+        }
+
+        .step-content { display: none; }
+        .step.active .step-content { display: block; }
+
+        .step-detail {
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            font-size: 0.98rem;
+        }
+
+        .step-detail p { margin-bottom: 0.75rem; }
+
+        .key-insight {
+            background: var(--accent-glow);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 10px 10px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .key-insight strong { color: var(--accent); }
+
+        .what-happens {
+            background: rgba(6, 182, 212, 0.06);
+            border-left: 3px solid var(--cyan);
+            border-radius: 0 10px 10px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .what-happens strong { color: var(--cyan); }
+
+        .terminal-output {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: #aaa;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .terminal-output .t-green { color: #4ade80; }
+        .terminal-output .t-yellow { color: #facc15; }
+        .terminal-output .t-blue { color: #60a5fa; }
+        .terminal-output .t-dim { color: #555; }
+        .terminal-output .t-cyan { color: #22d3ee; }
+        .terminal-output .t-bold { color: #fff; font-weight: 600; }
+
+        .run-command {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(34, 197, 94, 0.06);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            margin: 1.25rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .run-command .run-icon { font-size: 1rem; }
+        .run-command code { color: var(--green); }
+        .run-command .run-copy-btn {
+            margin-left: auto;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 0.35rem 0.6rem;
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s;
+        }
+        .run-command .run-copy-btn:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+        .run-command .run-copy-btn.copied { background: var(--green-dim); color: var(--green); border-color: rgba(34,197,94,0.3); }
+
+        /* Code blocks */
+        .code-block {
+            position: relative;
+            margin: 1.25rem 0;
+        }
+
+        .code-filename {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #1a1a2e;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            padding: 0.4rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .code-filename .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--cyan);
+        }
+
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 0 12px 12px 12px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.7;
+            color: #c9d1d9;
+            tab-size: 4;
+        }
+
+        .code-block:not(:has(.code-filename)) pre {
+            border-radius: 12px;
+        }
+
+        pre .kw { color: #ff7b72; }
+        pre .str { color: #a5d6ff; }
+        pre .fn { color: #d2a8ff; }
+        pre .cm { color: #555e6b; font-style: italic; }
+        pre .num { color: #79c0ff; }
+        pre .type { color: #7ee787; }
+        pre .op { color: #ff7b72; }
+        pre .prop { color: #c9d1d9; }
+        pre .param { color: #ffa657; }
+
+        pre code.hljs {
+            background: transparent;
+            padding: 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 0.35rem 0.6rem;
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .copy-btn:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+        .copy-btn.copied { background: var(--green-dim); color: var(--green); border-color: rgba(34,197,94,0.3); }
+
+        /* Handwritten annotations */
+        .handnote {
+            font-family: 'Caveat', cursive;
+            color: var(--pink);
+            font-size: 1.15rem;
+        }
+
+        /* ====== TOOLTIP TERMS ====== */
+        .term {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted rgba(136, 136, 160, 0.6);
+            cursor: help;
+        }
+
+        .term::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 50%;
+            bottom: 140%;
+            transform: translateX(-50%);
+            background: #0f1118;
+            color: var(--text);
+            padding: 0.45rem 0.65rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+            line-height: 1.4;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+            z-index: 20;
+        }
+
+        .term:hover::after,
+        .term:focus-visible::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        .loop-node.term { border-bottom: none; }
+
+        /* ====== PREP ====== */
+        .prep-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem 2rem;
+        }
+
+        .prep-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .prep-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+        }
+
+        .prep-header p {
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .prep-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .prep-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem 1.25rem 1.1rem;
+        }
+
+        .prep-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .prep-card p { color: var(--text-dim); font-size: 0.95rem; }
+
+        .prep-note {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        /* ====== DEMO ====== */
+        .demo-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--text);
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            margin-top: 0.5rem;
+        }
+
+        .demo-btn:hover { background: rgba(99, 102, 241, 0.2); }
+
+        .demo-output {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
+            margin: 0;
+        }
+
+        .demo-output.visible {
+            max-height: 2000px;
+            opacity: 1;
+            margin: 1.25rem 0;
+            overflow-x: auto;
+        }
+
+        .demo-player {
+            background: #0b0f14;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1rem 1.1rem;
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .demo-player.demo-output.visible { overflow-x: hidden; }
+
+        .demo-player-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .demo-player-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .demo-player-count {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .demo-chat-body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 0.9rem;
+        }
+
+        .chat-msg {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            max-width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #c9d1d9;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .chat-msg.llm { background: rgba(99, 102, 241, 0.12); }
+        .chat-msg.toolcall { background: rgba(245, 158, 11, 0.12); }
+        .chat-msg.toolresult { background: rgba(34, 197, 94, 0.12); }
+        .chat-msg.user { background: rgba(6, 182, 212, 0.12); }
+
+        .chat-msg-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .demo-player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: 0.9rem;
+        }
+
+        .demo-step-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+            color: var(--text);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .demo-step-btn:hover { background: rgba(255,255,255,0.12); }
+        .demo-step-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .demo-step-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .output-note {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .output-note.visible { display: block; }
+
+        /* ====== MINI BLOCKS ====== */
+        .mini-block {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.9rem 1.1rem;
+            margin: 1rem 0;
+            font-size: 0.92rem;
+        }
+
+        .mini-block.expect {
+            background: rgba(34, 197, 94, 0.08);
+            border-left: 3px solid var(--green);
+        }
+
+        .mini-block.trouble {
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 3px solid var(--orange);
+        }
+
+        .mini-title {
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        /* Architecture diagram */
+        .arch-diagram {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .arch-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* ====== PROGRESS MAP ====== */
+        .progress-map {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.75rem;
+        }
+
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .progress-dot.done { border-color: var(--green); background: var(--green); }
+        .progress-dot.current { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+
+        /* ====== FOOTER ====== */
+        .footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .footer p {
+            color: var(--text-dim);
+            max-width: 500px;
+            margin: 0 auto 2rem;
+        }
+
+        .footer-steps {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .footer-steps span { opacity: 0.5; }
+
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 640px) {
+            .step { padding-left: 2.5rem; }
+            .step-card { padding: 1.25rem; }
+            pre { font-size: 0.72rem; padding: 1rem; }
+            .progress-map { display: none; }
+            .loop-flow { font-size: 0.7rem; }
+            .hero-meta { flex-direction: column; align-items: center; gap: 0.75rem; }
+        }
+
+        /* ====== FOCUS VISIBLE ====== */
+        .step-card:focus-visible,
+        .progress-dot:focus-visible,
+        .demo-btn:focus-visible,
+        .demo-step-btn:focus-visible,
+        .copy-btn:focus-visible,
+        .run-copy-btn:focus-visible,
+        .hero-cta:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+    </style>
+
+
+<style>
+    .book-nav {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        backdrop-filter: blur(8px);
+        background: rgba(10, 10, 15, 0.85);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .book-nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0.8rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .book-nav a {
+        color: var(--text);
+        text-decoration: none;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .book-nav a:hover {
+        border-color: var(--accent);
+        color: var(--text-bright);
+    }
+
+    .book-nav-title {
+        color: var(--text-dim);
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .lesson-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 1.25rem;
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .lesson-sidebar {
+        position: sticky;
+        top: 76px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1rem;
+    }
+
+    .lesson-sidebar h2 {
+        margin: 0 0 0.6rem;
+        font-size: 1rem;
+    }
+
+    .lesson-toc {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .lesson-toc a {
+        display: block;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.45rem 0.6rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        line-height: 1.35;
+        font-size: 0.85rem;
+    }
+
+    .lesson-toc a:hover {
+        color: var(--text);
+        border-color: var(--accent);
+    }
+
+    .lesson-toc a.current {
+        color: var(--text-bright);
+        border-color: var(--accent);
+        background: rgba(99, 102, 241, 0.12);
+    }
+
+    .lesson-main .steps-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .lesson-main .step {
+        margin: 0;
+    }
+
+    .lesson-main .step-card {
+        cursor: default;
+    }
+
+    .lesson-main .step-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .lesson-pager {
+        margin: 1rem 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .lesson-pager-link {
+        color: var(--text);
+        text-decoration: none;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.45rem 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .lesson-pager-link:hover {
+        border-color: var(--accent);
+    }
+
+    .lesson-pager-link.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .book-outline-section {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 2rem 4rem;
+    }
+
+    .book-outline-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .book-outline-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s;
+    }
+
+    .book-outline-card:hover {
+        border-color: var(--accent);
+        background: var(--bg-card-hover);
+        transform: translateY(-2px);
+    }
+
+    .book-outline-meta {
+        color: var(--text-dim);
+        font-size: 0.8rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .book-outline-title {
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .book-outline-intro {
+        color: var(--text-dim);
+        margin-top: 0.45rem;
+        font-size: 0.92rem;
+    }
+
+    @media (max-width: 980px) {
+        .lesson-shell {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .lesson-sidebar {
+            position: static;
+        }
+    }
+
+    @media (max-width: 680px) {
+        .book-nav-inner {
+            padding: 0.7rem 0.8rem;
+        }
+
+        .lesson-shell {
+            padding: 0.75rem;
+        }
+
+        .book-outline-section {
+            padding: 0 0.8rem 2.5rem;
+        }
+    }
+</style>
+
 </head>
 <body>
-    <header class="site-header">
-        <div class="container header-inner">
-            <a class="brand" href="index.html">AI Agents Book</a>
-            <nav class="header-nav">
-                <a href="index.html">Оглавление</a>
-                <a href="lesson-01-basic-call.html">Начать курс</a>
-            </nav>
-        </div>
-    </header>
 
-    <main class="site-main">
-        <div class="container">
-            <div class="lesson-layout">
-    <aside class="panel lesson-sidebar">
-        <h2>Все уроки</h2>
-        <nav class="toc-nav">
-            <a class="toc-link" href="lesson-01-basic-call.html">01. Базовый LLM-вызов</a>
-<a class="toc-link current" href="lesson-02-with-tool.html">02. Добавляем первый Tool</a>
-<a class="toc-link" href="lesson-03-agent-loop.html">03. Agent Loop: замыкаем петлю</a>
-<a class="toc-link" href="lesson-04-real-tools.html">04. Реальные Tools: bash и файловая система</a>
-<a class="toc-link" href="lesson-05-skills.html">05. Skills: модульная архитектура</a>
-<a class="toc-link" href="lesson-06-planning.html">06. Multi-step Planning</a>
-<a class="toc-link" href="lesson-07-adaptive-agent.html">07. Adaptive Agent: Plan + ReAct + Replan</a>
-<a class="toc-link" href="lesson-08-interactive-agent.html">08. Human-in-the-Loop + Wizard</a>
-        </nav>
+<nav class="book-nav">
+    <div class="book-nav-inner">
+        <a href="index.html">← Оглавление</a>
+        <div class="book-nav-title">Урок 02 из 08</div>
+        <a href="lesson-03-agent-loop.html">Следующий урок →</a>
+    </div>
+</nav>
+<div class="lesson-shell lesson-page">
+    <aside class="lesson-sidebar">
+        <h2>Навигация по урокам</h2>
+        <div class="lesson-toc">
+<a href="lesson-01-basic-call.html">01. Базовый LLM-вызов</a>
+<a class="current" href="lesson-02-with-tool.html">02. Добавляем первый Tool</a>
+<a href="lesson-03-agent-loop.html">03. Agent Loop — замыкаем петлю</a>
+<a href="lesson-04-real-tools.html">04. Реальные Tools — bash и файловая система</a>
+<a href="lesson-05-skills.html">05. Skills — модульная архитектура</a>
+<a href="lesson-06-planning.html">06. Multi-step Planning</a>
+<a href="lesson-07-adaptive-agent.html">07. Adaptive Agent — Plan + ReAct + Replan</a>
+<a href="lesson-08-interactive-agent.html">08. Human-in-the-Loop + Wizard</a>
+        </div>
     </aside>
-
-    <article class="panel lesson-panel">
-        <p class="eyebrow">Урок 02</p>
-        <h1>Добавляем первый Tool</h1>
-        <div class="lesson-meta">
-            <span class="chip">Начало</span>
-            <span class="chip">15-20 минут</span>
-            <span class="chip">Файл: <code>src/02-with-tool.ts</code></span>
+    <main class="lesson-main">
+        <div class="steps-container">
+<div class="step active" data-step="2" id="step-2">
+    <div class="step-number">02</div>
+    <div class="step-card">
+        <div class="step-header">
+            <div class="step-title">Добавляем первый Tool</div>
+            <span class="step-badge beginner">Начало</span>
         </div>
+        <p class="step-intro">
+            Даём модели возможность «действовать» — вызывать функции (<span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span>). Ключевой момент: модель не выдумывает данные, а просит нас выполнить функцию.
+        </p>
 
-        <p class="lead">Подключаем функцию как tool, чтобы модель могла не только отвечать текстом, но и запрашивать выполнение действия.</p>
+        <div class="step-content">
+            <div class="step-detail">
+                <p>
+                    Tool описывается JSON Schema прямо в запросе к API. Модель видит описание и решает сама — нужно ли вызывать <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span> или ответить текстом.
+                </p>
+            </div>
 
-        <section class="lesson-section">
-            <h2>Что сделаем в уроке</h2>
-            <ul class="text-list">
-                <li>Описать tool через JSON Schema (<code>name</code>, <code>description</code>, <code>parameters</code>).</li>
-<li>Создать локальную реализацию функции и подготовить тестовые данные.</li>
-<li>Посмотреть <code>tool_calls</code> в ответе модели и понять формат вызова.</li>
-            </ul>
-        </section>
-
-        <section class="lesson-section">
-            <h2>Ключевые акценты</h2>
-            <ul class="text-list">
-                <li>Tool-контракт должен быть точным и однозначным.</li>
-<li>Модель решает, когда вызвать tool, а не когда просто ответить текстом.</li>
-<li>Логирование <code>tool_calls</code> упрощает отладку поведения агента.</li>
-            </ul>
-        </section>
-
-        <section class="lesson-section">
-            <h2>Код урока</h2>
-            <pre><code class="language-typescript">// src/02-with-tool.ts
-import OpenAI from &quot;openai&quot;;
-import dotenv from &quot;dotenv&quot;;
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>src/02-with-tool.ts</div>
+                <pre>// src/02-with-tool.ts
+import OpenAI from "openai";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 const client = new OpenAI({
-    baseURL: &quot;https://openrouter.ai/api/v1&quot;,
-    apiKey: process.env.OPENROUTER_API_KEY ?? &quot;&quot;,
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
 });
 
 // 1. Описываем tools — это просто JSON Schema
 const tools: OpenAI.ChatCompletionTool[] = [
     {
-        type: &quot;function&quot;,
+        type: "function",
         function: {
-            name: &quot;get_weather&quot;,
-            description: &quot;Получить текущую погоду в городе&quot;,
+            name: "get_weather",
+            description: "Получить текущую погоду в городе",
             parameters: {
-                type: &quot;object&quot;,
+                type: "object",
                 properties: {
                     city: {
-                        type: &quot;string&quot;,
-                        description: &quot;Название города&quot;,
+                        type: "string",
+                        description: "Название города",
                     },
                 },
-                required: [&quot;city&quot;],
+                required: ["city"],
             },
         },
     },
@@ -107,18 +1150,18 @@ const tools: OpenAI.ChatCompletionTool[] = [
 function get_weather(city: string): string {
     // Пока фейковая, потом можно реальный API
     const data: Record&lt;string, string&gt; = {
-        &quot;Москва&quot;: &quot;−5°C, снег&quot;,
-        &quot;Анапа&quot;: &quot;+8°C, облачно&quot;,
-        &quot;Лондон&quot;: &quot;+3°C, дождь&quot;,
+        "Москва": "−5°C, снег",
+        "Анапа": "+8°C, облачно",
+        "Лондон": "+3°C, дождь",
     };
     return data[city] ?? `Нет данных для города ${city}`;
 }
 
 async function main() {
     const response = await client.chat.completions.create({
-        model: &quot;anthropic/claude-sonnet-4.5&quot;,
+        model: "anthropic/claude-sonnet-4.5",
         messages: [
-            { role: &quot;user&quot;, content: &quot;Какая погода в Анапе?&quot; },
+            { role: "user", content: "Какая погода в Анапе?" },
         ],
         tools,
     });
@@ -126,40 +1169,843 @@ async function main() {
     const message = response.choices[0].message;
 
     // 3. Смотрим что вернула модель
-    console.log(&quot;=== Ответ модели ===&quot;);
-    console.log(&quot;Content:&quot;, message.content);
-    console.log(&quot;Tool calls:&quot;, JSON.stringify(message.tool_calls, null, 2));
+    console.log("=== Ответ модели ===");
+    console.log("Content:", message.content);
+    console.log("Tool calls:", JSON.stringify(message.tool_calls, null, 2));
 }
 
 main();
-</code></pre>
-        </section>
+</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
 
-        <nav class="lesson-pager">
-            <a class="pager-link" href="lesson-01-basic-call.html">← Предыдущий урок</a>
-            <a class="pager-link" href="index.html">Оглавление</a>
-            <a class="pager-link" href="lesson-03-agent-loop.html">Следующий урок →</a>
-        </nav>
-    </article>
+            <div class="step-detail">
+                <p>Подсказка: если убрать <code>tool_choice</code>, модель будет решать сама — так реалистичнее, но демо может быть нестабильным.</p>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/02-with-tool.ts</code>
+            </div>
+
+            <button class="demo-btn" data-demo="demo-step-2">▶ Запустить демо</button>
+
+                        <div class="demo-output demo-player" id="demo-step-2" data-demo-chat="step2" aria-live="polite">
+                <div class="demo-player-header">
+                    <div class="demo-player-title">Демо в формате диалога</div>
+                    <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span></div>
+                </div>
+                <div class="demo-chat-body" data-demo-chat-body></div>
+                <div class="demo-player-controls">
+                    <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                    <div class="demo-step-label" data-demo-label></div>
+                    <button class="demo-step-btn" data-demo-next>Далее →</button>
+                </div>
+            </div>
+            <div class="output-note" data-demo-note="demo-step-2">Пример вывода. У тебя может быть иначе — это нормально.</div>
+
+            <div class="mini-block expect">
+                <div class="mini-title">✅ Что должно получиться</div>
+                В выводе видно <code>tool_calls</code> с вызовом <code>get_weather</code> и аргументом <code>city</code>.
+            </div>
+
+            <div class="mini-block trouble">
+                <div class="mini-title">🧯 Если не работает</div>
+                Если <code>tool_calls</code> пустой — проверь, что есть <code>tool_choice</code>, или укажи в промпте «вызови get_weather».
+            </div>
+
+            <div class="key-insight">
+                <strong>💡 Обрати внимание:</strong> Content пустой! Модель не стала выдумывать погоду.
+                Она вернула <code>tool_calls</code> с именем функции и аргументами — попросила <em>нас</em> выполнить <code>get_weather</code>.
+                Вот это и есть structured output — нативный, не нужно просить «верни JSON».
+            </div>
+        </div>
+    </div>
 </div>
-
+        </div>
+        <div class="lesson-pager">
+            <a class="lesson-pager-link" href="lesson-01-basic-call.html">← Предыдущий урок</a>
+            <a class="lesson-pager-link" href="index.html">Оглавление</a>
+            <a class="lesson-pager-link" href="lesson-03-agent-loop.html">Следующий урок →</a>
         </div>
     </main>
+</div>
 
-    <footer class="site-footer">
-        <div class="container footer-inner">
-            <p>© 2026 Практический учебник по агентам на TypeScript.</p>
-            <a href="index.html">Вернуться к оглавлению</a>
-        </div>
-    </footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+<script>
+    // ====== Syntax Highlight (full files) ======
+    document.querySelectorAll('.code-block').forEach(block => {
+        const filename = block.querySelector('.code-filename')?.textContent?.trim() || '';
+        if (!filename.startsWith('src/') || !filename.endsWith('.ts')) return;
+        const pre = block.querySelector('pre');
+        if (!pre || pre.querySelector('code')) return;
+        const code = document.createElement('code');
+        code.className = 'language-typescript';
+        code.textContent = pre.textContent;
+        pre.textContent = '';
+        pre.appendChild(code);
+    });
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script>
-        if (window.hljs) {
-            document.querySelectorAll('pre code').forEach((el) => {
-                window.hljs.highlightElement(el);
+    if (window.hljs) {
+        document.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+    }
+
+    // ====== Step Toggle ======
+    document.querySelectorAll('.step-card').forEach(card => {
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        const parentStep = card.closest('.step');
+        card.setAttribute('aria-expanded', parentStep?.classList.contains('active') ? 'true' : 'false');
+
+        card.addEventListener('click', (e) => {
+            // Don't toggle if clicking inside code or buttons
+            if (e.target.closest('pre, button, .run-command, a, .demo-player')) return;
+
+            const step = card.closest('.step');
+            const wasActive = step.classList.contains('active');
+
+            // Close all
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active');
+                s.querySelector('.step-card')?.setAttribute('aria-expanded', 'false');
             });
+
+            // Toggle clicked
+            if (!wasActive) {
+                step.classList.add('active');
+                step.querySelector('.step-card')?.setAttribute('aria-expanded', 'true');
+                updateProgress(step.dataset.step);
+            }
+        });
+
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                card.click();
+            }
+        });
+    });
+
+    // ====== Progress Map ======
+    function updateProgress(activeStep) {
+        const dots = document.querySelectorAll('.progress-dot');
+        dots.forEach((dot, i) => {
+            dot.classList.remove('current', 'done');
+            if (i + 1 < activeStep) dot.classList.add('done');
+            if (i + 1 == activeStep) dot.classList.add('current');
+            dot.setAttribute('aria-current', i + 1 == activeStep ? 'step' : 'false');
+        });
+    }
+
+    updateProgress(document.querySelector('.step.active')?.dataset.step || 1);
+
+    document.querySelectorAll('.progress-dot').forEach(dot => {
+        dot.setAttribute('role', 'button');
+        dot.setAttribute('tabindex', '0');
+        dot.setAttribute('aria-label', dot.getAttribute('title') || 'Step');
+        dot.addEventListener('click', () => {
+            const targetId = dot.dataset.target;
+            const target = document.getElementById(targetId);
+            if (target) {
+                document.querySelectorAll('.step').forEach(s => {
+                    s.classList.remove('active');
+                    s.querySelector('.step-card')?.setAttribute('aria-expanded', 'false');
+                });
+                target.classList.add('active');
+                target.querySelector('.step-card')?.setAttribute('aria-expanded', 'true');
+                updateProgress(target.dataset.step);
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        dot.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                dot.click();
+            }
+        });
+    });
+
+    // ====== Copy Button ======
+    function copyCode(btn) {
+        const pre = btn.closest('.code-block').querySelector('pre');
+        const text = pre.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = '✓ Copied';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = 'Copy';
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    }
+
+    function copyRunCommand(btn) {
+        const code = btn.closest('.run-command')?.querySelector('code');
+        if (!code) return;
+        navigator.clipboard.writeText(code.innerText).then(() => {
+            btn.textContent = '✓ Copied';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = 'Copy';
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    }
+
+    // ====== Run Command Copy Buttons ======
+    document.querySelectorAll('.run-command').forEach(cmd => {
+        if (cmd.querySelector('.run-copy-btn')) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'run-copy-btn';
+        btn.textContent = 'Copy';
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            copyRunCommand(btn);
+        });
+        cmd.appendChild(btn);
+    });
+
+    // ====== Demo Buttons ======
+    document.querySelectorAll('.demo-btn').forEach(btn => {
+        const targetId = btn.dataset.demo;
+        const target = targetId ? document.getElementById(targetId) : null;
+        const note = targetId ? document.querySelector(`[data-demo-note="${targetId}"]`) : null;
+        if (targetId) {
+            btn.setAttribute('aria-controls', targetId);
         }
-    </script>
+        if (target && target.classList.contains('visible')) {
+            btn.textContent = 'Скрыть демо';
+            note?.classList.add('visible');
+            btn.setAttribute('aria-expanded', 'true');
+        } else {
+            btn.setAttribute('aria-expanded', 'false');
+        }
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.demo;
+            const target = document.getElementById(targetId);
+            const note = document.querySelector(`[data-demo-note="${targetId}"]`);
+            if (!target) return;
+            const isVisible = target.classList.toggle('visible');
+            note?.classList.toggle('visible', isVisible);
+            btn.textContent = isVisible ? 'Скрыть демо' : '▶ Запустить демо';
+            btn.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
+        });
+    });
+
+    // ====== Demo Player (Step-by-step) ======
+    const demoPlayers = {
+        "step1": [
+            {
+                "label": "Ответ",
+                "messages": [
+                    {
+                        "role": "user",
+                        "text": "Сколько будет 2 + 2?"
+                    },
+                    {
+                        "role": "llm",
+                        "text": "2 + 2 = 4"
+                    }
+                ]
+            }
+        ],
+        "step2": [
+            {
+                "label": "Tool call",
+                "messages": [
+                    {
+                        "role": "user",
+                        "text": "Какая погода в Анапе?"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "get_weather({\"city\": \"Анапа\"})"
+                    }
+                ]
+            }
+        ],
+        "step3": [
+            {
+                "label": "Итерация 1",
+                "messages": [
+                    {
+                        "role": "user",
+                        "text": "Какая погода в Москве и Анапе? И сколько сейчас времени?"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "get_weather({\"city\":\"Москва\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "−5°C, снег"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "get_weather({\"city\":\"Анапа\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "+8°C, облачно"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "get_time({\"city\":\"Москва\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "Сейчас в Москва: 20:04:51"
+                    }
+                ]
+            },
+            {
+                "label": "Итерация 2",
+                "messages": [
+                    {
+                        "role": "llm",
+                        "text": "Вот информация:\n\n**Погода:**\n- **Москва:** −5°C, снег ❄️\n- **Анапа:** +8°C, облачно ☁️\n\n**Время:**\n- Сейчас в Москве: 20:04:51"
+                    }
+                ]
+            }
+        ],
+        "step4": [
+            {
+                "label": "Итерация 1",
+                "messages": [
+                    {
+                        "role": "user",
+                        "text": "Посмотри что за проект лежит в текущей директории. Какие зависимости установлены?"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"ls -la\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "total 424\ndrwxr-xr-x   11 human  staff     352 Feb  5 19:57 .\ndrwxr-xr-x  110 human  staff    3520 Feb  5 17:19 ..\n-rw-r--r--@   1 human  staff      93 Feb  5 17:57 .env\ndrwxr-xr-x@  14 pavle..."
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"pwd\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "/Users/human/code/ai_agents_book..."
+                    }
+                ]
+            },
+            {
+                "label": "Итерация 2",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "read_file({\"path\":\"package.json\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "{\n  \"name\": \"ai_agents_book\",\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"repository\": {\n    \"type..."
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"head -20 index.html\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "<!DOCTYPE html>\n<html lang=\"ru\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>ИИ-агенты для самых маленьких — Интерактивный у..."
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"ls -la src/\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "total 152\ndrwxr-xr-x@ 10 human  staff    320 Feb  5 18:47 .\ndrwxr-xr-x  11 human  staff    352 Feb  5 19:57 ..\n-rw-r--r--@  1 human  staff    538 Feb  5 18:47 01-basic-call.ts\n-rw-r--r--@  1 ..."
+                    }
+                ]
+            },
+            {
+                "label": "Итерация 3",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"ls -la node_modules/\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "total 8\ndrwxr-xr-x@   6 human  staff   192 Feb  5 19:19 .\ndrwxr-xr-x   11 human  staff   352 Feb  5 19:57 ..\ndrwxr-xr-x@   3 human  staff    96 Feb  5 19:19 .bin\n-rw-r--r--@   1 human  sta..."
+                    }
+                ]
+            },
+            {
+                "label": "Итог",
+                "messages": [
+                    {
+                        "role": "llm",
+                        "text": "## Описание проекта\n\nВ текущей директории находится проект **\"ai_agents_book\"** - это интерактивный учебник \"ИИ-агенты для самых маленьких\".\n\n### Структура проекта:\n- 📁 **src/** - содержит 8 TypeScript файлов с примерами агентов (от базовых до интерактивных)\n- 📄 **index.html** - интерактивный веб-учебник на русском языке\n- 📄 **package.json** - конфигурация npm проекта\n- 📄 **.env** - файл с переменными окружения\n- 📁 **.git/** - Git репозиторий\n\n### Установленные зависимости:\n\nСогласно `package.json`, в проекте установлены **2 основные зависимости**:\n\n1. **`dotenv`** (версия ^17.2.3) - для работы с переменными окружения из .env файла\n2. **`openai`** (версия ^6.17.0) - официальная библиотека OpenAI API для работы с GPT моделями\n\n### Примеры кода в проекте:\nПроект содержит последовательные примеры создания ИИ-агентов:\n- 01-basic-call.ts - базовый вызов API\n- 02-with-tool.ts - работа с инструментами\n- 03-agent-loop.ts - цикл агента\n- 04-real-tools.ts - реальные инструменты\n- 05-skills.ts - навыки агента\n- 06-planning.ts - планирование действий\n- 07-adaptive-agent.ts - адаптивный агент\n- 08-interactive-agent.ts - интерактивный агент\n\nЭто образовательный проект для изучения разработки ИИ-агентов с использованием OpenAI API! 🤖"
+                    }
+                ]
+            }
+        ],
+        "step5": [
+            {
+                "label": "Итерация 1",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "list_dir({\"path\":\".\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "total 424\ndrwxr-xr-x   11 human  staff     352 Feb  5 19:57 .\ndrwxr-xr-x  110 human  staff    3520 Feb  5 17:19 ..\n-rw-r--r--@   1 human  sta"
+                    }
+                ]
+            },
+            {
+                "label": "Итерация 2–4",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"find src -name \\\"*.ts\\\" -type f\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "src/08-interactive-agent.ts\nsrc/05-skills.ts\nsrc/06-planning.ts\nsrc/07-adaptive-agent.ts\nsrc/04-real-tools.ts\nsrc/02-with-tool.ts\nsrc/03-agent-loop.ts"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"wc -l src/*.ts\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "23 src/01-basic-call.ts\n      61 src/02-with-tool.ts\n     118 src/03-agent-loop.ts\n     123 src/04-real-tools.ts\n     217 src/05-skills.ts\n     353 sr"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "list_dir({\"path\":\"src\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "total 152\ndrwxr-xr-x@ 10 human  staff    320 Feb  5 18:47 .\ndrwxr-xr-x  11 human  staff    352 Feb  5 19:57 ..\n-rw-r--r--@  1 human  staff   "
+                    }
+                ]
+            },
+            {
+                "label": "Итерация 5–6",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "read_file({\"path\":\"package.json\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "{\n  \"name\": \"ai_agents_book\",\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test speci"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "write_file({\"path\":\"STATS.md\",\"content\":\"# Статистика проекта AI Agents Book\\n\\n## Общая информация\\n- **Название проекта:** ai_agents_book\\n- **Версия:** 1.0.0\\n- **Репозиторий:** https://github.com/region23/ai_agents_book\\n\\n## Статистика кода\\n\\n### Общее количество строк в .ts файлах\\n**Всего строк кода: 1,688**\\n\\n### Детализация по файлам\\n\\n| Файл | Строк кода | Размер | Описание |\\n|------|------------|---------|----------|\\n| `01-basic-call.ts` | 23 | 538 B | Базовый вызов |\\n| `02-with-tool.ts` | 61 | 1.8 KB | Работа с инструментами |\\n| `03-agent-loop.ts` | 118 | 4.0 KB | Цикл агента |\\n| `04-real-tools.ts` | 123 | 3.8 KB | Реальные инструменты |\\n| `05-skills.ts` | 217 | 7.4 KB | Навыки агента |\\n| `06-planning.ts` | 353 | 12.9 KB | Планирование |\\n| `07-adaptive-agent.ts` | 359 | 13.1 KB | Адаптивный агент |\\n| `08-interactive-agent.ts` | 434 | 17.2 KB | Интерактивный агент |\\n\\n### Распределение кода\\n\\n```\\n├── Простые примеры (01-04): 325 строк (19.3%)\\n├── Средние примеры (05): 217 строк (12.9%)\\n└── Сложные примеры (06-08): 1,146 строк (67.8%)\\n```\\n\\n## Структура проекта\\n\\n```\\n.\\n├── src/\\n│   ├── 01-basic-call.ts\\n│   ├── 02-with-tool.ts\\n│   ├── 03-agent-loop.ts\\n│   ├── 04-real-tools.ts\\n│   ├── 05-skills.ts\\n│   ├── 06-planning.ts\\n│   ├── 07-adaptive-agent.ts\\n│   └── 08-interactive-agent.ts\\n├── index.html\\n├── package.json\\n└── .env\\n```\\n\\n## Зависимости\\n\\n- **dotenv** ^17.2.3 - Управление переменными окружения\\n- **openai** ^6.17.0 - OpenAI API клиент\\n\\n## Прогресс разработки\\n\\nПроект содержит 8 последовательных примеров, демонстрирующих эволюцию AI агентов:\\n1. ✅ Базовый вызов API\\n2. ✅ Интеграция инструментов\\n3. ✅ Агентский цикл\\n4. ✅ Реальные инструменты\\n5. ✅ Система навыков\\n6. ✅ Планирование задач\\n7. ✅ Адаптивное поведение\\n8. ✅ Интерактивный агент\\n\\n---\\n*Статистика сгенерирована автоматически*\\n\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "Файл STATS.md записан"
+                    }
+                ]
+            },
+            {
+                "label": "Итог",
+                "messages": [
+                    {
+                        "role": "llm",
+                        "text": "Отлично! Я завершил анализ проекта. Вот что было сделано:\n\n## Результаты анализа:\n\n📊 **Общее количество строк кода в .ts файлах: 1,688 строк**\n\n### Детализация:\n- `01-basic-call.ts` - 23 строки\n- `02-with-tool.ts` - 61 строка\n- `03-agent-loop.ts` - 118 строк\n- `04-real-tools.ts` - 123 строки\n- `05-skills.ts` - 217 строк\n- `06-planning.ts` - 353 строки\n- `07-adaptive-agent.ts` - 359 строк\n- `08-interactive-agent.ts` - 434 строки (самый большой файл)\n\n### Наблюдения:\n- Проект демонстрирует прогрессивное усложнение: от простого вызова API (23 строки) до интерактивного агента (434 строки)\n- Сложные примеры (06-08) составляют 67.8% всего кода\n- Проект использует OpenAI API и dotenv для управления конфигурацией\n\nФайл **STATS.md** создан с подробной статистикой, включая таблицы, распределение кода и структуру проекта! 📝"
+                    }
+                ]
+            }
+        ],
+        "step6": [
+            {
+                "label": "План",
+                "messages": [
+                    {
+                        "role": "llm",
+                        "text": "🎯 Цель: Проанализировать TypeScript файлы в src/, найти дублирование кода и создать отчёт с рекомендациями по рефакторингу\n📝 Шагов: 6\n\n   1. [run_bash] Найти все .ts файлы в директории src/\n      └─ Получить список всех TypeScript файлов для последующего анализа\n   2. [read_file] Прочитать содержимое каждого найденного .ts файла\n      └─ Загрузить код файлов для анализа дублирования\n   3. [run_bash] Проанализировать импорты во всех файлах\n      └─ Извлечь строки импортов из всех файлов для поиска повторяющихся зависимостей\n   4. [run_bash] Найти похожие функции и паттерны кода\n      └─ Использовать grep/awk для поиска повторяющихся сигнатур функций и кодовых паттернов\n   5. [run_bash] Подсчитать статистику по дублированию\n      └─ Агрегировать данные о частоте встречаемости импортов и паттернов\n   6. [write_file] Создать файл REFACTORING.md с рекомендациями\n      └─ Записать структурированный отчёт с найденными дублированиями и конкретными предложениями по рефакторингу"
+                    }
+                ]
+            },
+            {
+                "label": "Сбор данных",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"find src/ -type f -name \\\"*.ts\\\" 2>/dev/null | sort\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "src/01-basic-call.ts\nsrc/02-with-tool.ts\nsrc/03-agent-loop.ts\nsrc/04-real-tools.ts\nsrc/05-skills.ts\nsrc/06-planning.ts\ns"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "read_file({\"path\":\"src/01-basic-call.ts\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "// src/01-basic-call.ts\nimport OpenAI from \"openai\";\nimport dotenv from \"dotenv\";\n\ndotenv.config();\n\nconst client = new "
+                    }
+                ]
+            },
+            {
+                "label": "Статистика",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"grep -h \\\"^import\\\" src/*.ts | sort | uniq -c | sort -rn\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "8 import dotenv from \"dotenv\";\n   8 import OpenAI from \"openai\";\n   5 import { execSync } from \"child_process\";\n   2 imp"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"wc -l src/*.ts | tail -1\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "1688 total"
+                    }
+                ]
+            },
+            {
+                "label": "Запись отчёта",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "write_file({path: \"REFACTORING.md\", content: [19189 chars]})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "✅ Файл REFACTORING.md записан (19189 байт)"
+                    }
+                ]
+            },
+            {
+                "label": "Итог",
+                "messages": [
+                    {
+                        "role": "llm",
+                        "text": "✅ Выполнение завершено.\nИтог: ## ✅ Задача выполнена!\n\n### Итоги анализа:\n\n📊 **Проанализировано**: 8 TypeScript файлов (1688 строк кода)\n\n🔍 **Найдено дублирование**:\n\n1. **Критичное**:\n   - Инициализация OpenAI клиента (8 файлов) - ~40 строк дублирования\n   - Tool definitions (run_bash, read_file, write_file, think) - ~200 строк дублирования\n   - Tool handlers (5 файлов) - ~150 строк дублирования\n\n2. **Среднее**:\n   - Логика Agent Loop (2 файла) - ~80 строк дублирования\n\n3. **Статистика упоминаний**:\n   - `run_bash`: 14 упоминаний\n   - `read_file`: 14 упоминаний\n   - `write_file`: 18 упоминаний\n   - `think`: 11 упоминаний\n\n📝 **Создан отчёт**: `REFACTORING.md` (19KB)\n\n### Основные рекомендации:\n\n1. ✅ **Высокий приоритет** - Создать модули:\n   - `src/lib/client.ts` - централизованный OpenAI клиент\n   - `src/lib/tools-registry.ts` - определения инструментов\n   - `src/lib/tool-handlers.ts` - реализации обработчиков\n\n2. ⚠️ **Средний приоритет** - Унифицировать:\n   - `src/lib/agent-loop.ts` - базовая логика агента\n\n3. ℹ️ **Низкий приоритет** - Организовать:\n   - Структуру skills в отдельные модули\n\n### Потенциальная экономия:\n- **~480 строк кода** (28% от общего объёма)\n- **Снижение дублирования** с 35% до <5%\n- **Улучшение поддерживаемости** и тестируемости\n\nОтчёт содержит конкретные примеры кода, пошаговый план рефакторинга и дополнительные рекомендации по улучшению архитектуры проекта."
+                    }
+                ]
+            }
+        ],
+        "step7": [
+            {
+                "label": "План",
+                "messages": [
+                    {
+                        "role": "user",
+                        "text": "Проанализируй все .ts файлы в директории src/. Найди дублирование кода между файлами (общие паттерны, повторяющиеся импорты, похожие функции). Создай файл REFACTORING.md с конкретными рекомендациями."
+                    },
+                    {
+                        "role": "llm",
+                        "text": "📋 ПЛАН: Проанализировать все .ts файлы в директории src/, найти дублирование кода и создать файл REFACTORING.md с рекомендациями\n──────────────────────────────────────────────────\n  1. [run_bash] Найти все .ts файлы в директории src/ рекурсивно\n     └─ Получить полный список TypeScript файлов для анализа\n  2. [read_file] Прочитать содержимое каждого найденного .ts файла\n     └─ Получить исходный код всех файлов для анализа дублирования\n  3. [run_bash] Проанализировать импорты во всех файлах\n     └─ Извлечь все строки импортов для выявления повторяющихся паттернов\n  4. [read_file] Идентифицировать повторяющиеся паттерны кода, похожие функции и общие структуры\n     └─ Детальный анализ содержимого файлов для поиска дублирования логики\n  5. [write_file] Создать файл REFACTORING.md с структурированными рекомендациями по рефакторингу\n     └─ Сохранить результаты анализа с конкретными предложениями по устранению дублирования\n──────────────────────────────────────────────────"
+                    }
+                ]
+            },
+            {
+                "label": "Сбор файлов",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"find src/ -name \\\"*.ts\\\" -type f 2>/dev/null | sort\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "src/01-basic-call.ts\nsrc/02-with-tool.ts\nsrc/03-agent-loop.ts\nsrc/04-real-tools.ts\nsrc/05-skills.ts\nsrc/06-planning.ts\ns"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "read_file({\"path\":\"src/01-basic-call.ts\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "// src/01-basic-call.ts\nimport OpenAI from \"openai\";\nimport dotenv from \"dotenv\";\n\ndotenv.config();\n\nconst client = new "
+                    }
+                ]
+            },
+            {
+                "label": "Анализ",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"grep -n \\\"import OpenAI\\\" src/*.ts\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "src/01-basic-call.ts:2:import OpenAI from \"openai\";\nsrc/02-with-tool.ts:2:import OpenAI from \"openai\";\nsrc/03-agent-loop"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"grep -n \\\"run_bash:\\\" src/*.ts | head -20\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "src/04-real-tools.ts:52:    run_bash: ({ command }) => {\nsrc/05-skills.ts:108:        run_bash: ({ command }) => {\nsrc/0"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"wc -l src/*.ts\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "23 src/01-basic-call.ts\n      61 src/02-with-tool.ts\n     118 src/03-agent-loop.ts\n     123 src/04-real-tools.ts\n     21"
+                    }
+                ]
+            },
+            {
+                "label": "Итог",
+                "messages": [
+                    {
+                        "role": "llm",
+                        "text": "🎉 Агент завершил задачу."
+                    }
+                ]
+            }
+        ],
+        "step8": [
+            {
+                "label": "Запрос",
+                "messages": [
+                    {
+                        "role": "user",
+                        "text": "Помоги мне создать новый TypeScript проект. Спроси что за проект, предложи варианты структуры, настрой всё."
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "ask_user_input({ question: \"Какой проект ты хочешь создать?\", hint: \"Например: REST API, CLI утилита, библиотека, веб-приложение, бот и т.д.\" })"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "Пользователь ввёл: \"REST API\""
+                    }
+                ]
+            },
+            {
+                "label": "Выборы",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "ask_user_choice({ question: \"Какой подход к структуре проекта тебе больше подходит?\", options: [\"Express.js (классика) — Минималистичный фреймворк, гибкий и популярный. Подходит для проектов любого размера.\", \"Fastify (производительность) — Быстрый и современный фреймворк с отличной поддержкой TypeScript. Встроенная валидация через JSON Schema.\", \"NestJS (enterprise) — Полноценный фреймворк с архитектурой как в Angular. Dependency Injection, модульность.\", \"Минималистичный (без фреймворка) — Чистый Node.js http/https модуль. Полный контроль, но нужно многое делать вручную.\"] })"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "Пользователь выбрал: \"Express.js (классика)\" — Минималистичный фреймворк, гибкий и популярный. Подходит для проектов любого размера."
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "ask_user_choice({ question: \"Какую структуру папок и архитектуру предпочитаешь?\", options: [\"Простая (Flat) — Минимальная структура: src/index.ts, routes, middleware. Подходит для быстрого старта, прототипов, маленьких API.\", \"Слоистая (Layered) — Controllers → Services → Models/DAL. Чёткое разделение ответственности.\", \"Модульная (Feature-based) — Папки по фичам (users/, posts/), каждая со своими routes/controller/service.\"] })"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "Пользователь выбрал: \"Простая (Flat)\" — Минимальная структура: src/index.ts, routes, middleware. Подходит для быстрого старта, прототипов, маленьких API."
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "ask_user_input({ question: \"Как назовём проект?\", hint: \"Например: my-api, user-service, blog-backend\", default_value: \"my-express-api\" })"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "Пользователь ввёл: \"mini-api\""
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "ask_user_choice({ question: \"Какие дополнительные инструменты включить в проект?\", options: [\"Минимальный набор — TypeScript + Express + nodemon. Без лишнего, быстрый старт.\", \"Стандартный — + ESLint, Prettier, dotenv, cors, helmet. Хорошая база для реального проекта.\", \"Полный — + всё из стандартного + Jest (тесты), Zod (валидация), Winston (логи), Docker. Production-ready.\"] })"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "Пользователь выбрал: \"Минимальный набор\" — TypeScript + Express + nodemon. Без лишнего, быстрый старт."
+                    }
+                ]
+            },
+            {
+                "label": "Подтверждение",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "ask_user_confirm({ question: \"Создать проект в /Users/human/code/ai_agents_book/mini-api?\", details: \"Будет создана новая папка mini-api с полной структурой TypeScript + Express проекта\" })"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "Пользователь подтвердил: ДА"
+                    }
+                ]
+            },
+            {
+                "label": "Создание файлов",
+                "messages": [
+                    {
+                        "role": "tool_call",
+                        "text": "run_bash({\"command\":\"mkdir -p mini-api/src/routes mini-api/src/middleware\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": ""
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "write_file({path: \"mini-api/package.json\", content: \"... (ещё 10 строк)\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "✅ Файл mini-api/package.json записан (одобрено пользователем)"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "write_file({path: \"mini-api/tsconfig.json\", content: \"... (ещё 4 строк)\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "✅ Файл mini-api/tsconfig.json записан (одобрено пользователем)"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "write_file({path: \"mini-api/src/index.ts\", content: \"... (ещё 23 строк)\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "✅ Файл mini-api/src/index.ts записан (одобрено пользователем)"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "write_file({path: \"mini-api/src/routes/api.ts\", content: \"... (ещё 8 строк)\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "✅ Файл mini-api/src/routes/api.ts записан (одобрено пользователем)"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "write_file({path: \"mini-api/.gitignore\", content: \"... (ещё 19 строк)\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "✅ Файл mini-api/.gitignore записан (одобрено пользователем)"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "write_file({path: \"mini-api/README.md\", content: \"... (ещё 72 строк)\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "✅ Файл mini-api/README.md записан (одобрено пользователем)"
+                    },
+                    {
+                        "role": "tool_call",
+                        "text": "write_file({path: \"mini-api/nodemon.json\", content: \"...\"})"
+                    },
+                    {
+                        "role": "tool_result",
+                        "text": "✅ Файл mini-api/nodemon.json записан (одобрено пользователем)"
+                    }
+                ]
+            },
+            {
+                "label": "Итог",
+                "messages": [
+                    {
+                        "role": "llm",
+                        "text": "🤖 Идеально! 🎉 \n\n## ✅ Проект mini-api успешно создан!\n\n### 📁 Структура проекта:\n```\nmini-api/\n├── src/\n│   ├── index.ts          # Главный файл приложения\n│   ├── routes/\n│   │   └── api.ts        # Примеры API endpoints\n│   └── middleware/       # Папка для middleware (пуста)\n├── .gitignore\n├── package.json\n├── tsconfig.json\n├── nodemon.json\n└── README.md\n```\n\n### 🚀 Что дальше?\n\n**1. Установить зависимости:**\n```bash\ncd mini-api\nnpm install\n```\n\n**2. Запустить в режиме разработки:**\n```bash\nnpm run dev\n```\n\n**3. Проверить работу:**\n- Открой http://localhost:3000\n- Или `curl http://localhost:3000/api/hello?name=Alex`\n\n### 📝 Что уже настроено:\n\n✅ **TypeScript** с строгими проверками  \n✅ **Express** сервер с базовой настройкой  \n✅ **Nodemon** для авто-перезагрузки  \n✅ **Примеры endpoints** (GET /api/hello, POST /api/echo)  \n✅ **Health check** endpoint  \n✅ **404 обработчик**  \n✅ **.gitignore** для Git  \n✅ **README.md** с документацией  \n\n### 💡 Полезные команды:\n\n- `npm run dev` — разработка с hot-reload\n- `npm run build` — сборка в production\n- `npm start` — запуск собранного проекта\n\nВсё готово к разработке! Хочешь что-то добавить или изменить? 😊"
+                    }
+                ]
+            }
+        ]
+    };
+
+    const escapeHtml = (value) => String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    function initDemoPlayer(player) {
+        const key = player.dataset.demoChat;
+        const steps = demoPlayers[key];
+        if (!steps || steps.length === 0) return;
+
+        const bodyEl = player.querySelector('[data-demo-chat-body]');
+        const labelEl = player.querySelector('[data-demo-label]');
+        const indexEl = player.querySelector('[data-demo-index]');
+        const totalEl = player.querySelector('[data-demo-total]');
+        const prevBtn = player.querySelector('[data-demo-prev]');
+        const nextBtn = player.querySelector('[data-demo-next]');
+
+        let index = 0;
+        totalEl.textContent = String(steps.length);
+
+        const render = () => {
+            const step = steps[index];
+            const messages = step.messages || [];
+            bodyEl.innerHTML = messages.map((m) => {
+                const role = m.role || "llm";
+                const label = role === "tool_call" ? "tool_call"
+                    : role === "tool_result" ? "tool_result"
+                    : role === "user" ? "user"
+                    : "LLM";
+                const cls = role === "tool_call" ? "toolcall"
+                    : role === "tool_result" ? "toolresult"
+                    : role === "user" ? "user"
+                    : "llm";
+                const text = escapeHtml(m.text || "");
+                return `\n<div class="chat-msg ${cls}">\n  <div class="chat-msg-label">${label}</div>\n  <div>${text}</div>\n</div>`;
+            }).join("");
+            labelEl.textContent = step.label || `Шаг ${index + 1}`;
+            indexEl.textContent = String(index + 1);
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === steps.length - 1;
+        };
+
+        prevBtn.addEventListener('click', () => {
+            if (index > 0) {
+                index -= 1;
+                render();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (index < steps.length - 1) {
+                index += 1;
+                render();
+            }
+        });
+
+        render();
+    }
+
+    document.querySelectorAll('[data-demo-chat]').forEach(initDemoPlayer);
+
+    // ====== Tooltip focus ======
+    document.querySelectorAll('.term').forEach(term => {
+        term.setAttribute('tabindex', '0');
+    });
+
+    // ====== Smooth Scroll for CTA ======
+    document.querySelector('.hero-cta')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('step-0')?.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // ====== Scroll-based step activation ======
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const step = entry.target;
+                if (step.dataset.step) {
+                    updateProgress(step.dataset.step);
+                }
+            }
+        });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('.step').forEach(step => observer.observe(step));
+</script>
 </body>
 </html>
