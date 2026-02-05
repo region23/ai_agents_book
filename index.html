@@ -1061,9 +1061,18 @@ main();
 
             <button class="demo-btn" data-demo="demo-step-1">▶ Запустить демо</button>
 
-            <div class="terminal-output demo-output" id="demo-step-1" aria-live="polite">
-2 + 2 = 4
-</div>
+                        <div class="demo-output demo-player" id="demo-step-1" data-demo-chat="step1" aria-live="polite">
+                <div class="demo-player-header">
+                    <div class="demo-player-title">Демо в формате диалога</div>
+                    <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span></div>
+                </div>
+                <div class="demo-chat-body" data-demo-chat-body></div>
+                <div class="demo-player-controls">
+                    <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                    <div class="demo-step-label" data-demo-label></div>
+                    <button class="demo-step-btn" data-demo-next>Далее →</button>
+                </div>
+            </div>
             <div class="output-note" data-demo-note="demo-step-1">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1181,21 +1190,18 @@ main();
 
             <button class="demo-btn" data-demo="demo-step-2">▶ Запустить демо</button>
 
-            <div class="terminal-output demo-output" id="demo-step-2" aria-live="polite">
-Content:
-
-Tool calls: [
-  {
-    "type": "function",
-    "index": 0,
-    "id": "toolu_vrtx_018LcrQKqANi7YFc3aCfyyqL",
-    "function": {
-      "name": "get_weather",
-      "arguments": "{\"city\": \"Анапа\"}"
-    }
-  }
-]
-</div>
+                        <div class="demo-output demo-player" id="demo-step-2" data-demo-chat="step2" aria-live="polite">
+                <div class="demo-player-header">
+                    <div class="demo-player-title">Демо в формате диалога</div>
+                    <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span></div>
+                </div>
+                <div class="demo-chat-body" data-demo-chat-body></div>
+                <div class="demo-player-controls">
+                    <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                    <div class="demo-step-label" data-demo-label></div>
+                    <button class="demo-step-btn" data-demo-next>Далее →</button>
+                </div>
+            </div>
             <div class="output-note" data-demo-note="demo-step-2">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1361,26 +1367,18 @@ agentLoop("Какая погода в Москве и Анапе? И сколь�
 
             <button class="demo-btn" data-demo="demo-step-3">▶ Запустить демо</button>
 
-            <div class="terminal-output demo-output" id="demo-step-3" aria-live="polite">
-
---- Итерация 1 ---
-Tool: get_weather({"city":"Москва"})
-Результат: −5°C, снег
-Tool: get_weather({"city":"Анапа"})
-Результат: +8°C, облачно
-Tool: get_time({"city":"Москва"})
-Результат: Сейчас в Москва: 18:11:51
-
---- Итерация 2 ---
-Ответ: Вот актуальная информация:
-
-**Погода:**
-- **Москва**: −5°C, снег
-- **Анапа**: +8°C, облачно
-
-**Время:**
-- Сейчас в Москве: 18:11:51
-</div>
+                        <div class="demo-output demo-player" id="demo-step-3" data-demo-chat="step3" aria-live="polite">
+                <div class="demo-player-header">
+                    <div class="demo-player-title">Демо в формате диалога</div>
+                    <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span></div>
+                </div>
+                <div class="demo-chat-body" data-demo-chat-body></div>
+                <div class="demo-player-controls">
+                    <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                    <div class="demo-step-label" data-demo-label></div>
+                    <button class="demo-step-btn" data-demo-next>Далее →</button>
+                </div>
+            </div>
             <div class="output-note" data-demo-note="demo-step-3">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1567,72 +1565,18 @@ agentLoop("Посмотри что за проект лежит в текуще�
 
             <button class="demo-btn" data-demo="demo-step-4">▶ Запустить демо</button>
 
-            <div class="terminal-output demo-output" id="demo-step-4" aria-live="polite">
-
---- Итерация 1 ---
-Tool: run_bash({"command":"ls -la"})
-→ total 16
-drwxr-xr-x@ 6 pavlenko  wheel  192 Feb  5 18:21 .
-drwxr-xr-x@ 8 pavlenko  wheel  256 Feb  5 18:03 ..
--rw-r--r--@ 1 pavlenko  wheel   93 Feb  5 18:21 README.md
--rw-r--r--@ 1 pavlenko  wheel  143 Feb  5 18:21 package.json
-drwxr-xr-x@ 3 pavlenko  wheel   96 Feb  5 18:02 services
-drwxr-xr-x@ 7 pavlenko  wheel  224 Feb  5 18:00 src
-
---- Итерация 2 ---
-Tool: read_file({"path":"README.md"})
-→ # simple-agent
-
-Учебный проект для демонстрации AI-агента.
-
-Tool: read_file({"path":"package.json"})
-→ {
-  "name": "simple-agent",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Учебный проект для AI-агентов"
-}
-
-
---- Итерация 3 ---
-Tool: run_bash({"command":"find . -type f -name \"*.py\" -o -name \"*.js\" -o -name \"*.ts\" -o -name \"*.json\" | head -20"})
-→ ./package.json
-./services/index.ts
-./src/05-skills.ts
-./src/04-real-tools.ts
-./src/02-with-tool.ts
-./src/03-agent-loop.ts
-./src/01-basic-call.ts
-
---- Итерация 4 ---
-Tool: run_bash({"command":"tree -L 2 -I 'node_modules'"})
-→ Команда запрещена allowlist: tree -L 2 -I 'node_modules'
-
---- Итерация 5 ---
-Tool: run_bash({"command":"ls -R"})
-→ README.md
-package.json
-services
-src
-
-./services:
-index.ts
-
-./src:
-01-basic-call.ts
-02-with-tool.ts
-03-agent-loop.ts
-04-real-tools.ts
-05-skills.ts
-
---- Итерация 6 ---
-Tool: read_file({"path":"src/01-basic-call.ts"})
-→ // basic call example
-export const add = (a:number,b:number)=&gt;a+b;
-
-Tool: read_file({"path":"services/index.ts"})
-→ // service placeholder
-</div>
+                        <div class="demo-output demo-player" id="demo-step-4" data-demo-chat="step4" aria-live="polite">
+                <div class="demo-player-header">
+                    <div class="demo-player-title">Демо в формате диалога</div>
+                    <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span></div>
+                </div>
+                <div class="demo-chat-body" data-demo-chat-body></div>
+                <div class="demo-player-controls">
+                    <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                    <div class="demo-step-label" data-demo-label></div>
+                    <button class="demo-step-btn" data-demo-next>Далее →</button>
+                </div>
+            </div>
             <div class="output-note" data-demo-note="demo-step-4">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1892,107 +1836,18 @@ main();
 
             <button class="demo-btn" data-demo="demo-step-5">▶ Запустить демо</button>
 
-            <div class="terminal-output demo-output" id="demo-step-5" aria-live="polite">
-
---- Итерация 1 ---
-list_dir({"path":"."})
-README.md
-package.json
-services
-src
-list_dir({"path":"src"})
-01-basic-call.ts
-02-with-tool.ts
-03-agent-loop.ts
-04-real-tools.ts
-05-skills.ts
-
---- Итерация 2 ---
-run_bash({"command":"wc -l src/*.ts"})
-2 src/01-basic-call.ts
-       2 src/02-with-tool.ts
-       2 src/03-agent-loop.ts
-       2 src/04-real-tools.ts
-       2 src/05-skills.ts
-      10 total
-run_bash({"command":"find src -name \"*.ts\" -type f"})
-src/05-skills.ts
-src/04-real-tools.ts
-src/02-with-tool.ts
-src/03-agent-loop.ts
-src/01-basic-call.ts
-
---- Итерация 3 ---
-run_bash({"command":"cat src/01-basic-call.ts"})
-// basic call example
-export const add = (a:number,b:number)=&gt;a+b;
-run_bash({"command":"cat src/02-with-tool.ts"})
-// tool example
-export const tool = () =&gt; "ok";
-run_bash({"command":"cat src/03-agent-loop.ts"})
-// agent loop example
-export const loop = () =&gt; true;
-run_bash({"command":"cat src/04-real-tools.ts"})
-// real tools example
-export const run = () =&gt; null;
-run_bash({"command":"cat src/05-skills.ts"})
-// skills example
-export const skill = {};
-
---- Итерация 4 ---
-write_file({"path":"STATS.md","content":"# Статистика кода проекта
-
-## Общая информация
-
-**Дата создания отчёта:** 2024  
-**Папка анализа:** `src/`
-
-## Статистика по файлам
-
-| Файл | Строк кода | Описание |
-|------|------------|----------|
-| `01-basic-call.ts` | 2 | Пример базового вызова |
-| `02-with-tool.ts` | 2 | Пример с инструментом |
-| `03-agent-loop.ts` | 2 | Пример агентского цикла |
-| `04-real-tools.ts` | 2 | Пример реальных инструментов |
-| `05-skills.ts` | 2 | Пример навыков |
-
-## Итого
-
-- **Всего файлов:** 5
-- **Всего строк кода:** 10
-- **Средний размер файла:** 2 строки
-- **Язык программирования:** TypeScript
-
-## Структура проекта
-
-```
-src/
-├── 01-basic-call.ts
-├── 02-with-tool.ts
-├── 03-agent-loop.ts
-├── 04-real-tools.ts
-└── 05-skills.ts
-```
-
----
-*Отчёт сгенерирован автоматически*
-"})
-OK: записан STATS.md
-
---- Итерация 5 ---
-Готово! ✅ 
-
-Я создал файл **STATS.md** с кратким отчётом о коде в папке `src`. 
-
-**Основные результаты:**
-- 📁 Всего файлов: **5**
-- 📝 Всего строк кода: **10**
-- 📊 Средний размер файла: **2 строки**
-- 💻 Язык: **TypeScript**
-
-Все файлы содержат примеры различных концепций (базовый вызов, инструменты, агентский цикл, навыки).
-</div>
+                        <div class="demo-output demo-player" id="demo-step-5" data-demo-chat="step5" aria-live="polite">
+                <div class="demo-player-header">
+                    <div class="demo-player-title">Демо в формате диалога</div>
+                    <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span></div>
+                </div>
+                <div class="demo-chat-body" data-demo-chat-body></div>
+                <div class="demo-player-controls">
+                    <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                    <div class="demo-step-label" data-demo-label></div>
+                    <button class="demo-step-btn" data-demo-next>Далее →</button>
+                </div>
+            </div>
             <div class="output-note" data-demo-note="demo-step-5">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -2418,49 +2273,18 @@ main();
 
             <button class="demo-btn" data-demo="demo-step-6">▶ Запустить демо</button>
 
-            <div class="terminal-output demo-output" id="demo-step-6" aria-live="polite">
-
-📋 ПЛАН: Анализ дублирования кода в папке src и создание REFACTORING.md
-  1. [read_file] Прочитать содержимое файла src/01-basic-call.ts для анализа кода
-  2. [read_file] Прочитать содержимое файла src/02-with-tool.ts для анализа кода
-  3. [read_file] Прочитать содержимое файла src/03-agent-loop.ts для анализа кода
-  4. [read_file] Прочитать содержимое файла src/04-real-tools.ts для анализа кода
-  5. [read_file] Прочитать содержимое файла src/05-skills.ts для завершения анализа
-  6. [write_file] Создать файл REFACTORING.md с результатами анализа дублирования кода и рекомендациями по рефакторингу
-
-⚡ ВЫПОЛНЕНИЕ
-  💭 Начинаем с чтения первого файла из списка, чтобы понять структуру и найти повторяющиеся паттерны
-  🔧 read_file({"path":"src/01-basic-call.ts"})
-  → // basic call example
-export const add = (a:number,b:number)=&gt;a+b;
-
-  💭 Читаем второй файл для сравнения с первым и выявления общих фрагментов
-  🔧 read_file({"path":"src/02-with-tool.ts"})
-  → // tool example
-export const tool = () =&gt; "ok";
-
-  💭 Продолжаем анализ третьего файла для поиска дублирования
-  🔧 read_file({"path":"src/03-agent-loop.ts"})
-  → // agent loop example
-export const loop = () =&gt; true;
-
-  💭 Анализируем четвертый файл на предмет повторяющихся конструкций
-  🔧 read_file({"path":"src/04-real-tools.ts"})
-  → // real tools example
-export const run = () =&gt; null;
-
-  💭 Читаем последний файл из списка для полного анализа всех файлов в папке src
-  🔧 read_file({"path":"src/05-skills.ts"})
-  → // skills example
-export const skill = {};
-
-  💭 На основе прочитанных файлов составляем отчет с выявленными дубликатами кода, общими паттернами и предложениями по их устранению через выделение общих функций/утилит
-  🔧 write_file({"path":"REFACTORING.md","content":"# REFACTORING
-
-(Заполнить выводы по дублированию кода)
-"})
-  → OK: записан REFACTORING.md
-</div>
+                        <div class="demo-output demo-player" id="demo-step-6" data-demo-chat="step6" aria-live="polite">
+                <div class="demo-player-header">
+                    <div class="demo-player-title">Демо в формате диалога</div>
+                    <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span></div>
+                </div>
+                <div class="demo-chat-body" data-demo-chat-body></div>
+                <div class="demo-player-controls">
+                    <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                    <div class="demo-step-label" data-demo-label></div>
+                    <button class="demo-step-btn" data-demo-next>Далее →</button>
+                </div>
+            </div>
             <div class="output-note" data-demo-note="demo-step-6">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="run-command">
@@ -2915,39 +2739,18 @@ adaptiveAgent(task);
 
             <button class="demo-btn" data-demo="demo-step-7">▶ Запустить демо</button>
 
-            <div class="terminal-output demo-output" id="demo-step-7" aria-live="polite">
-
-📋 ПЛАН 1
-  1. Просмотреть структуру проекта и список файлов в корневой директории
-  2. Прочитать основную документацию проекта для понимания его назначения и структуры
-  3. Найти основные исходные файлы проекта для анализа используемых технологий
-  4. Создать файл отчёта с результатами анализа проекта
-
-🔧 list_dir({"path":"."})
-→ README.md
-package.json
-services
-src
-
-🔧 request_replan({"reason":"Найдены новые данные","completed_steps":["Просмотреть структуру проекта и список файлов в корневой директории"],"discoveries":["обнаружена папка services/"]})
-
-📋 ПЛАН 2
-  1. Изучить содержимое папки services/ для понимания архитектуры сервисов
-  2. Прочитать основную документацию проекта для понимания его назначения
-  3. Найти основные исходные файлы для определения используемых технологий
-  4. Создать итоговый отчёт с результатами анализа проекта
-
-🔧 list_dir({"path":"services"})
-→ index.ts
-
-🔧 read_file({"path":"README.md"})
-→ # simple-agent
-
-Учебный проект для демонстрации AI-агента.
-
-
-Готово!
-</div>
+                        <div class="demo-output demo-player" id="demo-step-7" data-demo-chat="step7" aria-live="polite">
+                <div class="demo-player-header">
+                    <div class="demo-player-title">Демо в формате диалога</div>
+                    <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span></div>
+                </div>
+                <div class="demo-chat-body" data-demo-chat-body></div>
+                <div class="demo-player-controls">
+                    <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                    <div class="demo-step-label" data-demo-label></div>
+                    <button class="demo-step-btn" data-demo-next>Далее →</button>
+                </div>
+            </div>
             <div class="output-note" data-demo-note="demo-step-7">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -3711,6 +3514,218 @@ main();
 
     // ====== Demo Player (Step-by-step) ======
     const demoPlayers = {
+        step1: [
+            {
+                label: "Запрос",
+                messages: [
+                    { role: "user", text: "Сколько будет 2 + 2?" },
+                    { role: "llm", text: "2 + 2 = 4" },
+                ],
+            },
+        ],
+        step2: [
+            {
+                label: "Tool call",
+                messages: [
+                    { role: "user", text: "Какая погода в Анапе?" },
+                    { role: "tool_call", text: "get_weather({\"city\":\"Анапа\"})" },
+                ],
+            },
+        ],
+        step3: [
+            {
+                label: "Итерация 1",
+                messages: [
+                    { role: "user", text: "Какая погода в Москве и Анапе? И сколько сейчас времени?" },
+                    { role: "tool_call", text: "get_weather({\"city\":\"Москва\"})" },
+                    { role: "tool_result", text: "−5°C, снег" },
+                    { role: "tool_call", text: "get_weather({\"city\":\"Анапа\"})" },
+                    { role: "tool_result", text: "+8°C, облачно" },
+                    { role: "tool_call", text: "get_time({\"city\":\"Москва\"})" },
+                    { role: "tool_result", text: "Сейчас в Москва: 18:11:51" },
+                ],
+            },
+            {
+                label: "Итерация 2",
+                messages: [
+                    {
+                        role: "llm",
+                        text: `Вот актуальная информация:\n\nПогода:\n- Москва: −5°C, снег\n- Анапа: +8°C, облачно\n\nВремя:\n- Сейчас в Москве: 18:11:51`,
+                    },
+                ],
+            },
+        ],
+        step4: [
+            {
+                label: "Итерация 1",
+                messages: [
+                    { role: "user", text: "Посмотри что за проект лежит в текущей директории. Какие зависимости установлены?" },
+                    { role: "tool_call", text: "run_bash({\"command\":\"ls -la\"})" },
+                    {
+                        role: "tool_result",
+                        text: `total 16\ndrwxr-xr-x@ 6 pavlenko  wheel  192 Feb  5 18:21 .\ndrwxr-xr-x@ 8 pavlenko  wheel  256 Feb  5 18:03 ..\n-rw-r--r--@ 1 pavlenko  wheel   93 Feb  5 18:21 README.md\n-rw-r--r--@ 1 pavlenko  wheel  143 Feb  5 18:21 package.json\ndrwxr-xr-x@ 3 pavlenko  wheel   96 Feb  5 18:02 services\ndrwxr-xr-x@ 7 pavlenko  wheel  224 Feb  5 18:00 src`,
+                    },
+                ],
+            },
+            {
+                label: "Итерация 2",
+                messages: [
+                    { role: "tool_call", text: "read_file({\"path\":\"README.md\"})" },
+                    { role: "tool_result", text: "# simple-agent\n\nУчебный проект для демонстрации AI-агента." },
+                    { role: "tool_call", text: "read_file({\"path\":\"package.json\"})" },
+                    {
+                        role: "tool_result",
+                        text: `{\n  \"name\": \"simple-agent\",\n  \"version\": \"1.0.0\",\n  \"private\": true,\n  \"description\": \"Учебный проект для AI-агентов\"\n}`,
+                    },
+                ],
+            },
+            {
+                label: "Итерация 3",
+                messages: [
+                    {
+                        role: "tool_call",
+                        text: "run_bash({\"command\":\"find . -type f -name \\\"*.py\\\" -o -name \\\"*.js\\\" -o -name \\\"*.ts\\\" -o -name \\\"*.json\\\" | head -20\"})",
+                    },
+                    {
+                        role: "tool_result",
+                        text: "./package.json\n./services/index.ts\n./src/05-skills.ts\n./src/04-real-tools.ts\n./src/02-with-tool.ts\n./src/03-agent-loop.ts\n./src/01-basic-call.ts",
+                    },
+                    { role: "tool_call", text: "run_bash({\"command\":\"tree -L 2 -I 'node_modules'\"})" },
+                    { role: "tool_result", text: "Команда запрещена allowlist: tree -L 2 -I 'node_modules'" },
+                    { role: "tool_call", text: "run_bash({\"command\":\"ls -R\"})" },
+                    {
+                        role: "tool_result",
+                        text: "README.md\npackage.json\nservices\nsrc\n\n./services:\nindex.ts\n\n./src:\n01-basic-call.ts\n02-with-tool.ts\n03-agent-loop.ts\n04-real-tools.ts\n05-skills.ts",
+                    },
+                ],
+            },
+            {
+                label: "Итерация 4",
+                messages: [
+                    { role: "tool_call", text: "read_file({\"path\":\"src/01-basic-call.ts\"})" },
+                    { role: "tool_result", text: "// basic call example\nexport const add = (a:number,b:number)=>a+b;" },
+                    { role: "tool_call", text: "read_file({\"path\":\"services/index.ts\"})" },
+                    { role: "tool_result", text: "// service placeholder" },
+                    { role: "llm", text: "Проект учебный: README, package.json, пример сервисов и набор demo-скриптов в src/." },
+                ],
+            },
+        ],
+        step5: [
+            {
+                label: "Итерация 1",
+                messages: [
+                    { role: "tool_call", text: "list_dir({\"path\":\".\"})" },
+                    { role: "tool_result", text: "README.md\npackage.json\nservices\nsrc" },
+                    { role: "tool_call", text: "list_dir({\"path\":\"src\"})" },
+                    { role: "tool_result", text: "01-basic-call.ts\n02-with-tool.ts\n03-agent-loop.ts\n04-real-tools.ts\n05-skills.ts" },
+                ],
+            },
+            {
+                label: "Итерация 2",
+                messages: [
+                    { role: "tool_call", text: "run_bash({\"command\":\"wc -l src/*.ts\"})" },
+                    { role: "tool_result", text: "2 src/01-basic-call.ts\n       2 src/02-with-tool.ts\n       2 src/03-agent-loop.ts\n       2 src/04-real-tools.ts\n       2 src/05-skills.ts\n      10 total" },
+                    { role: "tool_call", text: "run_bash({\"command\":\"find src -name \\\"*.ts\\\" -type f\"})" },
+                    { role: "tool_result", text: "src/05-skills.ts\nsrc/04-real-tools.ts\nsrc/02-with-tool.ts\nsrc/03-agent-loop.ts\nsrc/01-basic-call.ts" },
+                ],
+            },
+            {
+                label: "Итерация 3",
+                messages: [
+                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/01-basic-call.ts\"})" },
+                    { role: "tool_result", text: "// basic call example\nexport const add = (a:number,b:number)=>a+b;" },
+                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/02-with-tool.ts\"})" },
+                    { role: "tool_result", text: "// tool example\nexport const tool = () => \"ok\";" },
+                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/03-agent-loop.ts\"})" },
+                    { role: "tool_result", text: "// agent loop example\nexport const loop = () => true;" },
+                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/04-real-tools.ts\"})" },
+                    { role: "tool_result", text: "// real tools example\nexport const run = () => null;" },
+                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/05-skills.ts\"})" },
+                    { role: "tool_result", text: "// skills example\nexport const skill = {};" },
+                ],
+            },
+            {
+                label: "Итерация 4",
+                messages: [
+                    { role: "tool_call", text: "write_file({\"path\":\"STATS.md\",\"content\":\"# Статистика кода проекта\\n\\n... (сокращено)\\n\"})" },
+                    { role: "tool_result", text: "OK: записан STATS.md" },
+                    {
+                        role: "llm",
+                        text: `Готово! ✅\n\nЯ создал файл **STATS.md** с кратким отчётом о коде в папке src.\n\n**Основные результаты:**\n- 📁 Всего файлов: **5**\n- 📝 Всего строк кода: **10**\n- 📊 Средний размер файла: **2 строки**\n- 💻 Язык: **TypeScript**\n\nВсе файлы содержат примеры различных концепций (базовый вызов, инструменты, агентский цикл, навыки).`,
+                    },
+                ],
+            },
+        ],
+        step6: [
+            {
+                label: "План",
+                messages: [
+                    {
+                        role: "llm",
+                        text: `📋 ПЛАН: Анализ дублирования кода в папке src и создание REFACTORING.md\n  1. [read_file] Прочитать содержимое файла src/01-basic-call.ts для анализа кода\n  2. [read_file] Прочитать содержимое файла src/02-with-tool.ts для анализа кода\n  3. [read_file] Прочитать содержимое файла src/03-agent-loop.ts для анализа кода\n  4. [read_file] Прочитать содержимое файла src/04-real-tools.ts для анализа кода\n  5. [read_file] Прочитать содержимое файла src/05-skills.ts для завершения анализа\n  6. [write_file] Создать файл REFACTORING.md с результатами анализа дублирования кода и рекомендациями по рефакторингу`,
+                    },
+                ],
+            },
+            {
+                label: "Выполнение",
+                messages: [
+                    { role: "llm", text: "💭 Начинаем с чтения первого файла из списка, чтобы понять структуру и найти повторяющиеся паттерны" },
+                    { role: "tool_call", text: "read_file({\"path\":\"src/01-basic-call.ts\"})" },
+                    { role: "tool_result", text: "// basic call example\nexport const add = (a:number,b:number)=>a+b;" },
+                    { role: "llm", text: "💭 Читаем второй файл для сравнения с первым и выявления общих фрагментов" },
+                    { role: "tool_call", text: "read_file({\"path\":\"src/02-with-tool.ts\"})" },
+                    { role: "tool_result", text: "// tool example\nexport const tool = () => \"ok\";" },
+                    { role: "llm", text: "💭 Продолжаем анализ третьего файла для поиска дублирования" },
+                    { role: "tool_call", text: "read_file({\"path\":\"src/03-agent-loop.ts\"})" },
+                    { role: "tool_result", text: "// agent loop example\nexport const loop = () => true;" },
+                    { role: "llm", text: "💭 На основе прочитанных файлов составляем отчёт" },
+                    { role: "tool_call", text: "write_file({\"path\":\"REFACTORING.md\",\"content\":\"# REFACTORING\\n\\n(Заполнить выводы по дублированию кода)\\n\"})" },
+                    { role: "tool_result", text: "OK: записан REFACTORING.md" },
+                ],
+            },
+        ],
+        step7: [
+            {
+                label: "План 1",
+                messages: [
+                    {
+                        role: "llm",
+                        text: `📋 ПЛАН 1\n  1. Просмотреть структуру проекта и список файлов в корневой директории\n  2. Прочитать основную документацию проекта для понимания его назначения и структуры\n  3. Найти основные исходные файлы проекта для анализа используемых технологий\n  4. Создать файл отчёта с результатами анализа проекта`,
+                    },
+                ],
+            },
+            {
+                label: "Replan",
+                messages: [
+                    { role: "tool_call", text: "list_dir({\"path\":\".\"})" },
+                    { role: "tool_result", text: "README.md\npackage.json\nservices\nsrc" },
+                    {
+                        role: "tool_call",
+                        text: "request_replan({\"reason\":\"Найдены новые данные\",\"completed_steps\":[\"Просмотреть структуру проекта и список файлов в корневой директории\"],\"discoveries\":[\"обнаружена папка services/\"]})",
+                    },
+                    { role: "tool_result", text: "Запрос на реплан принят" },
+                ],
+            },
+            {
+                label: "План 2",
+                messages: [
+                    {
+                        role: "llm",
+                        text: `📋 ПЛАН 2\n  1. Изучить содержимое папки services/ для понимания архитектуры сервисов\n  2. Прочитать основную документацию проекта для понимания его назначения\n  3. Найти основные исходные файлы для определения используемых технологий\n  4. Создать итоговый отчёт с результатами анализа проекта`,
+                    },
+                ],
+            },
+            {
+                label: "Выполнение",
+                messages: [
+                    { role: "tool_call", text: "list_dir({\"path\":\"services\"})" },
+                    { role: "tool_result", text: "index.ts" },
+                    { role: "tool_call", text: "read_file({\"path\":\"README.md\"})" },
+                    { role: "tool_result", text: "# simple-agent\n\nУчебный проект для демонстрации AI-агента." },
+                    { role: "llm", text: "Готово!" },
+                ],
+            },
+        ],
         step8: [
             {
                 label: "Выбор типа",
@@ -3751,6 +3766,11 @@ main();
         ],
     };
 
+    const escapeHtml = (value) => String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
     function initDemoPlayer(player) {
         const key = player.dataset.demoChat;
         const steps = demoPlayers[key];
@@ -3779,7 +3799,8 @@ main();
                     : role === "tool_result" ? "toolresult"
                     : role === "user" ? "user"
                     : "llm";
-                return `\n<div class="chat-msg ${cls}">\n  <div class="chat-msg-label">${label}</div>\n  <div>${m.text || ""}</div>\n</div>`;
+                const text = escapeHtml(m.text || "");
+                return `\n<div class="chat-msg ${cls}">\n  <div class="chat-msg-label">${label}</div>\n  <div>${text}</div>\n</div>`;
             }).join("");
             labelEl.textContent = step.label || `Шаг ${index + 1}`;
             indexEl.textContent = String(index + 1);
