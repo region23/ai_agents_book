@@ -6,6 +6,7 @@
     <title>ИИ-агенты для самых маленьких — Интерактивный учебник</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <style>
         :root {
             --bg: #0a0a0f;
@@ -473,6 +474,11 @@
         pre .prop { color: #c9d1d9; }
         pre .param { color: #ffa657; }
 
+        pre code.hljs {
+            background: transparent;
+            padding: 0;
+        }
+
         .copy-btn {
             position: absolute;
             top: 0.5rem;
@@ -649,40 +655,41 @@
             color: var(--text-dim);
         }
 
-        .demo-flow {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            margin: 0.2rem 0 0.9rem;
-        }
-
-        .demo-player-body {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 0.8rem;
-        }
-
-        .demo-pane {
+        .demo-chat-body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
             background: #000;
             border: 1px solid #333;
+            border-radius: 12px;
+            padding: 0.9rem;
+        }
+
+        .chat-msg {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            padding: 0.6rem 0.75rem;
             border-radius: 10px;
-            padding: 0.75rem 0.85rem;
-            min-height: 120px;
-        }
-
-        .demo-pane-title {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-dim);
-            margin-bottom: 0.5rem;
-        }
-
-        .demo-pane-text {
+            max-width: 100%;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.78rem;
             line-height: 1.6;
-            color: #c9d1d9;
             white-space: pre-wrap;
+            color: #c9d1d9;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .chat-msg.llm { background: rgba(99, 102, 241, 0.12); }
+        .chat-msg.toolcall { background: rgba(245, 158, 11, 0.12); }
+        .chat-msg.toolresult { background: rgba(34, 197, 94, 0.12); }
+        .chat-msg.user { background: rgba(6, 182, 212, 0.12); }
+
+        .chat-msg-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
 
         .demo-player-controls {
@@ -835,7 +842,6 @@
             .progress-map { display: none; }
             .loop-flow { font-size: 0.7rem; }
             .hero-meta { flex-direction: column; align-items: center; gap: 0.75rem; }
-            .demo-player-body { grid-template-columns: 1fr; }
         }
 
         /* ====== FOCUS VISIBLE ====== */
@@ -1021,28 +1027,30 @@
 
             <div class="code-block">
                 <div class="code-filename"><span class="dot"></span>src/01-basic-call.ts</div>
-                <pre><span class="kw">import</span> OpenAI <span class="kw">from</span> <span class="str">"openai"</span>;
-<span class="kw">import</span> dotenv <span class="kw">from</span> <span class="str">"dotenv"</span>;
+                <pre>// src/01-basic-call.ts
+import OpenAI from "openai";
+import dotenv from "dotenv";
 
-dotenv.<span class="fn">config</span>();
+dotenv.config();
 
-<span class="kw">const</span> client = <span class="kw">new</span> <span class="type">OpenAI</span>({
-    <span class="prop">baseURL</span>: <span class="str">"https://openrouter.ai/api/v1"</span>,
-    <span class="prop">apiKey</span>: process.env.<span class="prop">OPENROUTER_API_KEY</span> ?? <span class="str">""</span>,
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
 });
 
-<span class="kw">async function</span> <span class="fn">main</span>() {
-    <span class="kw">const</span> response = <span class="kw">await</span> client.chat.completions.<span class="fn">create</span>({
-        <span class="prop">model</span>: <span class="str">"anthropic/claude-sonnet-4.5"</span>,
-        <span class="prop">messages</span>: [
-            { <span class="prop">role</span>: <span class="str">"user"</span>, <span class="prop">content</span>: <span class="str">"Сколько будет 2 + 2?"</span> }
+async function main() {
+    const response = await client.chat.completions.create({
+        model: "anthropic/claude-sonnet-4.5",
+        messages: [
+            { role: "user", content: "Сколько будет 2 + 2?" }
         ],
     });
 
-    console.<span class="fn">log</span>(response.choices[<span class="num">0</span>].message.content);
+    console.log(response.choices[0].message.content);
 }
 
-<span class="fn">main</span>();</pre>
+main();
+</pre>
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
 
@@ -1097,64 +1105,68 @@ dotenv.<span class="fn">config</span>();
 
             <div class="code-block">
                 <div class="code-filename"><span class="dot"></span>src/02-with-tool.ts</div>
-                <pre><span class="kw">import</span> OpenAI <span class="kw">from</span> <span class="str">"openai"</span>;
-<span class="kw">import</span> dotenv <span class="kw">from</span> <span class="str">"dotenv"</span>;
+                <pre>// src/02-with-tool.ts
+import OpenAI from "openai";
+import dotenv from "dotenv";
 
-dotenv.<span class="fn">config</span>();
+dotenv.config();
 
-<span class="kw">const</span> client = <span class="kw">new</span> <span class="type">OpenAI</span>({
-    <span class="prop">baseURL</span>: <span class="str">"https://openrouter.ai/api/v1"</span>,
-    <span class="prop">apiKey</span>: process.env.<span class="prop">OPENROUTER_API_KEY</span> ?? <span class="str">""</span>,
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
 });
 
-<span class="cm">// 1. Описываем tools — это JSON Schema</span>
-<span class="kw">const</span> tools: <span class="type">OpenAI.ChatCompletionTool</span>[] = [
+// 1. Описываем tools — это просто JSON Schema
+const tools: OpenAI.ChatCompletionTool[] = [
     {
-        <span class="prop">type</span>: <span class="str">"function"</span>,
-        <span class="prop">function</span>: {
-            <span class="prop">name</span>: <span class="str">"get_weather"</span>,
-            <span class="prop">description</span>: <span class="str">"Получить текущую погоду в городе"</span>,
-            <span class="prop">parameters</span>: {
-                <span class="prop">type</span>: <span class="str">"object"</span>,
-                <span class="prop">properties</span>: {
-                    <span class="prop">city</span>: {
-                        <span class="prop">type</span>: <span class="str">"string"</span>,
-                        <span class="prop">description</span>: <span class="str">"Название города"</span>,
+        type: "function",
+        function: {
+            name: "get_weather",
+            description: "Получить текущую погоду в городе",
+            parameters: {
+                type: "object",
+                properties: {
+                    city: {
+                        type: "string",
+                        description: "Название города",
                     },
                 },
-                <span class="prop">required</span>: [<span class="str">"city"</span>],
+                required: ["city"],
             },
         },
     },
 ];
 
-<span class="cm">// 2. Реализация tool — обычная функция</span>
-<span class="kw">function</span> <span class="fn">get_weather</span>(<span class="param">city</span>: <span class="type">string</span>): <span class="type">string</span> {
-    <span class="kw">const</span> data: <span class="type">Record</span>&lt;<span class="type">string</span>, <span class="type">string</span>&gt; = {
-        <span class="str">"Москва"</span>: <span class="str">"−5°C, снег"</span>,
-        <span class="str">"Анапа"</span>: <span class="str">"+8°C, облачно"</span>,
+// 2. Реализация tool — обычная функция
+function get_weather(city: string): string {
+    // Пока фейковая, потом можно реальный API
+    const data: Record&lt;string, string&gt; = {
+        "Москва": "−5°C, снег",
+        "Анапа": "+8°C, облачно",
+        "Лондон": "+3°C, дождь",
     };
-    <span class="kw">return</span> data[city] ?? <span class="str">`Нет данных для </span>${city}<span class="str">`</span>;
+    return data[city] ?? `Нет данных для города ${city}`;
 }
 
-<span class="kw">async function</span> <span class="fn">main</span>() {
-    <span class="kw">const</span> response = <span class="kw">await</span> client.chat.completions.<span class="fn">create</span>({
-        <span class="prop">model</span>: <span class="str">"anthropic/claude-sonnet-4.5"</span>,
-        <span class="prop">messages</span>: [
-            { <span class="prop">role</span>: <span class="str">"user"</span>, <span class="prop">content</span>: <span class="str">"Какая погода в Анапе?"</span> }
+async function main() {
+    const response = await client.chat.completions.create({
+        model: "anthropic/claude-sonnet-4.5",
+        messages: [
+            { role: "user", content: "Какая погода в Анапе?" },
         ],
         tools,
-        <span class="prop">tool_choice</span>: { <span class="prop">type</span>: <span class="str">"function"</span>, <span class="prop">function</span>: { <span class="prop">name</span>: <span class="str">"get_weather"</span> } }, <span class="cm">// для стабильного демо</span>
     });
 
-    <span class="kw">const</span> message = response.choices[<span class="num">0</span>].message;
+    const message = response.choices[0].message;
 
-    <span class="cm">// 3. Смотрим что вернула модель</span>
-    console.<span class="fn">log</span>(<span class="str">"Content:"</span>, message.content);
-    console.<span class="fn">log</span>(<span class="str">"Tool calls:"</span>, JSON.<span class="fn">stringify</span>(message.tool_calls, <span class="num">null</span>, <span class="num">2</span>));
+    // 3. Смотрим что вернула модель
+    console.log("=== Ответ модели ===");
+    console.log("Content:", message.content);
+    console.log("Tool calls:", JSON.stringify(message.tool_calls, null, 2));
 }
 
-<span class="fn">main</span>();</pre>
+main();
+</pre>
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
 
@@ -1220,112 +1232,125 @@ Tool calls: [
         <div class="step-content">
             <div class="code-block">
                 <div class="code-filename"><span class="dot"></span>src/03-agent-loop.ts</div>
-                <pre><span class="kw">import</span> OpenAI <span class="kw">from</span> <span class="str">"openai"</span>;
-<span class="kw">import</span> dotenv <span class="kw">from</span> <span class="str">"dotenv"</span>;
+                <pre>// src/03-agent-loop.ts
+import OpenAI from "openai";
+import dotenv from "dotenv";
 
-dotenv.<span class="fn">config</span>();
+dotenv.config();
 
-<span class="kw">const</span> client = <span class="kw">new</span> <span class="type">OpenAI</span>({
-    <span class="prop">baseURL</span>: <span class="str">"https://openrouter.ai/api/v1"</span>,
-    <span class="prop">apiKey</span>: process.env.<span class="prop">OPENROUTER_API_KEY</span> ?? <span class="str">""</span>,
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
 });
 
-<span class="kw">const</span> tools: <span class="type">OpenAI.ChatCompletionTool</span>[] = [
+const tools: OpenAI.ChatCompletionTool[] = [
     {
-        <span class="prop">type</span>: <span class="str">"function"</span>,
-        <span class="prop">function</span>: {
-            <span class="prop">name</span>: <span class="str">"get_weather"</span>,
-            <span class="prop">description</span>: <span class="str">"Получить текущую погоду в городе"</span>,
-            <span class="prop">parameters</span>: {
-                <span class="prop">type</span>: <span class="str">"object"</span>,
-                <span class="prop">properties</span>: {
-                    <span class="prop">city</span>: { <span class="prop">type</span>: <span class="str">"string"</span>, <span class="prop">description</span>: <span class="str">"Название города"</span> },
+        type: "function",
+        function: {
+            name: "get_weather",
+            description: "Получить текущую погоду в городе",
+            parameters: {
+                type: "object",
+                properties: {
+                    city: { type: "string", description: "Название города" },
                 },
-                <span class="prop">required</span>: [<span class="str">"city"</span>],
+                required: ["city"],
             },
         },
     },
     {
-        <span class="prop">type</span>: <span class="str">"function"</span>,
-        <span class="prop">function</span>: {
-            <span class="prop">name</span>: <span class="str">"get_time"</span>,
-            <span class="prop">description</span>: <span class="str">"Получить текущее время в городе"</span>,
-            <span class="prop">parameters</span>: {
-                <span class="prop">type</span>: <span class="str">"object"</span>,
-                <span class="prop">properties</span>: {
-                    <span class="prop">city</span>: { <span class="prop">type</span>: <span class="str">"string"</span>, <span class="prop">description</span>: <span class="str">"Название города"</span> },
+        type: "function",
+        function: {
+            name: "get_time",
+            description: "Получить текущее время в городе",
+            parameters: {
+                type: "object",
+                properties: {
+                    city: { type: "string", description: "Название города" },
                 },
-                <span class="prop">required</span>: [<span class="str">"city"</span>],
+                required: ["city"],
             },
         },
     },
 ];
 
-<span class="cm">// Реестр функций — маппинг имя → реализация</span>
-<span class="kw">const</span> toolHandlers: <span class="type">Record</span>&lt;<span class="type">string</span>, (<span class="param">args</span>: <span class="type">any</span>) =&gt; <span class="type">string</span>&gt; = {
-    <span class="fn">get_weather</span>: ({ city }) =&gt; {
-        <span class="kw">const</span> data: <span class="type">Record</span>&lt;<span class="type">string</span>, <span class="type">string</span>&gt; = {
-            <span class="str">"Москва"</span>: <span class="str">"−5°C, снег"</span>,
-            <span class="str">"Анапа"</span>: <span class="str">"+8°C, облачно"</span>,
+// Реестр функций — маппинг имя → реализация
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    get_weather: ({ city }) =&gt; {
+        const data: Record&lt;string, string&gt; = {
+            "Москва": "−5°C, снег",
+            "Анапа": "+8°C, облачно",
         };
-        <span class="kw">return</span> data[city] ?? <span class="str">`Нет данных для ${city}`</span>;
+        return data[city] ?? `Нет данных для ${city}`;
     },
-    <span class="fn">get_time</span>: ({ city }) =&gt; {
-        <span class="kw">return</span> <span class="str">`Сейчас в ${city}: ${</span><span class="kw">new</span> <span class="type">Date</span>().<span class="fn">toLocaleTimeString</span>(<span class="str">"ru-RU"</span>)<span class="str">}`</span>;
+    get_time: ({ city }) =&gt; {
+        const now = new Date();
+        return `Сейчас в ${city}: ${now.toLocaleTimeString("ru-RU")}`;
     },
 };
 
-<span class="kw">async function</span> <span class="fn">agentLoop</span>(<span class="param">userMessage</span>: <span class="type">string</span>) {
-    <span class="kw">const</span> messages: <span class="type">OpenAI.ChatCompletionMessageParam</span>[] = [
-        { <span class="prop">role</span>: <span class="str">"system"</span>, <span class="prop">content</span>: <span class="str">"Ты полезный ассистент. Используй tools когда нужно."</span> },
-        { <span class="prop">role</span>: <span class="str">"user"</span>, <span class="prop">content</span>: userMessage },
+async function agentLoop(userMessage: string) {
+    // Начальный контекст
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        { role: "system", content: "Ты полезный ассистент. Используй tools когда нужно." },
+        { role: "user", content: userMessage },
     ];
 
-    <span class="kw">let</span> iteration = <span class="num">0</span>;
-    <span class="kw">const</span> MAX_ITERATIONS = <span class="num">10</span>; <span class="cm">// защита от бесконечного цикла</span>
+    let iteration = 0;
+    const MAX_ITERATIONS = 10; // защита от бесконечного цикла
 
-    <span class="kw">while</span> (iteration &lt; MAX_ITERATIONS) {
+    while (iteration &lt; MAX_ITERATIONS) {
         iteration++;
-        console.<span class="fn">log</span>(<span class="str">`\n--- Итерация ${iteration} ---`</span>);
+        console.log(`\n--- Итерация ${iteration} ---`);
 
-        <span class="kw">const</span> response = <span class="kw">await</span> client.chat.completions.<span class="fn">create</span>({
-            <span class="prop">model</span>: <span class="str">"anthropic/claude-sonnet-4.5"</span>,
+        const response = await client.chat.completions.create({
+            model: "anthropic/claude-sonnet-4.5",
             messages,
             tools,
         });
 
-        <span class="kw">const</span> message = response.choices[<span class="num">0</span>].message;
-        messages.<span class="fn">push</span>(message); <span class="cm">// Добавляем ответ модели в контекст</span>
+        const message = response.choices[0].message;
 
-        <span class="cm">// Если нет tool_calls — модель решила остановиться</span>
-        <span class="kw">if</span> (!message.tool_calls || message.tool_calls.length === <span class="num">0</span>) {
-            console.<span class="fn">log</span>(<span class="str">"Ответ:"</span>, message.content);
-            <span class="kw">return</span>;
+        // Добавляем ответ модели в контекст
+        messages.push(message);
+
+        // Если нет tool_calls — модель решила остановиться
+        if (!message.tool_calls || message.tool_calls.length === 0) {
+            console.log("Агент завершил работу.");
+            console.log("Ответ:", message.content);
+            return message.content;
         }
 
-        <span class="cm">// Выполняем каждый tool call</span>
-        <span class="kw">for</span> (<span class="kw">const</span> toolCall <span class="kw">of</span> message.tool_calls) {
-            <span class="kw">const</span> name = toolCall.function.name;
-            <span class="kw">const</span> args = JSON.<span class="fn">parse</span>(toolCall.function.arguments);
+        // Выполняем каждый tool call
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
 
-            console.<span class="fn">log</span>(<span class="str">`Tool: ${name}(${</span>JSON.<span class="fn">stringify</span>(args)<span class="str">})`</span>);
+            console.log(`Tool: ${name}(${JSON.stringify(args)})`);
 
-            <span class="kw">const</span> result = toolHandlers[name]?.(args)
-                ?? <span class="str">`Tool "${name}" не найден`</span>;
-            console.<span class="fn">log</span>(<span class="str">`Результат: ${result}`</span>);
+            const handler = toolHandlers[name];
+            const result = handler
+                ? handler(args)
+                : `Ошибка: tool "${name}" не найден`;
 
-            <span class="cm">// Добавляем результат в контекст</span>
-            messages.<span class="fn">push</span>({
-                <span class="prop">role</span>: <span class="str">"tool"</span>,
-                <span class="prop">tool_call_id</span>: toolCall.id,
-                <span class="prop">content</span>: result,
+            console.log(`Результат: ${result}`);
+
+            // Добавляем результат в контекст
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: result,
             });
         }
-        <span class="cm">// Цикл продолжается — отправляем обратно в LLM</span>
+        // Цикл продолжается — отправляем обратно в LLM
     }
+
+    console.log("Достигнут лимит итераций!");
 }
 
-<span class="fn">agentLoop</span>(<span class="str">"Какая погода в Москве и Анапе? И сколько сейчас времени?"</span>);</pre>
+// Тестируем — запрос, требующий ДВА tool call
+agentLoop("Какая погода в Москве и Анапе? И сколько сейчас времени?");
+</pre>
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
 
@@ -1403,48 +1428,131 @@ Tool: get_time({"city":"Москва"})
             </div>
 
             <div class="code-block">
-                <div class="code-filename"><span class="dot"></span>src/04-real-tools.ts (ключевые части)</div>
-                <pre><span class="kw">import</span> { execSync } <span class="kw">from</span> <span class="str">"child_process"</span>;
-<span class="kw">import</span> { readFileSync } <span class="kw">from</span> <span class="str">"fs"</span>;
+                <div class="code-filename"><span class="dot"></span>src/04-real-tools.ts</div>
+                <pre>// src/04-real-tools.ts
+import OpenAI from "openai";
+import { execSync } from "child_process";
+import { readFileSync } from "fs";
+import dotenv from "dotenv";
 
-<span class="kw">const</span> ALLOWLIST = [
-    /^ls\b/,
-    /^pwd\b/,
-    /^cat\b/,
-    /^head\b/,
-    /^tail\b/,
-    /^wc\b/,
-    /^sed\b/,
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+const tools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: "function",
+        function: {
+            name: "run_bash",
+            description: "Выполнить bash-команду и вернуть результат. Только безопасные read-only команды.",
+            parameters: {
+                type: "object",
+                properties: {
+                    command: {
+                        type: "string",
+                        description: "Bash-команда для выполнения",
+                    },
+                },
+                required: ["command"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "read_file",
+            description: "Прочитать содержимое файла",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: {
+                        type: "string",
+                        description: "Путь к файлу",
+                    },
+                },
+                required: ["path"],
+            },
+        },
+    },
 ];
 
-<span class="kw">const</span> isAllowed = (<span class="param">command</span>: <span class="type">string</span>) =&gt;
-    ALLOWLIST.<span class="fn">some</span>((re) =&gt; re.<span class="fn">test</span>(command.<span class="fn">trim</span>()));
-
-<span class="kw">const</span> toolHandlers: <span class="type">Record</span>&lt;<span class="type">string</span>, (<span class="param">args</span>: <span class="type">any</span>) =&gt; <span class="type">string</span>&gt; = {
-    <span class="fn">run_bash</span>: ({ command }) =&gt; {
-        <span class="kw">if</span> (!<span class="fn">isAllowed</span>(command)) {
-            <span class="kw">return</span> <span class="str">`Команда запрещена allowlist: ${command}`</span>;
-        }
-        <span class="kw">try</span> {
-            <span class="kw">return</span> <span class="fn">execSync</span>(command, {
-                <span class="prop">encoding</span>: <span class="str">"utf-8"</span>,
-                <span class="prop">timeout</span>: <span class="num">5000</span>,
-            }).<span class="fn">trim</span>();
-        } <span class="kw">catch</span> (e: <span class="type">any</span>) {
-            <span class="kw">return</span> <span class="str">`Ошибка: ${e.message}`</span>;
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    run_bash: ({ command }) =&gt; {
+        try {
+            return execSync(command, {
+                encoding: "utf-8",
+                timeout: 5000,
+            }).trim();
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
         }
     },
-    <span class="fn">read_file</span>: ({ path }) =&gt; {
-        <span class="kw">try</span> {
-            <span class="kw">return</span> <span class="fn">readFileSync</span>(path, <span class="str">"utf-8"</span>);
-        } <span class="kw">catch</span> (e: <span class="type">any</span>) {
-            <span class="kw">return</span> <span class="str">`Ошибка: ${e.message}`</span>;
+    read_file: ({ path }) =&gt; {
+        try {
+            return readFileSync(path, "utf-8");
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
         }
     },
 };
 
-<span class="cm">// Агент реально исследует вашу файловую систему</span>
-<span class="fn">agentLoop</span>(<span class="str">"Посмотри что за проект лежит в текущей директории"</span>);</pre>
+async function agentLoop(userMessage: string) {
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: "system",
+            content: `Ты полезный ассистент с доступом к файловой системе.
+Можешь выполнять bash-команды и читать файлы.
+Отвечай на русском.`,
+        },
+        { role: "user", content: userMessage },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 10) {
+        iteration++;
+        console.log(`\n--- Итерация ${iteration} ---`);
+
+        const response = await client.chat.completions.create({
+            model: "anthropic/claude-sonnet-4.5",
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log("\nАгент завершил работу.");
+            console.log("Ответ:", message.content);
+            return;
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+            console.log(`Tool: ${name}(${JSON.stringify(args)})`);
+
+            const result = toolHandlers[name]?.(args)
+                ?? `Tool "${name}" не найден`;
+
+            console.log(`Результат: ${result.slice(0, 200)}...`);
+
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: result,
+            });
+        }
+    }
+}
+
+// Теперь агент может реально исследовать твою систему
+agentLoop("Посмотри что за проект лежит в текущей директории. Какие зависимости установлены?");
+</pre>
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
 
@@ -1560,42 +1668,225 @@ Tool: read_file({"path":"services/index.ts"})
 
         <div class="step-content">
             <div class="code-block">
-                <div class="code-filename"><span class="dot"></span>src/05-skills.ts (архитектура)</div>
-                <pre><span class="cm">// Skill — это интерфейс: описание + tools + handlers</span>
-<span class="kw">interface</span> <span class="type">Skill</span> {
-    <span class="prop">name</span>: <span class="type">string</span>;
-    <span class="prop">description</span>: <span class="type">string</span>;           <span class="cm">// для system prompt</span>
-    <span class="prop">tools</span>: <span class="type">OpenAI.ChatCompletionTool</span>[];
-    <span class="prop">handlers</span>: <span class="type">Record</span>&lt;<span class="type">string</span>, (<span class="param">args</span>: <span class="type">any</span>) =&gt; <span class="type">string</span>&gt;;
+                <div class="code-filename"><span class="dot"></span>src/05-skills.ts</div>
+                <pre>// src/05-skills.ts
+import OpenAI from "openai";
+import { execSync } from "child_process";
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+// === SKILL: определение ===
+interface Skill {
+    name: string;
+    description: string;           // для system prompt
+    tools: OpenAI.ChatCompletionTool[];
+    handlers: Record&lt;string, (args: any) =&gt; string&gt;;
 }
 
-<span class="cm">// Пример: filesystem skill</span>
-<span class="kw">const</span> filesystemSkill: <span class="type">Skill</span> = {
-    <span class="prop">name</span>: <span class="str">"filesystem"</span>,
-    <span class="prop">description</span>: <span class="str">"Умеешь читать, писать, просматривать файлы."</span>,
-    <span class="prop">tools</span>: [<span class="cm">/* read_file, write_file, list_dir */</span>],
-    <span class="prop">handlers</span>: {<span class="cm">/* реализации */</span>},
+// === SKILL: файловая система ===
+const filesystemSkill: Skill = {
+    name: "filesystem",
+    description: "Умеешь работать с файлами: читать, писать, просматривать директории.",
+    tools: [
+        {
+            type: "function",
+            function: {
+                name: "read_file",
+                description: "Прочитать файл",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        path: { type: "string", description: "Путь к файлу" },
+                    },
+                    required: ["path"],
+                },
+            },
+        },
+        {
+            type: "function",
+            function: {
+                name: "write_file",
+                description: "Записать содержимое в файл",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        path: { type: "string", description: "Путь к файлу" },
+                        content: { type: "string", description: "Содержимое" },
+                    },
+                    required: ["path", "content"],
+                },
+            },
+        },
+        {
+            type: "function",
+            function: {
+                name: "list_dir",
+                description: "Список файлов в директории",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        path: { type: "string", description: "Путь к директории" },
+                    },
+                    required: ["path"],
+                },
+            },
+        },
+    ],
+    handlers: {
+        read_file: ({ path }) =&gt; {
+            try { return readFileSync(path, "utf-8"); }
+            catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+        write_file: ({ path, content }) =&gt; {
+            try { writeFileSync(path, content); return `Файл ${path} записан`; }
+            catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+        list_dir: ({ path }) =&gt; {
+            try { return execSync(`ls -la ${path}`, { encoding: "utf-8" }); }
+            catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+    },
 };
 
-<span class="cm">// Агент собирается из подключаемых skills</span>
-<span class="kw">function</span> <span class="fn">createAgent</span>(<span class="param">skills</span>: <span class="type">Skill</span>[]) {
-    <span class="cm">// Собираем tools и handlers из ВСЕХ skills</span>
-    <span class="kw">const</span> allTools = skills.<span class="fn">flatMap</span>(s =&gt; s.tools);
-    <span class="kw">const</span> allHandlers = Object.<span class="fn">assign</span>({}, ...skills.<span class="fn">map</span>(s =&gt; s.handlers));
+// === SKILL: bash ===
+const bashSkill: Skill = {
+    name: "bash",
+    description: "Умеешь выполнять bash-команды в терминале.",
+    tools: [
+        {
+            type: "function",
+            function: {
+                name: "run_bash",
+                description: "Выполнить bash-команду",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        command: { type: "string", description: "Команда" },
+                    },
+                    required: ["command"],
+                },
+            },
+        },
+    ],
+    handlers: {
+        run_bash: ({ command }) =&gt; {
+            try {
+                return execSync(command, { encoding: "utf-8", timeout: 5000 }).trim();
+            } catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+    },
+};
 
-    <span class="cm">// System prompt собирается из описаний skills</span>
-    <span class="kw">const</span> systemPrompt = <span class="str">`У тебя есть навыки:\n${
-        skills.map(s => `- ${s.name}: ${s.description}`).join('\n')
-    }`</span>;
+// === SKILL: математика ===
+const mathSkill: Skill = {
+    name: "math",
+    description: "Умеешь вычислять математические выражения.",
+    tools: [
+        {
+            type: "function",
+            function: {
+                name: "calculate",
+                description: "Вычислить математическое выражение",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        expression: { type: "string", description: "Выражение, например: 2 * (3 + 4)" },
+                    },
+                    required: ["expression"],
+                },
+            },
+        },
+    ],
+    handlers: {
+        calculate: ({ expression }) =&gt; {
+            try { return String(eval(expression)); }
+            catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+    },
+};
 
-    <span class="kw">return async function</span> <span class="fn">run</span>(<span class="param">userMessage</span>: <span class="type">string</span>) {
-        <span class="cm">// тот же agent loop, но с allTools и allHandlers</span>
+// === АГЕНТ с подключаемыми skills ===
+function createAgent(skills: Skill[]) {
+    // Собираем tools и handlers из всех skills
+    const allTools = skills.flatMap(s =&gt; s.tools);
+    const allHandlers = Object.assign({}, ...skills.map(s =&gt; s.handlers));
+
+    // Собираем system prompt из описаний skills
+    const skillDescriptions = skills
+        .map(s =&gt; `- ${s.name}: ${s.description}`)
+        .join("\n");
+
+    const systemPrompt = `Ты полезный ассистент. У тебя есть следующие навыки:
+${skillDescriptions}
+Используй инструменты когда нужно. Отвечай на русском.`;
+
+    return async function run(userMessage: string) {
+        const messages: OpenAI.ChatCompletionMessageParam[] = [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+        ];
+
+        let iteration = 0;
+
+        while (iteration &lt; 10) {
+            iteration++;
+            console.log(`\n--- Итерация ${iteration} ---`);
+
+            const response = await client.chat.completions.create({
+                model: "anthropic/claude-sonnet-4.5",
+                messages,
+                tools: allTools,
+            });
+
+            const message = response.choices[0].message;
+            messages.push(message);
+
+            if (!message.tool_calls?.length) {
+                console.log("\nОтвет:", message.content);
+                return message.content;
+            }
+
+            for (const toolCall of message.tool_calls) {
+                const name = toolCall.function.name;
+                const args = JSON.parse(toolCall.function.arguments);
+                console.log(`Tool: ${name}(${JSON.stringify(args)})`);
+
+                const result = allHandlers[name]?.(args)
+                    ?? `Tool "${name}" не найден`;
+                console.log(`→ ${result.slice(0, 150)}`);
+
+                messages.push({
+                    role: "tool",
+                    tool_call_id: toolCall.id,
+                    content: result,
+                });
+            }
+        }
     };
 }
 
-<span class="cm">// Использование — подключай что нужно</span>
-<span class="kw">const</span> agent = <span class="fn">createAgent</span>([filesystemSkill, bashSkill, mathSkill]);
-<span class="kw">await</span> <span class="fn">agent</span>(<span class="str">"Посчитай строки кода и создай отчёт"</span>);</pre>
+// === Использование ===
+async function main() {
+    // Создаём агента с нужными skills
+    const agent = createAgent([filesystemSkill, bashSkill, mathSkill]);
+
+    // Агент сам решит какие tools использовать
+    await agent(
+        "Посмотри файлы проекта в текущей директории, " +
+        "посчитай общее количество строк кода во всех .ts файлах в src/, " +
+        "и создай файл STATS.md с результатами анализа."
+    );
+}
+
+main();
+</pre>
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
 
@@ -1766,6 +2057,364 @@ OK: записан STATS.md
 <span class="fn">think</span>: () =&gt; <span class="str">"OK"</span>  <span class="cm">// вот и всё</span></pre>
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>src/06-planning.ts</div>
+                <pre>// src/06-planning.ts
+// Агент с планированием: сначала думает, потом делает
+import OpenAI from "openai";
+import { execSync } from "child_process";
+import { readFileSync, writeFileSync } from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+const MODEL = "anthropic/claude-sonnet-4.5";
+
+// ============================================================
+// TOOLS (те же что в 05, но добавляем think tool)
+// ============================================================
+
+const tools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: "function",
+        function: {
+            name: "think",
+            description:
+                "Используй этот инструмент чтобы подумать, спланировать или порассуждать. " +
+                "Результат не виден пользователю — это твой внутренний блокнот.",
+            parameters: {
+                type: "object",
+                properties: {
+                    thought: {
+                        type: "string",
+                        description: "Твои мысли, план, рассуждения",
+                    },
+                },
+                required: ["thought"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "run_bash",
+            description: "Выполнить bash-команду",
+            parameters: {
+                type: "object",
+                properties: {
+                    command: { type: "string", description: "Команда" },
+                },
+                required: ["command"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "read_file",
+            description: "Прочитать файл",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "Путь к файлу" },
+                },
+                required: ["path"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "write_file",
+            description: "Записать содержимое в файл",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "Путь к файлу" },
+                    content: { type: "string", description: "Содержимое" },
+                },
+                required: ["path", "content"],
+            },
+        },
+    },
+];
+
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    think: ({ thought }) =&gt; {
+        // Think tool ничего не делает — просто возвращает подтверждение.
+        // Вся ценность в том, что модель "проговорила" мысль.
+        return "OK";
+    },
+    run_bash: ({ command }) =&gt; {
+        try {
+            return execSync(command, { encoding: "utf-8", timeout: 10000 }).trim();
+        } catch (e: any) {
+            return `Ошибка: ${e.stderr || e.message}`;
+        }
+    },
+    read_file: ({ path }) =&gt; {
+        try {
+            return readFileSync(path, "utf-8");
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+    write_file: ({ path, content }) =&gt; {
+        try {
+            writeFileSync(path, content, "utf-8");
+            return `✅ Файл ${path} записан (${content.length} байт)`;
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+};
+
+// ============================================================
+// ПОДХОД 1: Plan-then-Execute
+// Два отдельных этапа: сначала план, потом выполнение
+// ============================================================
+
+async function planThenExecute(userMessage: string) {
+    console.log("╔══════════════════════════════════════════╗");
+    console.log("║   ПОДХОД 1: Plan-then-Execute            ║");
+    console.log("╚══════════════════════════════════════════╝\n");
+
+    // --- ФАЗА 1: Планирование (без tools!) ---
+    console.log("📋 ФАЗА 1: ПЛАНИРОВАНИЕ\n");
+
+    const planResponse = await client.chat.completions.create({
+        model: MODEL,
+        messages: [
+            {
+                role: "system",
+                content: `Ты планировщик задач. Получив запрос пользователя, составь пошаговый план.
+
+Правила:
+- Каждый шаг должен быть конкретным и выполнимым
+- Используй формат JSON
+- НЕ выполняй задачу, только спланируй
+
+Доступные инструменты:
+- run_bash: выполнить bash-команду
+- read_file: прочитать файл
+- write_file: записать файл
+
+Ответь ТОЛЬКО валидным JSON в формате:
+{
+  "goal": "краткое описание цели",
+  "steps": [
+    { "id": 1, "action": "описание шага", "tool": "имя_tool", "reason": "зачем" },
+    ...
+  ]
+}`,
+            },
+            { role: "user", content: userMessage },
+        ],
+    });
+
+    const planText = planResponse.choices[0].message.content ?? "";
+
+    // Парсим план
+    let plan: { goal: string; steps: { id: number; action: string; tool: string; reason: string }[] };
+    try {
+        // Убираем возможные markdown-обёртки
+        const cleanJson = planText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        plan = JSON.parse(cleanJson);
+    } catch (e) {
+        console.log("❌ Не удалось распарсить план:");
+        console.log(planText);
+        return;
+    }
+
+    console.log(`🎯 Цель: ${plan.goal}`);
+    console.log(`📝 Шагов: ${plan.steps.length}\n`);
+    plan.steps.forEach((s) =&gt; {
+        console.log(`   ${s.id}. [${s.tool}] ${s.action}`);
+        console.log(`      └─ ${s.reason}`);
+    });
+
+    // --- ФАЗА 2: Выполнение (с tools) ---
+    console.log("\n\n⚡ ФАЗА 2: ВЫПОЛНЕНИЕ\n");
+
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: "system",
+            content: `Ты исполнитель задач. Выполни план пошагово, используя инструменты.
+
+ПЛАН:
+${JSON.stringify(plan, null, 2)}
+
+Выполняй шаги по порядку. После каждого шага сообщай прогресс.
+Если шаг не получился — адаптируй план.
+Когда все шаги выполнены — подведи итог.`,
+        },
+        { role: "user", content: userMessage },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 15) {
+        iteration++;
+        console.log(`\n--- Выполнение: итерация ${iteration} ---`);
+
+        const response = await client.chat.completions.create({
+            model: MODEL,
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log("\n✅ Выполнение завершено.");
+            console.log("Итог:", message.content);
+            return;
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+            const argsPreview =
+                name === "write_file"
+                    ? `{path: "${args.path}", content: [${args.content.length} chars]}`
+                    : JSON.stringify(args);
+
+            console.log(`   🔧 ${name}(${argsPreview})`);
+
+            const result = toolHandlers[name]?.(args) ?? `Tool "${name}" не найден`;
+            console.log(`   → ${result.slice(0, 120)}`);
+
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: result,
+            });
+        }
+    }
+}
+
+// ============================================================
+// ПОДХОД 2: ReAct (Reasoning + Acting)
+// Думает и действует на каждом шаге через think tool
+// ============================================================
+
+async function reactAgent(userMessage: string) {
+    console.log("╔══════════════════════════════════════════╗");
+    console.log("║   ПОДХОД 2: ReAct (Reason + Act)         ║");
+    console.log("╚══════════════════════════════════════════╝\n");
+
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: "system",
+            content: `Ты агент, который решает задачи пошагово.
+
+МЕТОД РАБОТЫ:
+1. Перед КАЖДЫМ действием сначала вызови tool "think" — обдумай:
+   - Что уже известно?
+   - Какой следующий шаг?
+   - Почему именно этот шаг?
+2. Затем выполни действие нужным tool
+3. После получения результата снова "think" — оцени:
+   - Получилось ли?
+   - Что это значит?
+   - Какой следующий шаг?
+
+ВАЖНО: Всегда чередуй think → action → think → action.
+Не делай действий без предварительного обдумывания.
+
+Доступные инструменты: think, run_bash, read_file, write_file.`,
+        },
+        { role: "user", content: userMessage },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 20) {
+        iteration++;
+
+        const response = await client.chat.completions.create({
+            model: MODEL,
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log(`\n✅ Агент завершил работу (${iteration} итераций).`);
+            console.log("Ответ:", message.content);
+            return;
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+
+            if (name === "think") {
+                // Красиво выводим мысли агента
+                console.log(`\n💭 [Мысль]: ${args.thought}`);
+            } else {
+                const argsPreview =
+                    name === "write_file"
+                        ? `{path: "${args.path}", content: [${args.content.length} chars]}`
+                        : JSON.stringify(args);
+                console.log(`   🔧 ${name}(${argsPreview})`);
+
+                const result = toolHandlers[name]?.(args) ?? `Tool "${name}" не найден`;
+                console.log(`   → ${result.slice(0, 120)}`);
+
+                messages.push({
+                    role: "tool",
+                    tool_call_id: toolCall.id,
+                    content: result,
+                });
+                continue;
+            }
+
+            // Think всегда возвращает OK
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: "OK",
+            });
+        }
+    }
+}
+
+// ============================================================
+// MAIN: выбери подход
+// ============================================================
+
+async function main() {
+    const task =
+        "Проанализируй все .ts файлы в директории src/. " +
+        "Найди дублирование кода между файлами (общие паттерны, " +
+        "повторяющиеся импорты, похожие функции). " +
+        "Создай файл REFACTORING.md с конкретными рекомендациями по рефакторингу.";
+
+    // Раскомментируй нужный подход:
+    const approach = process.argv[2] ?? "plan";
+
+    if (approach === "plan") {
+        await planThenExecute(task);
+    } else if (approach === "react") {
+        await reactAgent(task);
+    } else {
+        console.log("Использование: npx tsx src/06-planning.ts [plan|react]");
+    }
+}
+
+main();
+</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
 
             <button class="demo-btn" data-demo="demo-step-6">▶ Запустить демо</button>
 
@@ -1894,6 +2543,370 @@ export const skill = {};
 }</pre>
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>src/07-adaptive-agent.ts</div>
+                <pre>// src/07-adaptive-agent.ts
+// Адаптивный агент: Plan → ReAct Execute → Replan если нужно
+import OpenAI from "openai";
+import { execSync } from "child_process";
+import { readFileSync, writeFileSync } from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+const MODEL = "anthropic/claude-sonnet-4.5";
+
+// ============================================================
+// TOOLS
+// ============================================================
+
+const executionTools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: "function",
+        function: {
+            name: "think",
+            description:
+                "Внутренний блокнот. Используй перед действием чтобы обдумать следующий шаг, " +
+                "и после действия чтобы оценить результат.",
+            parameters: {
+                type: "object",
+                properties: {
+                    thought: { type: "string", description: "Рассуждение" },
+                },
+                required: ["thought"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "run_bash",
+            description: "Выполнить bash-команду",
+            parameters: {
+                type: "object",
+                properties: {
+                    command: { type: "string", description: "Команда" },
+                },
+                required: ["command"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "read_file",
+            description: "Прочитать файл",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "Путь к файлу" },
+                },
+                required: ["path"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "write_file",
+            description: "Записать содержимое в файл",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "Путь к файлу" },
+                    content: { type: "string", description: "Содержимое" },
+                },
+                required: ["path", "content"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "request_replan",
+            description:
+                "Вызови когда план нужно пересмотреть: обнаружилась новая информация, " +
+                "шаг провалился, или появился лучший путь к цели.",
+            parameters: {
+                type: "object",
+                properties: {
+                    reason: { type: "string", description: "Почему нужен новый план" },
+                    completed_steps: {
+                        type: "array",
+                        items: { type: "string" },
+                        description: "Какие шаги уже выполнены",
+                    },
+                    discoveries: {
+                        type: "array",
+                        items: { type: "string" },
+                        description: "Что нового узнали",
+                    },
+                },
+                required: ["reason", "completed_steps", "discoveries"],
+            },
+        },
+    },
+];
+
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    think: () =&gt; "OK",
+    run_bash: ({ command }) =&gt; {
+        try {
+            return execSync(command, { encoding: "utf-8", timeout: 10000 }).trim();
+        } catch (e: any) {
+            return `Ошибка: ${e.stderr || e.message}`;
+        }
+    },
+    read_file: ({ path }) =&gt; {
+        try {
+            return readFileSync(path, "utf-8");
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+    write_file: ({ path, content }) =&gt; {
+        try {
+            writeFileSync(path, content, "utf-8");
+            return `✅ Файл ${path} записан (${content.length} байт)`;
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+    request_replan: () =&gt; "REPLAN_REQUESTED",
+};
+
+// ============================================================
+// ФАЗА 1: ПЛАНИРОВАНИЕ
+// ============================================================
+
+interface Plan {
+    goal: string;
+    steps: { id: number; action: string; tool: string; reason: string }[];
+}
+
+async function createPlan(
+    task: string,
+    context?: { previousPlan?: Plan; completedSteps?: string[]; discoveries?: string[] }
+): Promise&lt;Plan&gt; {
+    let systemPrompt = `Ты стратегический планировщик. Составь пошаговый план выполнения задачи.
+
+Доступные инструменты: run_bash, read_file, write_file.
+
+Ответь ТОЛЬКО валидным JSON:
+{
+  "goal": "краткое описание цели",
+  "steps": [
+    { "id": 1, "action": "описание", "tool": "имя_tool", "reason": "зачем" }
+  ]
+}`;
+
+    // Если это реплан — добавляем контекст
+    if (context?.previousPlan) {
+        systemPrompt += `
+
+КОНТЕКСТ РЕПЛАНА:
+Предыдущий план: ${JSON.stringify(context.previousPlan)}
+Уже выполнено: ${context.completedSteps?.join(", ") || "ничего"}
+Новые данные: ${context.discoveries?.join("; ") || "нет"}
+
+Учти что уже сделано, не повторяй выполненные шаги.
+Скорректируй план с учётом новых данных.`;
+    }
+
+    const response = await client.chat.completions.create({
+        model: MODEL,
+        messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: task },
+        ],
+    });
+
+    const text = response.choices[0].message.content ?? "";
+    const cleanJson = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    return JSON.parse(cleanJson);
+}
+
+function printPlan(plan: Plan, isReplan: boolean = false) {
+    const label = isReplan ? "🔄 НОВЫЙ ПЛАН" : "📋 ПЛАН";
+    console.log(`\n${label}: ${plan.goal}`);
+    console.log("─".repeat(50));
+    plan.steps.forEach((s) =&gt; {
+        console.log(`  ${s.id}. [${s.tool}] ${s.action}`);
+        console.log(`     └─ ${s.reason}`);
+    });
+    console.log("─".repeat(50));
+}
+
+// ============================================================
+// ФАЗА 2: ВЫПОЛНЕНИЕ с ReAct + возможностью реплана
+// ============================================================
+
+interface ExecutionResult {
+    status: "completed" | "replan_requested";
+    replanContext?: {
+        reason: string;
+        completedSteps: string[];
+        discoveries: string[];
+    };
+}
+
+async function executeWithReact(
+    task: string,
+    plan: Plan
+): Promise&lt;ExecutionResult&gt; {
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: "system",
+            content: `Ты исполнитель с аналитическим мышлением.
+
+ТВОЙ ПЛАН:
+${JSON.stringify(plan, null, 2)}
+
+МЕТОД РАБОТЫ:
+1. Перед каждым действием — вызови "think": обдумай шаг, проверь что он всё ещё актуален
+2. Выполни действие нужным tool
+3. После результата — снова "think": оцени, совпало ли с ожиданиями
+4. Если обнаружил что план нужно менять — вызови "request_replan"
+
+КОГДА ВЫЗЫВАТЬ request_replan:
+- Обнаружил что-то неожиданное (файлов больше/меньше чем думали)
+- Шаг провалился и обходной путь требует нового плана
+- Появилась информация, которая делает оставшиеся шаги неактуальными
+- Нашёл более эффективный путь к цели
+
+НЕ вызывай replan для мелких проблем — адаптируйся на лету.
+Вызывай только когда нужна существенная коррекция курса.`,
+        },
+        { role: "user", content: task },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 20) {
+        iteration++;
+
+        const response = await client.chat.completions.create({
+            model: MODEL,
+            messages,
+            tools: executionTools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log(`\n✅ Выполнение завершено (${iteration} итераций)`);
+            console.log("Итог:", message.content?.slice(0, 300));
+            return { status: "completed" };
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+
+            // Форматированный вывод
+            if (name === "think") {
+                console.log(`\n  💭 ${args.thought}`);
+            } else if (name === "request_replan") {
+                console.log(`\n  🔄 РЕПЛАН: ${args.reason}`);
+                messages.push({
+                    role: "tool",
+                    tool_call_id: toolCall.id,
+                    content: "REPLAN_REQUESTED",
+                });
+                return {
+                    status: "replan_requested",
+                    replanContext: {
+                        reason: args.reason,
+                        completedSteps: args.completed_steps,
+                        discoveries: args.discoveries,
+                    },
+                };
+            } else {
+                const argsPreview =
+                    name === "write_file"
+                        ? `{path: "${args.path}", content: [${args.content.length} chars]}`
+                        : JSON.stringify(args);
+                console.log(`  🔧 ${name}(${argsPreview})`);
+
+                const result = toolHandlers[name]?.(args) ?? `Tool "${name}" не найден`;
+                console.log(`     → ${result.slice(0, 120)}`);
+            }
+
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: toolHandlers[name]?.(args) ?? "OK",
+            });
+        }
+    }
+
+    return { status: "completed" };
+}
+
+// ============================================================
+// ГЛАВНЫЙ ЦИКЛ: Plan → Execute → Replan → Execute → ...
+// ============================================================
+
+async function adaptiveAgent(task: string) {
+    console.log("╔══════════════════════════════════════════════╗");
+    console.log("║   ADAPTIVE AGENT: Plan + ReAct + Replan      ║");
+    console.log("╚══════════════════════════════════════════════╝");
+    console.log(`\n📌 Задача: ${task}\n`);
+
+    let plan = await createPlan(task);
+    printPlan(plan);
+
+    const MAX_REPLANS = 3;
+    let replanCount = 0;
+
+    while (replanCount &lt;= MAX_REPLANS) {
+        console.log(`\n⚡ ВЫПОЛНЕНИЕ (план v${replanCount + 1})\n`);
+
+        const result = await executeWithReact(task, plan);
+
+        if (result.status === "completed") {
+            console.log("\n🎉 Агент завершил задачу.");
+            return;
+        }
+
+        // Реплан
+        replanCount++;
+        if (replanCount &gt; MAX_REPLANS) {
+            console.log("\n⚠️  Достигнут лимит репланов. Завершаем с текущим результатом.");
+            return;
+        }
+
+        console.log(`\n📋 РЕПЛАН #${replanCount}...`);
+        plan = await createPlan(task, {
+            previousPlan: plan,
+            completedSteps: result.replanContext?.completedSteps,
+            discoveries: result.replanContext?.discoveries,
+        });
+        printPlan(plan, true);
+    }
+}
+
+// ============================================================
+// ЗАПУСК
+// ============================================================
+
+const task =
+    process.argv[2] ||
+    "Проанализируй все .ts файлы в директории src/. " +
+    "Найди дублирование кода между файлами (общие паттерны, " +
+    "повторяющиеся импорты, похожие функции). " +
+    "Создай файл REFACTORING.md с конкретными рекомендациями.";
+
+adaptiveAgent(task);
+</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
 
             <div class="run-command">
                 <span class="run-icon">▶</span>
@@ -2004,6 +3017,445 @@ src
 { <span class="prop">name</span>: <span class="str">"ask_user_confirm"</span> }  <span class="cm">// "Записать файл?"</span></pre>
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>src/08-interactive-agent.ts</div>
+                <pre>// src/08-interactive-agent.ts
+// Интерактивный агент: Human-in-the-loop + Wizard-style guided flow
+import OpenAI from "openai";
+import { execSync } from "child_process";
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import * as readline from "readline";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+const MODEL = "anthropic/claude-sonnet-4.5";
+
+// ============================================================
+// УТИЛИТА: ввод от пользователя
+// ============================================================
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+});
+
+function ask(question: string): Promise&lt;string&gt; {
+    return new Promise((resolve) =&gt; {
+        rl.question(question, (answer) =&gt; resolve(answer.trim()));
+    });
+}
+
+// ============================================================
+// TOOLS: включая интерактивные
+// ============================================================
+
+const tools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: "function",
+        function: {
+            name: "think",
+            description: "Внутренний блокнот для рассуждений.",
+            parameters: {
+                type: "object",
+                properties: {
+                    thought: { type: "string", description: "Рассуждение" },
+                },
+                required: ["thought"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "run_bash",
+            description: "Выполнить bash-команду (read-only, безопасные)",
+            parameters: {
+                type: "object",
+                properties: {
+                    command: { type: "string", description: "Команда" },
+                },
+                required: ["command"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "read_file",
+            description: "Прочитать файл",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "Путь к файлу" },
+                },
+                required: ["path"],
+            },
+        },
+    },
+    // --- ОПАСНОЕ ДЕЙСТВИЕ: требует подтверждения ---
+    {
+        type: "function",
+        function: {
+            name: "write_file",
+            description:
+                "Записать файл. ВАЖНО: это изменяющее действие — " +
+                "будет запрошено подтверждение пользователя.",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "Путь к файлу" },
+                    content: { type: "string", description: "Содержимое" },
+                },
+                required: ["path", "content"],
+            },
+        },
+    },
+    // --- WIZARD: предложить варианты пользователю ---
+    {
+        type: "function",
+        function: {
+            name: "ask_user_choice",
+            description:
+                "Предложить пользователю выбор из нескольких вариантов. " +
+                "Используй когда есть несколько хороших решений и выбор зависит от предпочтений пользователя. " +
+                "Пользователь может выбрать номер варианта или ввести свой.",
+            parameters: {
+                type: "object",
+                properties: {
+                    question: {
+                        type: "string",
+                        description: "Вопрос или описание ситуации для пользователя",
+                    },
+                    options: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                label: { type: "string", description: "Краткое название варианта" },
+                                description: { type: "string", description: "Описание — плюсы, минусы, для кого" },
+                            },
+                            required: ["label", "description"],
+                        },
+                        description: "Варианты для выбора (2-5 штук)",
+                    },
+                    allow_custom: {
+                        type: "boolean",
+                        description: "Разрешить пользователю ввести свой вариант",
+                    },
+                },
+                required: ["question", "options"],
+            },
+        },
+    },
+    // --- WIZARD: запросить текстовый ввод ---
+    {
+        type: "function",
+        function: {
+            name: "ask_user_input",
+            description:
+                "Запросить у пользователя текстовый ввод. " +
+                "Используй когда нужна конкретная информация: имя, путь, описание.",
+            parameters: {
+                type: "object",
+                properties: {
+                    question: { type: "string", description: "Что спросить" },
+                    hint: { type: "string", description: "Подсказка или пример ответа" },
+                    default_value: { type: "string", description: "Значение по умолчанию (Enter чтобы принять)" },
+                },
+                required: ["question"],
+            },
+        },
+    },
+    // --- WIZARD: запросить подтверждение да/нет ---
+    {
+        type: "function",
+        function: {
+            name: "ask_user_confirm",
+            description:
+                "Запросить подтверждение да/нет. " +
+                "Используй перед необратимыми или важными действиями.",
+            parameters: {
+                type: "object",
+                properties: {
+                    question: { type: "string", description: "Что подтвердить" },
+                    details: { type: "string", description: "Детали для принятия решения" },
+                },
+                required: ["question"],
+            },
+        },
+    },
+];
+
+// ============================================================
+// TOOL HANDLERS (с интерактивностью)
+// ============================================================
+
+// Категории опасности для human-in-the-loop
+const DANGEROUS_TOOLS = new Set(["write_file"]);
+
+const toolHandlers: Record&lt;string, (args: any) =&gt; Promise&lt;string&gt; | string&gt; = {
+    think: () =&gt; "OK",
+
+    run_bash: ({ command }) =&gt; {
+        try {
+            return execSync(command, { encoding: "utf-8", timeout: 10000 }).trim();
+        } catch (e: any) {
+            return `Ошибка: ${e.stderr || e.message}`;
+        }
+    },
+
+    read_file: ({ path }) =&gt; {
+        try {
+            return readFileSync(path, "utf-8");
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+
+    // --- HUMAN-IN-THE-LOOP: подтверждение перед записью ---
+    write_file: async ({ path, content }) =&gt; {
+        const exists = existsSync(path);
+        const action = exists ? "перезаписать" : "создать";
+
+        console.log("\n" + "═".repeat(50));
+        console.log(`⚠️  Агент хочет ${action} файл: ${path}`);
+        console.log("─".repeat(50));
+
+        // Показываем превью содержимого
+        const lines = content.split("\n");
+        const preview = lines.slice(0, 15).join("\n");
+        console.log(preview);
+        if (lines.length &gt; 15) {
+            console.log(`... (ещё ${lines.length - 15} строк)`);
+        }
+        console.log("─".repeat(50));
+
+        const answer = await ask(`Разрешить? [y/n/edit]: `);
+
+        if (answer.toLowerCase() === "y" || answer.toLowerCase() === "д") {
+            try {
+                writeFileSync(path, content, "utf-8");
+                return `✅ Файл ${path} записан (одобрено пользователем)`;
+            } catch (e: any) {
+                return `Ошибка: ${e.message}`;
+            }
+        } else if (answer.toLowerCase() === "edit" || answer.toLowerCase() === "e") {
+            const newPath = await ask(`Новый путь (Enter = ${path}): `);
+            const finalPath = newPath || path;
+            try {
+                writeFileSync(finalPath, content, "utf-8");
+                return `✅ Файл ${finalPath} записан (путь изменён пользователем)`;
+            } catch (e: any) {
+                return `Ошибка: ${e.message}`;
+            }
+        } else {
+            return `❌ Пользователь отклонил запись файла ${path}`;
+        }
+    },
+
+    // --- WIZARD: выбор из вариантов ---
+    ask_user_choice: async ({ question, options, allow_custom }) =&gt; {
+        console.log("\n" + "═".repeat(50));
+        console.log(`🤔 ${question}`);
+        console.log("─".repeat(50));
+
+        options.forEach((opt: any, i: number) =&gt; {
+            console.log(`  ${i + 1}) ${opt.label}`);
+            console.log(`     ${opt.description}`);
+        });
+
+        if (allow_custom) {
+            console.log(`  ${options.length + 1}) Свой вариант...`);
+        }
+
+        console.log("─".repeat(50));
+        const answer = await ask(`Выбор [1-${options.length + (allow_custom ? 1 : 0)}]: `);
+
+        const num = parseInt(answer);
+
+        if (allow_custom &amp;&amp; num === options.length + 1) {
+            const custom = await ask("Введите свой вариант: ");
+            return `Пользователь выбрал свой вариант: "${custom}"`;
+        }
+
+        if (num &gt;= 1 &amp;&amp; num &lt;= options.length) {
+            const chosen = options[num - 1];
+            return `Пользователь выбрал: "${chosen.label}" — ${chosen.description}`;
+        }
+
+        // Если ввели текст вместо номера
+        return `Пользователь ответил: "${answer}"`;
+    },
+
+    // --- WIZARD: текстовый ввод ---
+    ask_user_input: async ({ question, hint, default_value }) =&gt; {
+        console.log("\n" + "═".repeat(50));
+        let prompt = `📝 ${question}`;
+        if (hint) prompt += `\n   💡 ${hint}`;
+        if (default_value) prompt += `\n   (Enter = "${default_value}")`;
+        console.log(prompt);
+        console.log("─".repeat(50));
+
+        const answer = await ask("&gt; ");
+        const result = answer || default_value || "";
+        return `Пользователь ввёл: "${result}"`;
+    },
+
+    // --- WIZARD: подтверждение ---
+    ask_user_confirm: async ({ question, details }) =&gt; {
+        console.log("\n" + "═".repeat(50));
+        console.log(`❓ ${question}`);
+        if (details) console.log(`   ${details}`);
+        console.log("─".repeat(50));
+
+        const answer = await ask("Да/Нет [y/n]: ");
+        const confirmed = ["y", "д", "да", "yes"].includes(answer.toLowerCase());
+        return confirmed ? "Пользователь подтвердил: ДА" : "Пользователь отказал: НЕТ";
+    },
+};
+
+// ============================================================
+// AGENT LOOP (с async handlers)
+// ============================================================
+
+async function interactiveAgent(task: string, systemPrompt?: string) {
+    const defaultSystem = `Ты умный ассистент-визард, который помогает пользователю решать задачи.
+
+СТИЛЬ РАБОТЫ:
+1. Сначала разберись в ситуации (read_file, run_bash, think)
+2. Проанализируй и подготовь варианты
+3. Предложи пользователю выбор через ask_user_choice
+4. На основе выбора — действуй или уточни детали через ask_user_input
+5. Перед изменяющими действиями — подтверди через ask_user_confirm или write_file
+
+ПРИНЦИПЫ:
+- Не делай предположений — спрашивай
+- Предлагай 2-4 варианта с понятными описаниями
+- Объясняй плюсы и минусы каждого варианта
+- Разбивай сложные решения на шаги (wizard)
+- Уважай выбор пользователя, не навязывай своё мнение`;
+
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        { role: "system", content: systemPrompt || defaultSystem },
+        { role: "user", content: task },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 30) {
+        iteration++;
+
+        const response = await client.chat.completions.create({
+            model: MODEL,
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        // Если агент говорит текстом — показываем и продолжаем диалог
+        if (!message.tool_calls?.length) {
+            console.log(`\n🤖 ${message.content}`);
+
+            // Спрашиваем, хочет ли пользователь продолжить
+            const follow = await ask("\n&gt; (Enter чтобы завершить, или введите сообщение): ");
+            if (!follow) {
+                console.log("\n👋 Завершено.");
+                rl.close();
+                return;
+            }
+
+            messages.push({ role: "user", content: follow });
+            continue;
+        }
+
+        // Обрабатываем tool calls
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+
+            // Логирование (кроме интерактивных — они сами себя показывают)
+            if (name === "think") {
+                console.log(`\n  💭 ${args.thought}`);
+            } else if (!name.startsWith("ask_user") &amp;&amp; name !== "write_file") {
+                const preview = JSON.stringify(args).slice(0, 100);
+                console.log(`  🔧 ${name}(${preview})`);
+            }
+
+            const handler = toolHandlers[name];
+            let result: string;
+
+            if (handler) {
+                const output = handler(args);
+                result = output instanceof Promise ? await output : output;
+            } else {
+                result = `Tool "${name}" не найден`;
+            }
+
+            // Логируем результат (кроме интерактивных и think)
+            if (!name.startsWith("ask_user") &amp;&amp; name !== "write_file" &amp;&amp; name !== "think") {
+                console.log(`     → ${result.slice(0, 120)}`);
+            }
+
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: result,
+            });
+        }
+    }
+
+    rl.close();
+}
+
+// ============================================================
+// СЦЕНАРИИ
+// ============================================================
+
+async function main() {
+    const scenario = process.argv[2] ?? "project";
+
+    switch (scenario) {
+        // --- Сценарий 1: Wizard для инициализации проекта ---
+        case "project":
+            await interactiveAgent(
+                "Помоги мне создать новый TypeScript проект. " +
+                "Спроси что за проект, предложи варианты структуры, настрой всё."
+            );
+            break;
+
+        // --- Сценарий 2: Рефакторинг с подтверждениями ---
+        case "refactor":
+            await interactiveAgent(
+                "Проанализируй .ts файлы в src/ и предложи рефакторинг. " +
+                "Покажи мне варианты, дай выбрать что делать, и выполни с подтверждениями."
+            );
+            break;
+
+        // --- Сценарий 3: свободный режим ---
+        case "free":
+            console.log("🤖 Интерактивный агент запущен. Введите задачу:\n");
+            const task = await ask("&gt; ");
+            await interactiveAgent(task);
+            break;
+
+        default:
+            console.log("Сценарии: npx tsx src/08-interactive-agent.ts [project|refactor|free]");
+            rl.close();
+    }
+}
+
+main();
+</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
 
             <div class="step-detail">
                 <p>Главная хитрость: модель не знает что эти tool'ы интерактивные. Для неё <code>ask_user_choice</code> — обычный tool, который возвращает строку <code>"Пользователь выбрал: ..."</code>. Вся магия в handlers — они блокируют выполнение и ждут ввод через <code>readline</code>.</p>
@@ -2011,30 +3463,12 @@ src
 
             <button class="demo-btn" data-demo="demo-step-8">▶ Запустить демо</button>
 
-            <div class="demo-output demo-player" id="demo-step-8" data-demo-player="step8" aria-live="polite">
+            <div class="demo-output demo-player" id="demo-step-8" data-demo-chat="step8" aria-live="polite">
                 <div class="demo-player-header">
-                    <div class="demo-player-title">Демо по шагам</div>
+                    <div class="demo-player-title">Демо в формате диалога</div>
                     <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>4</span></div>
                 </div>
-                <div class="demo-flow">LLM → tool_call → tool_result → LLM</div>
-                <div class="demo-player-body">
-                    <div class="demo-pane">
-                        <div class="demo-pane-title">LLM</div>
-                        <div class="demo-pane-text" data-demo-llm1></div>
-                    </div>
-                    <div class="demo-pane">
-                        <div class="demo-pane-title">tool_call</div>
-                        <div class="demo-pane-text" data-demo-toolcall></div>
-                    </div>
-                    <div class="demo-pane">
-                        <div class="demo-pane-title">tool_result</div>
-                        <div class="demo-pane-text" data-demo-toolresult></div>
-                    </div>
-                    <div class="demo-pane">
-                        <div class="demo-pane-title">LLM</div>
-                        <div class="demo-pane-text" data-demo-llm2></div>
-                    </div>
-                </div>
+                <div class="demo-chat-body" data-demo-chat-body></div>
                 <div class="demo-player-controls">
                     <button class="demo-step-btn" data-demo-prev>← Назад</button>
                     <div class="demo-step-label" data-demo-label></div>
@@ -2111,7 +3545,26 @@ src
     <div class="progress-dot" data-target="step-8" title="08: Interactive"></div>
 </nav>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
 <script>
+    // ====== Syntax Highlight (full files) ======
+    document.querySelectorAll('.code-block').forEach(block => {
+        const filename = block.querySelector('.code-filename')?.textContent?.trim() || '';
+        if (!filename.startsWith('src/') || !filename.endsWith('.ts')) return;
+        const pre = block.querySelector('pre');
+        if (!pre || pre.querySelector('code')) return;
+        const code = document.createElement('code');
+        code.className = 'language-typescript';
+        code.textContent = pre.textContent;
+        pre.textContent = '';
+        pre.appendChild(code);
+    });
+
+    if (window.hljs) {
+        document.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+    }
+
     // ====== Step Toggle ======
     document.querySelectorAll('.step-card').forEach(card => {
         card.setAttribute('role', 'button');
@@ -2261,44 +3714,49 @@ src
         step8: [
             {
                 label: "Выбор типа",
-                llm1: "Понимаю задачу. Сначала уточню тип REST API проекта.",
-                tool_call: `ask_user_choice({\n  question: \"Какой тип REST API проекта ты хочешь создать?\",\n  options: [Express, Fastify, NestJS, Koa]\n})`,
-                tool_result: "Пользователь выбрал: Fastify (Node.js)",
-                llm2: "Отлично. Теперь нужно имя проекта.",
+                messages: [
+                    { role: "user", text: "Помоги создать небольшой REST API проект" },
+                    { role: "llm", text: "Понимаю задачу. Сначала уточню тип REST API проекта." },
+                    { role: "tool_call", text: "ask_user_choice({\n  question: \"Какой тип REST API проекта ты хочешь создать?\",\n  options: [Express, Fastify, NestJS, Koa]\n})" },
+                    { role: "tool_result", text: "Пользователь выбрал: Fastify (Node.js)" },
+                    { role: "llm", text: "Отлично. Теперь нужно имя проекта." },
+                ],
             },
             {
                 label: "Имя проекта",
-                llm1: "Спрашиваю название проекта для генерации конфигурации.",
-                tool_call: `ask_user_input({\n  question: \"Как назовём проект?\",\n  placeholder: \"my-rest-api\"\n})`,
-                tool_result: "todo-api",
-                llm2: "Готовлю конфиг и попрошу подтверждение перед записью файла.",
+                messages: [
+                    { role: "llm", text: "Спрашиваю название проекта для генерации конфигурации." },
+                    { role: "tool_call", text: "ask_user_input({\n  question: \"Как назовём проект?\",\n  placeholder: \"my-rest-api\"\n})" },
+                    { role: "tool_result", text: "todo-api" },
+                    { role: "llm", text: "Готовлю конфиг и попрошу подтверждение перед записью файла." },
+                ],
             },
             {
                 label: "Подтверждение",
-                llm1: "Собрал package.json. Надо подтвердить запись.",
-                tool_call: `ask_user_confirm({\n  question: \"Создать проект с этой конфигурацией?\",\n  preview: \"{ name: 'todo-api', scripts: { dev: 'nodemon src/index.js' } }\"\n})`,
-                tool_result: "y",
-                llm2: "Записываю файл package.json.",
+                messages: [
+                    { role: "llm", text: "Собрал package.json. Надо подтвердить запись." },
+                    { role: "tool_call", text: "ask_user_confirm({\n  question: \"Создать проект с этой конфигурацией?\",\n  preview: \"{ name: 'todo-api', scripts: { dev: 'nodemon src/index.js' } }\"\n})" },
+                    { role: "tool_result", text: "y" },
+                    { role: "llm", text: "Записываю файл package.json." },
+                ],
             },
             {
                 label: "Запись",
-                llm1: "Выполняю запись конфигурации на диск.",
-                tool_call: `write_file({ path: \"package.json\", content: \"...\" })`,
-                tool_result: "✅ Файл package.json записан",
-                llm2: "Готово! Проект создан. Могу подсказать следующие шаги.",
+                messages: [
+                    { role: "tool_call", text: "write_file({ path: \"package.json\", content: \"...\" })" },
+                    { role: "tool_result", text: "✅ Файл package.json записан" },
+                    { role: "llm", text: "Готово! Проект создан. Могу подсказать следующие шаги." },
+                ],
             },
         ],
     };
 
     function initDemoPlayer(player) {
-        const key = player.dataset.demoPlayer;
+        const key = player.dataset.demoChat;
         const steps = demoPlayers[key];
         if (!steps || steps.length === 0) return;
 
-        const llm1El = player.querySelector('[data-demo-llm1]');
-        const toolCallEl = player.querySelector('[data-demo-toolcall]');
-        const toolResultEl = player.querySelector('[data-demo-toolresult]');
-        const llm2El = player.querySelector('[data-demo-llm2]');
+        const bodyEl = player.querySelector('[data-demo-chat-body]');
         const labelEl = player.querySelector('[data-demo-label]');
         const indexEl = player.querySelector('[data-demo-index]');
         const totalEl = player.querySelector('[data-demo-total]');
@@ -2310,10 +3768,19 @@ src
 
         const render = () => {
             const step = steps[index];
-            llm1El.textContent = step.llm1 || "";
-            toolCallEl.textContent = step.tool_call || "";
-            toolResultEl.textContent = step.tool_result || "";
-            llm2El.textContent = step.llm2 || "";
+            const messages = step.messages || [];
+            bodyEl.innerHTML = messages.map((m) => {
+                const role = m.role || "llm";
+                const label = role === "tool_call" ? "tool_call"
+                    : role === "tool_result" ? "tool_result"
+                    : role === "user" ? "user"
+                    : "LLM";
+                const cls = role === "tool_call" ? "toolcall"
+                    : role === "tool_result" ? "toolresult"
+                    : role === "user" ? "user"
+                    : "llm";
+                return `\n<div class="chat-msg ${cls}">\n  <div class="chat-msg-label">${label}</div>\n  <div>${m.text || ""}</div>\n</div>`;
+            }).join("");
             labelEl.textContent = step.label || `Шаг ${index + 1}`;
             indexEl.textContent = String(index + 1);
             prevBtn.disabled = index === 0;
@@ -2337,7 +3804,7 @@ src
         render();
     }
 
-    document.querySelectorAll('[data-demo-player]').forEach(initDemoPlayer);
+    document.querySelectorAll('[data-demo-chat]').forEach(initDemoPlayer);
 
     // ====== Tooltip focus ======
     document.querySelectorAll('.term').forEach(term => {
