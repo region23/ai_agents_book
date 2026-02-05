@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build:site": "node scripts/build-site.js",
+    "build": "npm run build:site",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

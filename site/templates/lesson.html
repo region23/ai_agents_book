@@ -1,0 +1,45 @@
+<div class="lesson-layout">
+    <aside class="panel lesson-sidebar">
+        <h2>Все уроки</h2>
+        <nav class="toc-nav">
+            {{LESSON_TOC}}
+        </nav>
+    </aside>
+
+    <article class="panel lesson-panel">
+        <p class="eyebrow">Урок {{LESSON_NUMBER}}</p>
+        <h1>{{LESSON_TITLE}}</h1>
+        <div class="lesson-meta">
+            <span class="chip">{{LESSON_LEVEL}}</span>
+            <span class="chip">{{LESSON_DURATION}}</span>
+            <span class="chip">Файл: <code>{{LESSON_SOURCE_PATH}}</code></span>
+        </div>
+
+        <p class="lead">{{LESSON_SUMMARY}}</p>
+
+        <section class="lesson-section">
+            <h2>Что сделаем в уроке</h2>
+            <ul class="text-list">
+                {{LESSON_OBJECTIVES}}
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Ключевые акценты</h2>
+            <ul class="text-list">
+                {{LESSON_KEY_POINTS}}
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Код урока</h2>
+            <pre><code class="language-typescript">{{LESSON_CODE}}</code></pre>
+        </section>
+
+        <nav class="lesson-pager">
+            {{PREV_LINK}}
+            <a class="pager-link" href="index.html">Оглавление</a>
+            {{NEXT_LINK}}
+        </nav>
+    </article>
+</div>

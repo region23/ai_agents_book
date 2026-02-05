@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок 07 · Adaptive Agent: Plan + ReAct + Replan</title>
+    <meta name="description" content="Добавляем адаптивность: агент умеет анализировать промежуточные результаты, запрашивать реплан и менять стратегию на лету.">
+    <meta name="color-scheme" content="dark">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/ocean.min.css" />
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="index.html">AI Agents Book</a>
+            <nav class="header-nav">
+                <a href="index.html">Оглавление</a>
+                <a href="lesson-01-basic-call.html">Начать курс</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="lesson-layout">
+    <aside class="panel lesson-sidebar">
+        <h2>Все уроки</h2>
+        <nav class="toc-nav">
+            <a class="toc-link" href="lesson-01-basic-call.html">01. Базовый LLM-вызов</a>
+<a class="toc-link" href="lesson-02-with-tool.html">02. Добавляем первый Tool</a>
+<a class="toc-link" href="lesson-03-agent-loop.html">03. Agent Loop: замыкаем петлю</a>
+<a class="toc-link" href="lesson-04-real-tools.html">04. Реальные Tools: bash и файловая система</a>
+<a class="toc-link" href="lesson-05-skills.html">05. Skills: модульная архитектура</a>
+<a class="toc-link" href="lesson-06-planning.html">06. Multi-step Planning</a>
+<a class="toc-link current" href="lesson-07-adaptive-agent.html">07. Adaptive Agent: Plan + ReAct + Replan</a>
+<a class="toc-link" href="lesson-08-interactive-agent.html">08. Human-in-the-Loop + Wizard</a>
+        </nav>
+    </aside>
+
+    <article class="panel lesson-panel">
+        <p class="eyebrow">Урок 07</p>
+        <h1>Adaptive Agent: Plan + ReAct + Replan</h1>
+        <div class="lesson-meta">
+            <span class="chip">Продвинутый</span>
+            <span class="chip">40-55 минут</span>
+            <span class="chip">Файл: <code>src/07-adaptive-agent.ts</code></span>
+        </div>
+
+        <p class="lead">Добавляем адаптивность: агент умеет анализировать промежуточные результаты, запрашивать реплан и менять стратегию на лету.</p>
+
+        <section class="lesson-section">
+            <h2>Что сделаем в уроке</h2>
+            <ul class="text-list">
+                <li>Ввести сигнал <code>request_replan</code> и контекст для перепланирования.</li>
+<li>Организовать цикл Plan -&gt; Execute -&gt; Replan до достижения цели.</li>
+<li>Зафиксировать выполненные шаги и новые открытия между итерациями.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Ключевые акценты</h2>
+            <ul class="text-list">
+                <li>Статичный план редко переживает реальное выполнение.</li>
+<li>ReAct-подход улучшает качество решений на длинных задачах.</li>
+<li>Реплан должен быть контролируемым, а не бесконечным.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Код урока</h2>
+            <pre><code class="language-typescript">// src/07-adaptive-agent.ts
+// Адаптивный агент: Plan → ReAct Execute → Replan если нужно
+import OpenAI from &quot;openai&quot;;
+import { execSync } from &quot;child_process&quot;;
+import { readFileSync, writeFileSync } from &quot;fs&quot;;
+import dotenv from &quot;dotenv&quot;;
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: &quot;https://openrouter.ai/api/v1&quot;,
+    apiKey: process.env.OPENROUTER_API_KEY ?? &quot;&quot;,
+});
+
+const MODEL = &quot;anthropic/claude-sonnet-4.5&quot;;
+
+// ============================================================
+// TOOLS
+// ============================================================
+
+const executionTools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;think&quot;,
+            description:
+                &quot;Внутренний блокнот. Используй перед действием чтобы обдумать следующий шаг, &quot; +
+                &quot;и после действия чтобы оценить результат.&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    thought: { type: &quot;string&quot;, description: &quot;Рассуждение&quot; },
+                },
+                required: [&quot;thought&quot;],
+            },
+        },
+    },
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;run_bash&quot;,
+            description: &quot;Выполнить bash-команду&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    command: { type: &quot;string&quot;, description: &quot;Команда&quot; },
+                },
+                required: [&quot;command&quot;],
+            },
+        },
+    },
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;read_file&quot;,
+            description: &quot;Прочитать файл&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    path: { type: &quot;string&quot;, description: &quot;Путь к файлу&quot; },
+                },
+                required: [&quot;path&quot;],
+            },
+        },
+    },
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;write_file&quot;,
+            description: &quot;Записать содержимое в файл&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    path: { type: &quot;string&quot;, description: &quot;Путь к файлу&quot; },
+                    content: { type: &quot;string&quot;, description: &quot;Содержимое&quot; },
+                },
+                required: [&quot;path&quot;, &quot;content&quot;],
+            },
+        },
+    },
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;request_replan&quot;,
+            description:
+                &quot;Вызови когда план нужно пересмотреть: обнаружилась новая информация, &quot; +
+                &quot;шаг провалился, или появился лучший путь к цели.&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    reason: { type: &quot;string&quot;, description: &quot;Почему нужен новый план&quot; },
+                    completed_steps: {
+                        type: &quot;array&quot;,
+                        items: { type: &quot;string&quot; },
+                        description: &quot;Какие шаги уже выполнены&quot;,
+                    },
+                    discoveries: {
+                        type: &quot;array&quot;,
+                        items: { type: &quot;string&quot; },
+                        description: &quot;Что нового узнали&quot;,
+                    },
+                },
+                required: [&quot;reason&quot;, &quot;completed_steps&quot;, &quot;discoveries&quot;],
+            },
+        },
+    },
+];
+
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    think: () =&gt; &quot;OK&quot;,
+    run_bash: ({ command }) =&gt; {
+        try {
+            return execSync(command, { encoding: &quot;utf-8&quot;, timeout: 10000 }).trim();
+        } catch (e: any) {
+            return `Ошибка: ${e.stderr || e.message}`;
+        }
+    },
+    read_file: ({ path }) =&gt; {
+        try {
+            return readFileSync(path, &quot;utf-8&quot;);
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+    write_file: ({ path, content }) =&gt; {
+        try {
+            writeFileSync(path, content, &quot;utf-8&quot;);
+            return `✅ Файл ${path} записан (${content.length} байт)`;
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+    request_replan: () =&gt; &quot;REPLAN_REQUESTED&quot;,
+};
+
+// ============================================================
+// ФАЗА 1: ПЛАНИРОВАНИЕ
+// ============================================================
+
+interface Plan {
+    goal: string;
+    steps: { id: number; action: string; tool: string; reason: string }[];
+}
+
+async function createPlan(
+    task: string,
+    context?: { previousPlan?: Plan; completedSteps?: string[]; discoveries?: string[] }
+): Promise&lt;Plan&gt; {
+    let systemPrompt = `Ты стратегический планировщик. Составь пошаговый план выполнения задачи.
+
+Доступные инструменты: run_bash, read_file, write_file.
+
+Ответь ТОЛЬКО валидным JSON:
+{
+  &quot;goal&quot;: &quot;краткое описание цели&quot;,
+  &quot;steps&quot;: [
+    { &quot;id&quot;: 1, &quot;action&quot;: &quot;описание&quot;, &quot;tool&quot;: &quot;имя_tool&quot;, &quot;reason&quot;: &quot;зачем&quot; }
+  ]
+}`;
+
+    // Если это реплан — добавляем контекст
+    if (context?.previousPlan) {
+        systemPrompt += `
+
+КОНТЕКСТ РЕПЛАНА:
+Предыдущий план: ${JSON.stringify(context.previousPlan)}
+Уже выполнено: ${context.completedSteps?.join(&quot;, &quot;) || &quot;ничего&quot;}
+Новые данные: ${context.discoveries?.join(&quot;; &quot;) || &quot;нет&quot;}
+
+Учти что уже сделано, не повторяй выполненные шаги.
+Скорректируй план с учётом новых данных.`;
+    }
+
+    const response = await client.chat.completions.create({
+        model: MODEL,
+        messages: [
+            { role: &quot;system&quot;, content: systemPrompt },
+            { role: &quot;user&quot;, content: task },
+        ],
+    });
+
+    const text = response.choices[0].message.content ?? &quot;&quot;;
+    const cleanJson = text.replace(/```json\n?/g, &quot;&quot;).replace(/```\n?/g, &quot;&quot;).trim();
+    return JSON.parse(cleanJson);
+}
+
+function printPlan(plan: Plan, isReplan: boolean = false) {
+    const label = isReplan ? &quot;🔄 НОВЫЙ ПЛАН&quot; : &quot;📋 ПЛАН&quot;;
+    console.log(`\n${label}: ${plan.goal}`);
+    console.log(&quot;─&quot;.repeat(50));
+    plan.steps.forEach((s) =&gt; {
+        console.log(`  ${s.id}. [${s.tool}] ${s.action}`);
+        console.log(`     └─ ${s.reason}`);
+    });
+    console.log(&quot;─&quot;.repeat(50));
+}
+
+// ============================================================
+// ФАЗА 2: ВЫПОЛНЕНИЕ с ReAct + возможностью реплана
+// ============================================================
+
+interface ExecutionResult {
+    status: &quot;completed&quot; | &quot;replan_requested&quot;;
+    replanContext?: {
+        reason: string;
+        completedSteps: string[];
+        discoveries: string[];
+    };
+}
+
+async function executeWithReact(
+    task: string,
+    plan: Plan
+): Promise&lt;ExecutionResult&gt; {
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: &quot;system&quot;,
+            content: `Ты исполнитель с аналитическим мышлением.
+
+ТВОЙ ПЛАН:
+${JSON.stringify(plan, null, 2)}
+
+МЕТОД РАБОТЫ:
+1. Перед каждым действием — вызови &quot;think&quot;: обдумай шаг, проверь что он всё ещё актуален
+2. Выполни действие нужным tool
+3. После результата — снова &quot;think&quot;: оцени, совпало ли с ожиданиями
+4. Если обнаружил что план нужно менять — вызови &quot;request_replan&quot;
+
+КОГДА ВЫЗЫВАТЬ request_replan:
+- Обнаружил что-то неожиданное (файлов больше/меньше чем думали)
+- Шаг провалился и обходной путь требует нового плана
+- Появилась информация, которая делает оставшиеся шаги неактуальными
+- Нашёл более эффективный путь к цели
+
+НЕ вызывай replan для мелких проблем — адаптируйся на лету.
+Вызывай только когда нужна существенная коррекция курса.`,
+        },
+        { role: &quot;user&quot;, content: task },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 20) {
+        iteration++;
+
+        const response = await client.chat.completions.create({
+            model: MODEL,
+            messages,
+            tools: executionTools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log(`\n✅ Выполнение завершено (${iteration} итераций)`);
+            console.log(&quot;Итог:&quot;, message.content?.slice(0, 300));
+            return { status: &quot;completed&quot; };
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+
+            // Форматированный вывод
+            if (name === &quot;think&quot;) {
+                console.log(`\n  💭 ${args.thought}`);
+            } else if (name === &quot;request_replan&quot;) {
+                console.log(`\n  🔄 РЕПЛАН: ${args.reason}`);
+                messages.push({
+                    role: &quot;tool&quot;,
+                    tool_call_id: toolCall.id,
+                    content: &quot;REPLAN_REQUESTED&quot;,
+                });
+                return {
+                    status: &quot;replan_requested&quot;,
+                    replanContext: {
+                        reason: args.reason,
+                        completedSteps: args.completed_steps,
+                        discoveries: args.discoveries,
+                    },
+                };
+            } else {
+                const argsPreview =
+                    name === &quot;write_file&quot;
+                        ? `{path: &quot;${args.path}&quot;, content: [${args.content.length} chars]}`
+                        : JSON.stringify(args);
+                console.log(`  🔧 ${name}(${argsPreview})`);
+
+                const result = toolHandlers[name]?.(args) ?? `Tool &quot;${name}&quot; не найден`;
+                console.log(`     → ${result.slice(0, 120)}`);
+            }
+
+            messages.push({
+                role: &quot;tool&quot;,
+                tool_call_id: toolCall.id,
+                content: toolHandlers[name]?.(args) ?? &quot;OK&quot;,
+            });
+        }
+    }
+
+    return { status: &quot;completed&quot; };
+}
+
+// ============================================================
+// ГЛАВНЫЙ ЦИКЛ: Plan → Execute → Replan → Execute → ...
+// ============================================================
+
+async function adaptiveAgent(task: string) {
+    console.log(&quot;╔══════════════════════════════════════════════╗&quot;);
+    console.log(&quot;║   ADAPTIVE AGENT: Plan + ReAct + Replan      ║&quot;);
+    console.log(&quot;╚══════════════════════════════════════════════╝&quot;);
+    console.log(`\n📌 Задача: ${task}\n`);
+
+    let plan = await createPlan(task);
+    printPlan(plan);
+
+    const MAX_REPLANS = 3;
+    let replanCount = 0;
+
+    while (replanCount &lt;= MAX_REPLANS) {
+        console.log(`\n⚡ ВЫПОЛНЕНИЕ (план v${replanCount + 1})\n`);
+
+        const result = await executeWithReact(task, plan);
+
+        if (result.status === &quot;completed&quot;) {
+            console.log(&quot;\n🎉 Агент завершил задачу.&quot;);
+            return;
+        }
+
+        // Реплан
+        replanCount++;
+        if (replanCount &gt; MAX_REPLANS) {
+            console.log(&quot;\n⚠️  Достигнут лимит репланов. Завершаем с текущим результатом.&quot;);
+            return;
+        }
+
+        console.log(`\n📋 РЕПЛАН #${replanCount}...`);
+        plan = await createPlan(task, {
+            previousPlan: plan,
+            completedSteps: result.replanContext?.completedSteps,
+            discoveries: result.replanContext?.discoveries,
+        });
+        printPlan(plan, true);
+    }
+}
+
+// ============================================================
+// ЗАПУСК
+// ============================================================
+
+const task =
+    process.argv[2] ||
+    &quot;Проанализируй все .ts файлы в директории src/. &quot; +
+    &quot;Найди дублирование кода между файлами (общие паттерны, &quot; +
+    &quot;повторяющиеся импорты, похожие функции). &quot; +
+    &quot;Создай файл REFACTORING.md с конкретными рекомендациями.&quot;;
+
+adaptiveAgent(task);
+</code></pre>
+        </section>
+
+        <nav class="lesson-pager">
+            <a class="pager-link" href="lesson-06-planning.html">← Предыдущий урок</a>
+            <a class="pager-link" href="index.html">Оглавление</a>
+            <a class="pager-link" href="lesson-08-interactive-agent.html">Следующий урок →</a>
+        </nav>
+    </article>
+</div>
+
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>© 2026 Практический учебник по агентам на TypeScript.</p>
+            <a href="index.html">Вернуться к оглавлению</a>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        if (window.hljs) {
+            document.querySelectorAll('pre code').forEach((el) => {
+                window.hljs.highlightElement(el);
+            });
+        }
+    </script>
+</body>
+</html>

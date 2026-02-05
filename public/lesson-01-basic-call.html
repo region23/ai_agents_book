@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок 01 · Базовый LLM-вызов</title>
+    <meta name="description" content="Запускаем первый запрос к модели через OpenAI SDK и OpenRouter, чтобы получить минимальный рабочий скелет.">
+    <meta name="color-scheme" content="dark">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/ocean.min.css" />
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="index.html">AI Agents Book</a>
+            <nav class="header-nav">
+                <a href="index.html">Оглавление</a>
+                <a href="lesson-01-basic-call.html">Начать курс</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="lesson-layout">
+    <aside class="panel lesson-sidebar">
+        <h2>Все уроки</h2>
+        <nav class="toc-nav">
+            <a class="toc-link current" href="lesson-01-basic-call.html">01. Базовый LLM-вызов</a>
+<a class="toc-link" href="lesson-02-with-tool.html">02. Добавляем первый Tool</a>
+<a class="toc-link" href="lesson-03-agent-loop.html">03. Agent Loop: замыкаем петлю</a>
+<a class="toc-link" href="lesson-04-real-tools.html">04. Реальные Tools: bash и файловая система</a>
+<a class="toc-link" href="lesson-05-skills.html">05. Skills: модульная архитектура</a>
+<a class="toc-link" href="lesson-06-planning.html">06. Multi-step Planning</a>
+<a class="toc-link" href="lesson-07-adaptive-agent.html">07. Adaptive Agent: Plan + ReAct + Replan</a>
+<a class="toc-link" href="lesson-08-interactive-agent.html">08. Human-in-the-Loop + Wizard</a>
+        </nav>
+    </aside>
+
+    <article class="panel lesson-panel">
+        <p class="eyebrow">Урок 01</p>
+        <h1>Базовый LLM-вызов</h1>
+        <div class="lesson-meta">
+            <span class="chip">Начало</span>
+            <span class="chip">10-15 минут</span>
+            <span class="chip">Файл: <code>src/01-basic-call.ts</code></span>
+        </div>
+
+        <p class="lead">Запускаем первый запрос к модели через OpenAI SDK и OpenRouter, чтобы получить минимальный рабочий скелет.</p>
+
+        <section class="lesson-section">
+            <h2>Что сделаем в уроке</h2>
+            <ul class="text-list">
+                <li>Подключить <code>dotenv</code> и загрузить API-ключ из переменных окружения.</li>
+<li>Инициализировать клиента OpenAI с кастомным <code>baseURL</code>.</li>
+<li>Сделать первый <code>chat.completions.create</code> запрос и вывести результат.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Ключевые акценты</h2>
+            <ul class="text-list">
+                <li>Агент начинается с простого диалога с моделью.</li>
+<li>Надежная конфигурация окружения важнее хитрой логики на старте.</li>
+<li>Этот урок дает фундамент для всех следующих шагов.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Код урока</h2>
+            <pre><code class="language-typescript">// src/01-basic-call.ts
+import OpenAI from &quot;openai&quot;;
+import dotenv from &quot;dotenv&quot;;
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: &quot;https://openrouter.ai/api/v1&quot;,
+    apiKey: process.env.OPENROUTER_API_KEY ?? &quot;&quot;,
+});
+
+async function main() {
+    const response = await client.chat.completions.create({
+        model: &quot;anthropic/claude-sonnet-4.5&quot;,
+        messages: [
+            { role: &quot;user&quot;, content: &quot;Сколько будет 2 + 2?&quot; }
+        ],
+    });
+
+    console.log(response.choices[0].message.content);
+}
+
+main();
+</code></pre>
+        </section>
+
+        <nav class="lesson-pager">
+            <span class="pager-link disabled">Предыдущий урок</span>
+            <a class="pager-link" href="index.html">Оглавление</a>
+            <a class="pager-link" href="lesson-02-with-tool.html">Следующий урок →</a>
+        </nav>
+    </article>
+</div>
+
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>© 2026 Практический учебник по агентам на TypeScript.</p>
+            <a href="index.html">Вернуться к оглавлению</a>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        if (window.hljs) {
+            document.querySelectorAll('pre code').forEach((el) => {
+                window.hljs.highlightElement(el);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок 05 · Skills: модульная архитектура</title>
+    <meta name="description" content="Группируем tools и handlers в независимые skills, чтобы агент можно было гибко собирать под задачу.">
+    <meta name="color-scheme" content="dark">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/ocean.min.css" />
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="index.html">AI Agents Book</a>
+            <nav class="header-nav">
+                <a href="index.html">Оглавление</a>
+                <a href="lesson-01-basic-call.html">Начать курс</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="lesson-layout">
+    <aside class="panel lesson-sidebar">
+        <h2>Все уроки</h2>
+        <nav class="toc-nav">
+            <a class="toc-link" href="lesson-01-basic-call.html">01. Базовый LLM-вызов</a>
+<a class="toc-link" href="lesson-02-with-tool.html">02. Добавляем первый Tool</a>
+<a class="toc-link" href="lesson-03-agent-loop.html">03. Agent Loop: замыкаем петлю</a>
+<a class="toc-link" href="lesson-04-real-tools.html">04. Реальные Tools: bash и файловая система</a>
+<a class="toc-link current" href="lesson-05-skills.html">05. Skills: модульная архитектура</a>
+<a class="toc-link" href="lesson-06-planning.html">06. Multi-step Planning</a>
+<a class="toc-link" href="lesson-07-adaptive-agent.html">07. Adaptive Agent: Plan + ReAct + Replan</a>
+<a class="toc-link" href="lesson-08-interactive-agent.html">08. Human-in-the-Loop + Wizard</a>
+        </nav>
+    </aside>
+
+    <article class="panel lesson-panel">
+        <p class="eyebrow">Урок 05</p>
+        <h1>Skills: модульная архитектура</h1>
+        <div class="lesson-meta">
+            <span class="chip">Архитектура</span>
+            <span class="chip">30-40 минут</span>
+            <span class="chip">Файл: <code>src/05-skills.ts</code></span>
+        </div>
+
+        <p class="lead">Группируем tools и handlers в независимые skills, чтобы агент можно было гибко собирать под задачу.</p>
+
+        <section class="lesson-section">
+            <h2>Что сделаем в уроке</h2>
+            <ul class="text-list">
+                <li>Ввести интерфейс <code>Skill</code> с <code>tools</code>, <code>handlers</code>, <code>description</code>.</li>
+<li>Собрать агента из набора skills через <code>createAgent</code>.</li>
+<li>Понять, как ограничивать capabilities агента выбором skills.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Ключевые акценты</h2>
+            <ul class="text-list">
+                <li>Skills дают масштабируемость и переиспользование.</li>
+<li>Агенту не нужно давать все возможности сразу.</li>
+<li>Состав skills напрямую влияет на безопасность и стоимость выполнения.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Код урока</h2>
+            <pre><code class="language-typescript">// src/05-skills.ts
+import OpenAI from &quot;openai&quot;;
+import { execSync } from &quot;child_process&quot;;
+import { readFileSync, writeFileSync, existsSync } from &quot;fs&quot;;
+import dotenv from &quot;dotenv&quot;;
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: &quot;https://openrouter.ai/api/v1&quot;,
+    apiKey: process.env.OPENROUTER_API_KEY ?? &quot;&quot;,
+});
+
+// === SKILL: определение ===
+interface Skill {
+    name: string;
+    description: string;           // для system prompt
+    tools: OpenAI.ChatCompletionTool[];
+    handlers: Record&lt;string, (args: any) =&gt; string&gt;;
+}
+
+// === SKILL: файловая система ===
+const filesystemSkill: Skill = {
+    name: &quot;filesystem&quot;,
+    description: &quot;Умеешь работать с файлами: читать, писать, просматривать директории.&quot;,
+    tools: [
+        {
+            type: &quot;function&quot;,
+            function: {
+                name: &quot;read_file&quot;,
+                description: &quot;Прочитать файл&quot;,
+                parameters: {
+                    type: &quot;object&quot;,
+                    properties: {
+                        path: { type: &quot;string&quot;, description: &quot;Путь к файлу&quot; },
+                    },
+                    required: [&quot;path&quot;],
+                },
+            },
+        },
+        {
+            type: &quot;function&quot;,
+            function: {
+                name: &quot;write_file&quot;,
+                description: &quot;Записать содержимое в файл&quot;,
+                parameters: {
+                    type: &quot;object&quot;,
+                    properties: {
+                        path: { type: &quot;string&quot;, description: &quot;Путь к файлу&quot; },
+                        content: { type: &quot;string&quot;, description: &quot;Содержимое&quot; },
+                    },
+                    required: [&quot;path&quot;, &quot;content&quot;],
+                },
+            },
+        },
+        {
+            type: &quot;function&quot;,
+            function: {
+                name: &quot;list_dir&quot;,
+                description: &quot;Список файлов в директории&quot;,
+                parameters: {
+                    type: &quot;object&quot;,
+                    properties: {
+                        path: { type: &quot;string&quot;, description: &quot;Путь к директории&quot; },
+                    },
+                    required: [&quot;path&quot;],
+                },
+            },
+        },
+    ],
+    handlers: {
+        read_file: ({ path }) =&gt; {
+            try { return readFileSync(path, &quot;utf-8&quot;); }
+            catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+        write_file: ({ path, content }) =&gt; {
+            try { writeFileSync(path, content); return `Файл ${path} записан`; }
+            catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+        list_dir: ({ path }) =&gt; {
+            try { return execSync(`ls -la ${path}`, { encoding: &quot;utf-8&quot; }); }
+            catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+    },
+};
+
+// === SKILL: bash ===
+const bashSkill: Skill = {
+    name: &quot;bash&quot;,
+    description: &quot;Умеешь выполнять bash-команды в терминале.&quot;,
+    tools: [
+        {
+            type: &quot;function&quot;,
+            function: {
+                name: &quot;run_bash&quot;,
+                description: &quot;Выполнить bash-команду&quot;,
+                parameters: {
+                    type: &quot;object&quot;,
+                    properties: {
+                        command: { type: &quot;string&quot;, description: &quot;Команда&quot; },
+                    },
+                    required: [&quot;command&quot;],
+                },
+            },
+        },
+    ],
+    handlers: {
+        run_bash: ({ command }) =&gt; {
+            try {
+                return execSync(command, { encoding: &quot;utf-8&quot;, timeout: 5000 }).trim();
+            } catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+    },
+};
+
+// === SKILL: математика ===
+const mathSkill: Skill = {
+    name: &quot;math&quot;,
+    description: &quot;Умеешь вычислять математические выражения.&quot;,
+    tools: [
+        {
+            type: &quot;function&quot;,
+            function: {
+                name: &quot;calculate&quot;,
+                description: &quot;Вычислить математическое выражение&quot;,
+                parameters: {
+                    type: &quot;object&quot;,
+                    properties: {
+                        expression: { type: &quot;string&quot;, description: &quot;Выражение, например: 2 * (3 + 4)&quot; },
+                    },
+                    required: [&quot;expression&quot;],
+                },
+            },
+        },
+    ],
+    handlers: {
+        calculate: ({ expression }) =&gt; {
+            try { return String(eval(expression)); }
+            catch (e: any) { return `Ошибка: ${e.message}`; }
+        },
+    },
+};
+
+// === АГЕНТ с подключаемыми skills ===
+function createAgent(skills: Skill[]) {
+    // Собираем tools и handlers из всех skills
+    const allTools = skills.flatMap(s =&gt; s.tools);
+    const allHandlers = Object.assign({}, ...skills.map(s =&gt; s.handlers));
+
+    // Собираем system prompt из описаний skills
+    const skillDescriptions = skills
+        .map(s =&gt; `- ${s.name}: ${s.description}`)
+        .join(&quot;\n&quot;);
+
+    const systemPrompt = `Ты полезный ассистент. У тебя есть следующие навыки:
+${skillDescriptions}
+Используй инструменты когда нужно. Отвечай на русском.`;
+
+    return async function run(userMessage: string) {
+        const messages: OpenAI.ChatCompletionMessageParam[] = [
+            { role: &quot;system&quot;, content: systemPrompt },
+            { role: &quot;user&quot;, content: userMessage },
+        ];
+
+        let iteration = 0;
+
+        while (iteration &lt; 10) {
+            iteration++;
+            console.log(`\n--- Итерация ${iteration} ---`);
+
+            const response = await client.chat.completions.create({
+                model: &quot;anthropic/claude-sonnet-4.5&quot;,
+                messages,
+                tools: allTools,
+            });
+
+            const message = response.choices[0].message;
+            messages.push(message);
+
+            if (!message.tool_calls?.length) {
+                console.log(&quot;\nОтвет:&quot;, message.content);
+                return message.content;
+            }
+
+            for (const toolCall of message.tool_calls) {
+                const name = toolCall.function.name;
+                const args = JSON.parse(toolCall.function.arguments);
+                console.log(`Tool: ${name}(${JSON.stringify(args)})`);
+
+                const result = allHandlers[name]?.(args)
+                    ?? `Tool &quot;${name}&quot; не найден`;
+                console.log(`→ ${result.slice(0, 150)}`);
+
+                messages.push({
+                    role: &quot;tool&quot;,
+                    tool_call_id: toolCall.id,
+                    content: result,
+                });
+            }
+        }
+    };
+}
+
+// === Использование ===
+async function main() {
+    // Создаём агента с нужными skills
+    const agent = createAgent([filesystemSkill, bashSkill, mathSkill]);
+
+    // Агент сам решит какие tools использовать
+    await agent(
+        &quot;Посмотри файлы проекта в текущей директории, &quot; +
+        &quot;посчитай общее количество строк кода во всех .ts файлах в src/, &quot; +
+        &quot;и создай файл STATS.md с результатами анализа.&quot;
+    );
+}
+
+main();
+</code></pre>
+        </section>
+
+        <nav class="lesson-pager">
+            <a class="pager-link" href="lesson-04-real-tools.html">← Предыдущий урок</a>
+            <a class="pager-link" href="index.html">Оглавление</a>
+            <a class="pager-link" href="lesson-06-planning.html">Следующий урок →</a>
+        </nav>
+    </article>
+</div>
+
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>© 2026 Практический учебник по агентам на TypeScript.</p>
+            <a href="index.html">Вернуться к оглавлению</a>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        if (window.hljs) {
+            document.querySelectorAll('pre code').forEach((el) => {
+                window.hljs.highlightElement(el);
+            });
+        }
+    </script>
+</body>
+</html>

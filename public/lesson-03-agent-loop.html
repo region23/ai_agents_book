@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок 03 · Agent Loop: замыкаем петлю</title>
+    <meta name="description" content="Собираем основной цикл агента: принимаем запрос, выполняем tool calls, возвращаем результаты в контекст и продолжаем.">
+    <meta name="color-scheme" content="dark">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/ocean.min.css" />
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="index.html">AI Agents Book</a>
+            <nav class="header-nav">
+                <a href="index.html">Оглавление</a>
+                <a href="lesson-01-basic-call.html">Начать курс</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="lesson-layout">
+    <aside class="panel lesson-sidebar">
+        <h2>Все уроки</h2>
+        <nav class="toc-nav">
+            <a class="toc-link" href="lesson-01-basic-call.html">01. Базовый LLM-вызов</a>
+<a class="toc-link" href="lesson-02-with-tool.html">02. Добавляем первый Tool</a>
+<a class="toc-link current" href="lesson-03-agent-loop.html">03. Agent Loop: замыкаем петлю</a>
+<a class="toc-link" href="lesson-04-real-tools.html">04. Реальные Tools: bash и файловая система</a>
+<a class="toc-link" href="lesson-05-skills.html">05. Skills: модульная архитектура</a>
+<a class="toc-link" href="lesson-06-planning.html">06. Multi-step Planning</a>
+<a class="toc-link" href="lesson-07-adaptive-agent.html">07. Adaptive Agent: Plan + ReAct + Replan</a>
+<a class="toc-link" href="lesson-08-interactive-agent.html">08. Human-in-the-Loop + Wizard</a>
+        </nav>
+    </aside>
+
+    <article class="panel lesson-panel">
+        <p class="eyebrow">Урок 03</p>
+        <h1>Agent Loop: замыкаем петлю</h1>
+        <div class="lesson-meta">
+            <span class="chip">Начало</span>
+            <span class="chip">20-30 минут</span>
+            <span class="chip">Файл: <code>src/03-agent-loop.ts</code></span>
+        </div>
+
+        <p class="lead">Собираем основной цикл агента: принимаем запрос, выполняем tool calls, возвращаем результаты в контекст и продолжаем.</p>
+
+        <section class="lesson-section">
+            <h2>Что сделаем в уроке</h2>
+            <ul class="text-list">
+                <li>Собрать массив <code>messages</code> как единый контекст выполнения.</li>
+<li>Обработать несколько tools через единый реестр <code>toolHandlers</code>.</li>
+<li>Добавить ограничение по итерациям для защиты от бесконечного цикла.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Ключевые акценты</h2>
+            <ul class="text-list">
+                <li>Agent loop - ядро любой агентной системы.</li>
+<li>Каждый шаг должен сохраняться в контексте, иначе модель теряет состояние.</li>
+<li>Ограничение итераций - обязательная инженерная защита.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Код урока</h2>
+            <pre><code class="language-typescript">// src/03-agent-loop.ts
+import OpenAI from &quot;openai&quot;;
+import dotenv from &quot;dotenv&quot;;
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: &quot;https://openrouter.ai/api/v1&quot;,
+    apiKey: process.env.OPENROUTER_API_KEY ?? &quot;&quot;,
+});
+
+const tools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;get_weather&quot;,
+            description: &quot;Получить текущую погоду в городе&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    city: { type: &quot;string&quot;, description: &quot;Название города&quot; },
+                },
+                required: [&quot;city&quot;],
+            },
+        },
+    },
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;get_time&quot;,
+            description: &quot;Получить текущее время в городе&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    city: { type: &quot;string&quot;, description: &quot;Название города&quot; },
+                },
+                required: [&quot;city&quot;],
+            },
+        },
+    },
+];
+
+// Реестр функций — маппинг имя → реализация
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    get_weather: ({ city }) =&gt; {
+        const data: Record&lt;string, string&gt; = {
+            &quot;Москва&quot;: &quot;−5°C, снег&quot;,
+            &quot;Анапа&quot;: &quot;+8°C, облачно&quot;,
+        };
+        return data[city] ?? `Нет данных для ${city}`;
+    },
+    get_time: ({ city }) =&gt; {
+        const now = new Date();
+        return `Сейчас в ${city}: ${now.toLocaleTimeString(&quot;ru-RU&quot;)}`;
+    },
+};
+
+async function agentLoop(userMessage: string) {
+    // Начальный контекст
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        { role: &quot;system&quot;, content: &quot;Ты полезный ассистент. Используй tools когда нужно.&quot; },
+        { role: &quot;user&quot;, content: userMessage },
+    ];
+
+    let iteration = 0;
+    const MAX_ITERATIONS = 10; // защита от бесконечного цикла
+
+    while (iteration &lt; MAX_ITERATIONS) {
+        iteration++;
+        console.log(`\n--- Итерация ${iteration} ---`);
+
+        const response = await client.chat.completions.create({
+            model: &quot;anthropic/claude-sonnet-4.5&quot;,
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+
+        // Добавляем ответ модели в контекст
+        messages.push(message);
+
+        // Если нет tool_calls — модель решила остановиться
+        if (!message.tool_calls || message.tool_calls.length === 0) {
+            console.log(&quot;Агент завершил работу.&quot;);
+            console.log(&quot;Ответ:&quot;, message.content);
+            return message.content;
+        }
+
+        // Выполняем каждый tool call
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+
+            console.log(`Tool: ${name}(${JSON.stringify(args)})`);
+
+            const handler = toolHandlers[name];
+            const result = handler
+                ? handler(args)
+                : `Ошибка: tool &quot;${name}&quot; не найден`;
+
+            console.log(`Результат: ${result}`);
+
+            // Добавляем результат в контекст
+            messages.push({
+                role: &quot;tool&quot;,
+                tool_call_id: toolCall.id,
+                content: result,
+            });
+        }
+        // Цикл продолжается — отправляем обратно в LLM
+    }
+
+    console.log(&quot;Достигнут лимит итераций!&quot;);
+}
+
+// Тестируем — запрос, требующий ДВА tool call
+agentLoop(&quot;Какая погода в Москве и Анапе? И сколько сейчас времени?&quot;);
+</code></pre>
+        </section>
+
+        <nav class="lesson-pager">
+            <a class="pager-link" href="lesson-02-with-tool.html">← Предыдущий урок</a>
+            <a class="pager-link" href="index.html">Оглавление</a>
+            <a class="pager-link" href="lesson-04-real-tools.html">Следующий урок →</a>
+        </nav>
+    </article>
+</div>
+
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>© 2026 Практический учебник по агентам на TypeScript.</p>
+            <a href="index.html">Вернуться к оглавлению</a>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        if (window.hljs) {
+            document.querySelectorAll('pre code').forEach((el) => {
+                window.hljs.highlightElement(el);
+            });
+        }
+    </script>
+</body>
+</html>

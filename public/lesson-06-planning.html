@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок 06 · Multi-step Planning</title>
+    <meta name="description" content="Разделяем выполнение на две фазы: сначала модель строит структурированный план, затем исполняет его через tools.">
+    <meta name="color-scheme" content="dark">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/ocean.min.css" />
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="index.html">AI Agents Book</a>
+            <nav class="header-nav">
+                <a href="index.html">Оглавление</a>
+                <a href="lesson-01-basic-call.html">Начать курс</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="lesson-layout">
+    <aside class="panel lesson-sidebar">
+        <h2>Все уроки</h2>
+        <nav class="toc-nav">
+            <a class="toc-link" href="lesson-01-basic-call.html">01. Базовый LLM-вызов</a>
+<a class="toc-link" href="lesson-02-with-tool.html">02. Добавляем первый Tool</a>
+<a class="toc-link" href="lesson-03-agent-loop.html">03. Agent Loop: замыкаем петлю</a>
+<a class="toc-link" href="lesson-04-real-tools.html">04. Реальные Tools: bash и файловая система</a>
+<a class="toc-link" href="lesson-05-skills.html">05. Skills: модульная архитектура</a>
+<a class="toc-link current" href="lesson-06-planning.html">06. Multi-step Planning</a>
+<a class="toc-link" href="lesson-07-adaptive-agent.html">07. Adaptive Agent: Plan + ReAct + Replan</a>
+<a class="toc-link" href="lesson-08-interactive-agent.html">08. Human-in-the-Loop + Wizard</a>
+        </nav>
+    </aside>
+
+    <article class="panel lesson-panel">
+        <p class="eyebrow">Урок 06</p>
+        <h1>Multi-step Planning</h1>
+        <div class="lesson-meta">
+            <span class="chip">Продвинутый</span>
+            <span class="chip">35-45 минут</span>
+            <span class="chip">Файл: <code>src/06-planning.ts</code></span>
+        </div>
+
+        <p class="lead">Разделяем выполнение на две фазы: сначала модель строит структурированный план, затем исполняет его через tools.</p>
+
+        <section class="lesson-section">
+            <h2>Что сделаем в уроке</h2>
+            <ul class="text-list">
+                <li>Сделать отдельную фазу планирования с JSON-ответом.</li>
+<li>Провести валидацию/парсинг плана до старта выполнения.</li>
+<li>Запустить фазу исполнения с отчетом по шагам.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Ключевые акценты</h2>
+            <ul class="text-list">
+                <li>Plan-first снижает хаотичные действия агента.</li>
+<li>Явная структура плана помогает дебажить сложные задачи.</li>
+<li>Разделение ролей (planner/executor) повышает предсказуемость.</li>
+            </ul>
+        </section>
+
+        <section class="lesson-section">
+            <h2>Код урока</h2>
+            <pre><code class="language-typescript">// src/06-planning.ts
+// Агент с планированием: сначала думает, потом делает
+import OpenAI from &quot;openai&quot;;
+import { execSync } from &quot;child_process&quot;;
+import { readFileSync, writeFileSync } from &quot;fs&quot;;
+import dotenv from &quot;dotenv&quot;;
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: &quot;https://openrouter.ai/api/v1&quot;,
+    apiKey: process.env.OPENROUTER_API_KEY ?? &quot;&quot;,
+});
+
+const MODEL = &quot;anthropic/claude-sonnet-4.5&quot;;
+
+// ============================================================
+// TOOLS (те же что в 05, но добавляем think tool)
+// ============================================================
+
+const tools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;think&quot;,
+            description:
+                &quot;Используй этот инструмент чтобы подумать, спланировать или порассуждать. &quot; +
+                &quot;Результат не виден пользователю — это твой внутренний блокнот.&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    thought: {
+                        type: &quot;string&quot;,
+                        description: &quot;Твои мысли, план, рассуждения&quot;,
+                    },
+                },
+                required: [&quot;thought&quot;],
+            },
+        },
+    },
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;run_bash&quot;,
+            description: &quot;Выполнить bash-команду&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    command: { type: &quot;string&quot;, description: &quot;Команда&quot; },
+                },
+                required: [&quot;command&quot;],
+            },
+        },
+    },
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;read_file&quot;,
+            description: &quot;Прочитать файл&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    path: { type: &quot;string&quot;, description: &quot;Путь к файлу&quot; },
+                },
+                required: [&quot;path&quot;],
+            },
+        },
+    },
+    {
+        type: &quot;function&quot;,
+        function: {
+            name: &quot;write_file&quot;,
+            description: &quot;Записать содержимое в файл&quot;,
+            parameters: {
+                type: &quot;object&quot;,
+                properties: {
+                    path: { type: &quot;string&quot;, description: &quot;Путь к файлу&quot; },
+                    content: { type: &quot;string&quot;, description: &quot;Содержимое&quot; },
+                },
+                required: [&quot;path&quot;, &quot;content&quot;],
+            },
+        },
+    },
+];
+
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    think: ({ thought }) =&gt; {
+        // Think tool ничего не делает — просто возвращает подтверждение.
+        // Вся ценность в том, что модель &quot;проговорила&quot; мысль.
+        return &quot;OK&quot;;
+    },
+    run_bash: ({ command }) =&gt; {
+        try {
+            return execSync(command, { encoding: &quot;utf-8&quot;, timeout: 10000 }).trim();
+        } catch (e: any) {
+            return `Ошибка: ${e.stderr || e.message}`;
+        }
+    },
+    read_file: ({ path }) =&gt; {
+        try {
+            return readFileSync(path, &quot;utf-8&quot;);
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+    write_file: ({ path, content }) =&gt; {
+        try {
+            writeFileSync(path, content, &quot;utf-8&quot;);
+            return `✅ Файл ${path} записан (${content.length} байт)`;
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+};
+
+// ============================================================
+// ПОДХОД 1: Plan-then-Execute
+// Два отдельных этапа: сначала план, потом выполнение
+// ============================================================
+
+async function planThenExecute(userMessage: string) {
+    console.log(&quot;╔══════════════════════════════════════════╗&quot;);
+    console.log(&quot;║   ПОДХОД 1: Plan-then-Execute            ║&quot;);
+    console.log(&quot;╚══════════════════════════════════════════╝\n&quot;);
+
+    // --- ФАЗА 1: Планирование (без tools!) ---
+    console.log(&quot;📋 ФАЗА 1: ПЛАНИРОВАНИЕ\n&quot;);
+
+    const planResponse = await client.chat.completions.create({
+        model: MODEL,
+        messages: [
+            {
+                role: &quot;system&quot;,
+                content: `Ты планировщик задач. Получив запрос пользователя, составь пошаговый план.
+
+Правила:
+- Каждый шаг должен быть конкретным и выполнимым
+- Используй формат JSON
+- НЕ выполняй задачу, только спланируй
+
+Доступные инструменты:
+- run_bash: выполнить bash-команду
+- read_file: прочитать файл
+- write_file: записать файл
+
+Ответь ТОЛЬКО валидным JSON в формате:
+{
+  &quot;goal&quot;: &quot;краткое описание цели&quot;,
+  &quot;steps&quot;: [
+    { &quot;id&quot;: 1, &quot;action&quot;: &quot;описание шага&quot;, &quot;tool&quot;: &quot;имя_tool&quot;, &quot;reason&quot;: &quot;зачем&quot; },
+    ...
+  ]
+}`,
+            },
+            { role: &quot;user&quot;, content: userMessage },
+        ],
+    });
+
+    const planText = planResponse.choices[0].message.content ?? &quot;&quot;;
+
+    // Парсим план
+    let plan: { goal: string; steps: { id: number; action: string; tool: string; reason: string }[] };
+    try {
+        // Убираем возможные markdown-обёртки
+        const cleanJson = planText.replace(/```json\n?/g, &quot;&quot;).replace(/```\n?/g, &quot;&quot;).trim();
+        plan = JSON.parse(cleanJson);
+    } catch (e) {
+        console.log(&quot;❌ Не удалось распарсить план:&quot;);
+        console.log(planText);
+        return;
+    }
+
+    console.log(`🎯 Цель: ${plan.goal}`);
+    console.log(`📝 Шагов: ${plan.steps.length}\n`);
+    plan.steps.forEach((s) =&gt; {
+        console.log(`   ${s.id}. [${s.tool}] ${s.action}`);
+        console.log(`      └─ ${s.reason}`);
+    });
+
+    // --- ФАЗА 2: Выполнение (с tools) ---
+    console.log(&quot;\n\n⚡ ФАЗА 2: ВЫПОЛНЕНИЕ\n&quot;);
+
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: &quot;system&quot;,
+            content: `Ты исполнитель задач. Выполни план пошагово, используя инструменты.
+
+ПЛАН:
+${JSON.stringify(plan, null, 2)}
+
+Выполняй шаги по порядку. После каждого шага сообщай прогресс.
+Если шаг не получился — адаптируй план.
+Когда все шаги выполнены — подведи итог.`,
+        },
+        { role: &quot;user&quot;, content: userMessage },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 15) {
+        iteration++;
+        console.log(`\n--- Выполнение: итерация ${iteration} ---`);
+
+        const response = await client.chat.completions.create({
+            model: MODEL,
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log(&quot;\n✅ Выполнение завершено.&quot;);
+            console.log(&quot;Итог:&quot;, message.content);
+            return;
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+            const argsPreview =
+                name === &quot;write_file&quot;
+                    ? `{path: &quot;${args.path}&quot;, content: [${args.content.length} chars]}`
+                    : JSON.stringify(args);
+
+            console.log(`   🔧 ${name}(${argsPreview})`);
+
+            const result = toolHandlers[name]?.(args) ?? `Tool &quot;${name}&quot; не найден`;
+            console.log(`   → ${result.slice(0, 120)}`);
+
+            messages.push({
+                role: &quot;tool&quot;,
+                tool_call_id: toolCall.id,
+                content: result,
+            });
+        }
+    }
+}
+
+// ============================================================
+// ПОДХОД 2: ReAct (Reasoning + Acting)
+// Думает и действует на каждом шаге через think tool
+// ============================================================
+
+async function reactAgent(userMessage: string) {
+    console.log(&quot;╔══════════════════════════════════════════╗&quot;);
+    console.log(&quot;║   ПОДХОД 2: ReAct (Reason + Act)         ║&quot;);
+    console.log(&quot;╚══════════════════════════════════════════╝\n&quot;);
+
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: &quot;system&quot;,
+            content: `Ты агент, который решает задачи пошагово.
+
+МЕТОД РАБОТЫ:
+1. Перед КАЖДЫМ действием сначала вызови tool &quot;think&quot; — обдумай:
+   - Что уже известно?
+   - Какой следующий шаг?
+   - Почему именно этот шаг?
+2. Затем выполни действие нужным tool
+3. После получения результата снова &quot;think&quot; — оцени:
+   - Получилось ли?
+   - Что это значит?
+   - Какой следующий шаг?
+
+ВАЖНО: Всегда чередуй think → action → think → action.
+Не делай действий без предварительного обдумывания.
+
+Доступные инструменты: think, run_bash, read_file, write_file.`,
+        },
+        { role: &quot;user&quot;, content: userMessage },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 20) {
+        iteration++;
+
+        const response = await client.chat.completions.create({
+            model: MODEL,
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log(`\n✅ Агент завершил работу (${iteration} итераций).`);
+            console.log(&quot;Ответ:&quot;, message.content);
+            return;
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+
+            if (name === &quot;think&quot;) {
+                // Красиво выводим мысли агента
+                console.log(`\n💭 [Мысль]: ${args.thought}`);
+            } else {
+                const argsPreview =
+                    name === &quot;write_file&quot;
+                        ? `{path: &quot;${args.path}&quot;, content: [${args.content.length} chars]}`
+                        : JSON.stringify(args);
+                console.log(`   🔧 ${name}(${argsPreview})`);
+
+                const result = toolHandlers[name]?.(args) ?? `Tool &quot;${name}&quot; не найден`;
+                console.log(`   → ${result.slice(0, 120)}`);
+
+                messages.push({
+                    role: &quot;tool&quot;,
+                    tool_call_id: toolCall.id,
+                    content: result,
+                });
+                continue;
+            }
+
+            // Think всегда возвращает OK
+            messages.push({
+                role: &quot;tool&quot;,
+                tool_call_id: toolCall.id,
+                content: &quot;OK&quot;,
+            });
+        }
+    }
+}
+
+// ============================================================
+// MAIN: выбери подход
+// ============================================================
+
+async function main() {
+    const task =
+        &quot;Проанализируй все .ts файлы в директории src/. &quot; +
+        &quot;Найди дублирование кода между файлами (общие паттерны, &quot; +
+        &quot;повторяющиеся импорты, похожие функции). &quot; +
+        &quot;Создай файл REFACTORING.md с конкретными рекомендациями по рефакторингу.&quot;;
+
+    // Раскомментируй нужный подход:
+    const approach = process.argv[2] ?? &quot;plan&quot;;
+
+    if (approach === &quot;plan&quot;) {
+        await planThenExecute(task);
+    } else if (approach === &quot;react&quot;) {
+        await reactAgent(task);
+    } else {
+        console.log(&quot;Использование: npx tsx src/06-planning.ts [plan|react]&quot;);
+    }
+}
+
+main();
+</code></pre>
+        </section>
+
+        <nav class="lesson-pager">
+            <a class="pager-link" href="lesson-05-skills.html">← Предыдущий урок</a>
+            <a class="pager-link" href="index.html">Оглавление</a>
+            <a class="pager-link" href="lesson-07-adaptive-agent.html">Следующий урок →</a>
+        </nav>
+    </article>
+</div>
+
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>© 2026 Практический учебник по агентам на TypeScript.</p>
+            <a href="index.html">Вернуться к оглавлению</a>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        if (window.hljs) {
+            document.querySelectorAll('pre code').forEach((el) => {
+                window.hljs.highlightElement(el);
+            });
+        }
+    </script>
+</body>
+</html>

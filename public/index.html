@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИИ-агенты: от первого вызова до интерактивного помощника</title>
+    <meta name="description" content="Практический учебник по построению агентных систем на TypeScript: от базового вызова модели до адаптивного агента с планированием, репланом и Human-in-the-Loop.">
+    <meta name="color-scheme" content="dark">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/ocean.min.css" />
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="index.html">AI Agents Book</a>
+            <nav class="header-nav">
+                <a href="index.html">Оглавление</a>
+                <a href="lesson-01-basic-call.html">Начать курс</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <section class="panel hero-panel">
+    <p class="eyebrow">Практический маршрут обучения</p>
+    <h1>ИИ-агенты: от первого вызова до интерактивного помощника</h1>
+    <p class="lead">Практический учебник по построению агентных систем на TypeScript: от базового вызова модели до адаптивного агента с планированием, репланом и Human-in-the-Loop.</p>
+    <p class="sublead">Начинающие и middle-разработчики, которые хотят перейти от простых LLM-запросов к рабочим агентам.</p>
+    <div class="hero-actions">
+        <a class="button" href="lesson-01-basic-call.html">Перейти к уроку 1</a>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Чему научится ученик</h2>
+    <ul class="text-list check-list">
+        <li>Поймете базовый цикл агента: LLM -&gt; tool call -&gt; результат -&gt; следующий шаг.</li>
+<li>Научитесь проектировать и подключать инструменты (tools) через JSON Schema.</li>
+<li>Соберете модульного агента со skills и управляемым набором возможностей.</li>
+<li>Реализуете двухфазный подход Plan -&gt; Execute и разберетесь, когда нужен Replan.</li>
+<li>Добавите Human-in-the-Loop и wizard-поток для безопасных изменений в проекте.</li>
+    </ul>
+</section>
+
+<section class="panel">
+    <h2>Какой путь мы пройдем</h2>
+    <div class="path-grid">
+        
+                <article class="path-card">
+                    <h3>Этап 1: База</h3>
+                    <p>Первые 3 урока: как вызвать LLM, добавить tool и собрать непрерывный agent loop.</p>
+                </article>
+            
+
+                <article class="path-card">
+                    <h3>Этап 2: Инструменты и архитектура</h3>
+                    <p>Уроки 4-5: подключение реальных инструментов и переход к модульным skills.</p>
+                </article>
+            
+
+                <article class="path-card">
+                    <h3>Этап 3: Планирование и адаптация</h3>
+                    <p>Уроки 6-7: multi-step planning, стратегия выполнения и реплан при новых данных.</p>
+                </article>
+            
+
+                <article class="path-card">
+                    <h3>Этап 4: Работа с пользователем</h3>
+                    <p>Урок 8: подтверждения, выбор вариантов и безопасные действия через Human-in-the-Loop.</p>
+                </article>
+            
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Оглавление уроков</h2>
+    <div class="lesson-grid">
+        
+                <a class="lesson-card" href="lesson-01-basic-call.html">
+                    <span class="lesson-number">Урок 01</span>
+                    <h3>Базовый LLM-вызов</h3>
+                    <p>Запускаем первый запрос к модели через OpenAI SDK и OpenRouter, чтобы получить минимальный рабочий скелет.</p>
+                    <div class="meta-inline">
+                        <span>Начало</span>
+                        <span>10-15 минут</span>
+                    </div>
+                </a>
+            
+
+                <a class="lesson-card" href="lesson-02-with-tool.html">
+                    <span class="lesson-number">Урок 02</span>
+                    <h3>Добавляем первый Tool</h3>
+                    <p>Подключаем функцию как tool, чтобы модель могла не только отвечать текстом, но и запрашивать выполнение действия.</p>
+                    <div class="meta-inline">
+                        <span>Начало</span>
+                        <span>15-20 минут</span>
+                    </div>
+                </a>
+            
+
+                <a class="lesson-card" href="lesson-03-agent-loop.html">
+                    <span class="lesson-number">Урок 03</span>
+                    <h3>Agent Loop: замыкаем петлю</h3>
+                    <p>Собираем основной цикл агента: принимаем запрос, выполняем tool calls, возвращаем результаты в контекст и продолжаем.</p>
+                    <div class="meta-inline">
+                        <span>Начало</span>
+                        <span>20-30 минут</span>
+                    </div>
+                </a>
+            
+
+                <a class="lesson-card" href="lesson-04-real-tools.html">
+                    <span class="lesson-number">Урок 04</span>
+                    <h3>Реальные Tools: bash и файловая система</h3>
+                    <p>Переходим от учебных заглушек к реальным инструментам: выполнение команд и чтение файлов в рабочей директории.</p>
+                    <div class="meta-inline">
+                        <span>Практика</span>
+                        <span>25-35 минут</span>
+                    </div>
+                </a>
+            
+
+                <a class="lesson-card" href="lesson-05-skills.html">
+                    <span class="lesson-number">Урок 05</span>
+                    <h3>Skills: модульная архитектура</h3>
+                    <p>Группируем tools и handlers в независимые skills, чтобы агент можно было гибко собирать под задачу.</p>
+                    <div class="meta-inline">
+                        <span>Архитектура</span>
+                        <span>30-40 минут</span>
+                    </div>
+                </a>
+            
+
+                <a class="lesson-card" href="lesson-06-planning.html">
+                    <span class="lesson-number">Урок 06</span>
+                    <h3>Multi-step Planning</h3>
+                    <p>Разделяем выполнение на две фазы: сначала модель строит структурированный план, затем исполняет его через tools.</p>
+                    <div class="meta-inline">
+                        <span>Продвинутый</span>
+                        <span>35-45 минут</span>
+                    </div>
+                </a>
+            
+
+                <a class="lesson-card" href="lesson-07-adaptive-agent.html">
+                    <span class="lesson-number">Урок 07</span>
+                    <h3>Adaptive Agent: Plan + ReAct + Replan</h3>
+                    <p>Добавляем адаптивность: агент умеет анализировать промежуточные результаты, запрашивать реплан и менять стратегию на лету.</p>
+                    <div class="meta-inline">
+                        <span>Продвинутый</span>
+                        <span>40-55 минут</span>
+                    </div>
+                </a>
+            
+
+                <a class="lesson-card" href="lesson-08-interactive-agent.html">
+                    <span class="lesson-number">Урок 08</span>
+                    <h3>Human-in-the-Loop + Wizard</h3>
+                    <p>Делаем агента безопасным для реальной работы: подтверждения перед опасными действиями, выбор вариантов и интерактивный ввод от пользователя.</p>
+                    <div class="meta-inline">
+                        <span>Финал</span>
+                        <span>45-60 минут</span>
+                    </div>
+                </a>
+            
+    </div>
+</section>
+
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>© 2026 Практический учебник по агентам на TypeScript.</p>
+            <a href="index.html">Вернуться к оглавлению</a>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        if (window.hljs) {
+            document.querySelectorAll('pre code').forEach((el) => {
+                window.hljs.highlightElement(el);
+            });
+        }
+    </script>
+</body>
+</html>
