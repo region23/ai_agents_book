@@ -483,6 +483,161 @@
             font-size: 1.15rem;
         }
 
+        /* ====== TOOLTIP TERMS ====== */
+        .term {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted rgba(136, 136, 160, 0.6);
+            cursor: help;
+        }
+
+        .term::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 50%;
+            bottom: 140%;
+            transform: translateX(-50%);
+            background: #0f1118;
+            color: var(--text);
+            padding: 0.45rem 0.65rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+            line-height: 1.4;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+            z-index: 20;
+        }
+
+        .term:hover::after,
+        .term:focus-visible::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        .loop-node.term { border-bottom: none; }
+
+        /* ====== PREP ====== */
+        .prep-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem 2rem;
+        }
+
+        .prep-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .prep-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+        }
+
+        .prep-header p {
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .prep-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .prep-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem 1.25rem 1.1rem;
+        }
+
+        .prep-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .prep-card p { color: var(--text-dim); font-size: 0.95rem; }
+
+        .prep-note {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        /* ====== DEMO ====== */
+        .demo-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--text);
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            margin-top: 0.5rem;
+        }
+
+        .demo-btn:hover { background: rgba(99, 102, 241, 0.2); }
+
+        .demo-output {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
+            margin: 0;
+        }
+
+        .demo-output.visible {
+            max-height: 2000px;
+            opacity: 1;
+            margin: 1.25rem 0;
+            overflow-x: auto;
+        }
+
+        .output-note {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .output-note.visible { display: block; }
+
+        /* ====== MINI BLOCKS ====== */
+        .mini-block {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.9rem 1.1rem;
+            margin: 1rem 0;
+            font-size: 0.92rem;
+        }
+
+        .mini-block.expect {
+            background: rgba(34, 197, 94, 0.08);
+            border-left: 3px solid var(--green);
+        }
+
+        .mini-block.trouble {
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 3px solid var(--orange);
+        }
+
+        .mini-title {
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
         /* Architecture diagram */
         .arch-diagram {
             background: var(--bg-code);
@@ -573,6 +728,16 @@
             .loop-flow { font-size: 0.7rem; }
             .hero-meta { flex-direction: column; align-items: center; gap: 0.75rem; }
         }
+
+        /* ====== FOCUS VISIBLE ====== */
+        .step-card:focus-visible,
+        .progress-dot:focus-visible,
+        .demo-btn:focus-visible,
+        .copy-btn:focus-visible,
+        .hero-cta:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
     </style>
 </head>
 <body>
@@ -584,8 +749,9 @@
         <h1>ИИ-агенты для самых маленьких</h1>
         <p class="hero-subtitle">Интерактивный учебник на TypeScript</p>
         <p class="hero-description">
-            8 шагов от «привет, LLM» до полноценного интерактивного агента
-            с планированием, tools и human-in-the-loop.
+            8 шагов от «привет, <span class="term" data-tip="Большая языковая модель">LLM</span>» до полноценного интерактивного агента
+            с планированием, <span class="term" data-tip="Инструменты/функции, которые модель может вызвать">tools</span> и
+            <span class="term" data-tip="Пользователь участвует в принятии решений">human-in-the-loop</span>.
             Никакой магии — только код, который ты напишешь сам.
         </p>
         <a href="#step-0" class="hero-cta">
@@ -605,6 +771,47 @@
     </div>
 </section>
 
+<!-- ====== BEFORE START ====== -->
+<section class="prep-section" id="before-start">
+    <div class="prep-header">
+        <h2>Перед стартом</h2>
+        <p>Пара минут подготовки — и всё пойдёт гладко. Это важно, особенно если ты делаешь первые шаги.</p>
+    </div>
+    <div class="prep-grid">
+        <div class="prep-card">
+            <div class="prep-title">✅ Что нужно</div>
+            <p>Node.js 18+ и npm. Проверь версии: <code style="color: var(--cyan);">node -v</code> и <code style="color: var(--cyan);">npm -v</code>.</p>
+        </div>
+        <div class="prep-card">
+            <div class="prep-title">🔑 OpenRouter</div>
+            <p>Нужен аккаунт и API‑ключ. Расход зависит от модели, но для первых шагов обычно хватает лимита $1–$5. Следи за балансом в кабинете.</p>
+        </div>
+        <div class="prep-card">
+            <div class="prep-title">🛡 Безопасность ключа</div>
+            <p>Ключ храним только в <code style="color: var(--cyan);">.env</code>. Не публикуй его и не коммить в репозиторий.</p>
+        </div>
+    </div>
+
+    <div class="prep-card" style="margin-top: 1.5rem;">
+        <div class="prep-title">Быстрый чек‑лист проекта</div>
+        <div class="run-command" style="margin-top: 0.75rem;">
+            <span class="run-icon">▶</span>
+            <code>mkdir simple-agent && cd simple-agent</code>
+        </div>
+        <div class="run-command">
+            <span class="run-icon">▶</span>
+            <code>mkdir src</code>
+        </div>
+        <div class="code-block">
+            <div class="code-filename"><span class="dot"></span>.gitignore</div>
+            <pre>node_modules
+.env</pre>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <p class="prep-note">В учебнике есть кнопки «Запустить демо» — это симуляция вывода. Реальные ответы <span class="term" data-tip="Большая языковая модель">LLM</span> могут отличаться.</p>
+    </div>
+</section>
+
 <!-- ====== CONCEPT ====== -->
 <section class="concept-section" id="step-0">
     <div class="concept-header">
@@ -614,15 +821,15 @@
 
     <div class="loop-diagram">
         <div class="loop-flow">
-            <span class="loop-node llm">LLM</span>
+            <span class="loop-node llm term" data-tip="Большая языковая модель">LLM</span>
             <span class="loop-arrow">→</span>
-            <span class="loop-node output">structured output</span>
+            <span class="loop-node output term" data-tip="Структурированный ответ (например, tool_calls)">structured output</span>
             <span class="loop-arrow">→</span>
-            <span class="loop-node tool">execute tool</span>
+            <span class="loop-node tool term" data-tip="Выполнить инструмент">execute tool</span>
             <span class="loop-arrow">→</span>
-            <span class="loop-node context">add to context</span>
+            <span class="loop-node context term" data-tip="Добавить в историю сообщений">add to context</span>
             <span class="loop-arrow">→</span>
-            <span class="loop-node llm">LLM</span>
+            <span class="loop-node llm term" data-tip="Большая языковая модель">LLM</span>
             <span class="loop-arrow">→ …</span>
         </div>
         <span class="loop-label">↑ вот и весь агент — это цикл</span>
@@ -630,17 +837,17 @@
 
     <div style="max-width: 680px; margin: 0 auto;">
         <p style="color: var(--text); margin-bottom: 1rem;">
-            Агент — это LLM в цикле. Модель получает запрос, решает какой инструмент вызвать (или не вызвать),
-            мы выполняем этот инструмент, добавляем результат в контекст и отправляем обратно в LLM.
+            Агент — это <span class="term" data-tip="Большая языковая модель">LLM</span> в цикле. Модель получает запрос, решает какой инструмент вызвать (или не вызвать),
+            мы выполняем этот инструмент, добавляем результат в контекст и отправляем обратно в <span class="term" data-tip="Большая языковая модель">LLM</span>.
             И так до тех пор, пока модель сама не решит, что пора остановиться.
         </p>
         <p style="color: var(--text-dim); margin-bottom: 1rem;">
-            Современные LLM API (Anthropic, OpenAI) уже имеют <strong style="color: var(--text);">нативную поддержку tools</strong> —
-            ты описываешь доступные инструменты в запросе, и модель сама возвращает <code style="color: var(--cyan);">tool_calls</code>
+            Современные <span class="term" data-tip="API больших языковых моделей">LLM API</span> (Anthropic, OpenAI) уже имеют <strong style="color: var(--text);">нативную поддержку <span class="term" data-tip="Инструменты/функции, которые модель может вызвать">tools</span></strong> —
+            ты описываешь доступные инструменты в запросе, и модель сама возвращает <span class="term" data-tip="Структурированный список вызовов инструментов"><code style="color: var(--cyan);">tool_calls</code></span>
             в структурированном виде. Не нужно просить «верни JSON» — это уже встроено.
         </p>
         <p style="color: var(--text-dim);">
-            Claude Code, Cursor, GitHub Copilot — все работают на этом же фундаменте. Разница в количестве tools,
+            Claude Code, Cursor, GitHub Copilot — все работают на этом же фундаменте. Разница в количестве <span class="term" data-tip="Инструменты/функции, которые модель может вызвать">tools</span>,
             quality of prompts и UX вокруг. Ядро — одно и то же. Давай построим его с нуля.
         </p>
     </div>
@@ -654,11 +861,11 @@
     <div class="step-number">01</div>
     <div class="step-card">
         <div class="step-header">
-            <div class="step-title">Базовый LLM-вызов</div>
+        <div class="step-title">Базовый <span class="term" data-tip="Большая языковая модель">LLM</span>-вызов</div>
             <span class="step-badge beginner">Начало</span>
         </div>
         <p class="step-intro">
-            Отправляем запрос в LLM, получаем ответ. Просто чтобы убедиться что всё работает.
+            Отправляем запрос в <span class="term" data-tip="Большая языковая модель">LLM</span>, получаем ответ. Просто чтобы убедиться что всё работает.
         </p>
 
         <div class="step-content">
@@ -672,7 +879,23 @@
             </div>
 
             <div class="step-detail">
-                <p>Создай файл <code>.env</code> с ключом от OpenRouter:</p>
+                <p>Создай папку <code>src</code> и добавь <code>.gitignore</code>, чтобы случайно не закоммитить ключ:</p>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>mkdir src</code>
+            </div>
+
+            <div class="code-block">
+                <div class="code-filename"><span class="dot"></span>.gitignore</div>
+                <pre>node_modules
+.env</pre>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+
+            <div class="step-detail">
+                <p>Теперь создай файл <code>.env</code> с ключом от OpenRouter:</p>
             </div>
 
             <div class="code-block">
@@ -717,8 +940,21 @@ dotenv.<span class="fn">config</span>();
                 <code>npx tsx src/01-basic-call.ts</code>
             </div>
 
-            <div class="terminal-output">
+            <button class="demo-btn" data-demo="demo-step-1">▶ Запустить демо</button>
+
+            <div class="terminal-output demo-output" id="demo-step-1" aria-live="polite">
 <span class="t-bold">4</span>
+            </div>
+            <div class="output-note" data-demo-note="demo-step-1">Пример вывода. У тебя может быть иначе — это нормально.</div>
+
+            <div class="mini-block expect">
+                <div class="mini-title">✅ Что должно получиться</div>
+                В терминале появляется ответ модели (обычно «4») без ошибок.
+            </div>
+
+            <div class="mini-block trouble">
+                <div class="mini-title">🧯 Если не работает</div>
+                Проверь <code>OPENROUTER_API_KEY</code> в <code>.env</code>, наличие интернета и версии <code>node</code>/<code>npm</code>.
             </div>
 
             <div class="key-insight">
@@ -738,13 +974,13 @@ dotenv.<span class="fn">config</span>();
             <span class="step-badge beginner">Начало</span>
         </div>
         <p class="step-intro">
-            Даём модели возможность «действовать» — вызывать функции. Ключевой момент: модель не выдумывает данные, а просит нас выполнить функцию.
+            Даём модели возможность «действовать» — вызывать функции (<span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span>). Ключевой момент: модель не выдумывает данные, а просит нас выполнить функцию.
         </p>
 
         <div class="step-content">
             <div class="step-detail">
                 <p>
-                    Tool описывается JSON Schema прямо в запросе к API. Модель видит описание и решает сама — нужно ли вызывать tool или ответить текстом.
+                    Tool описывается JSON Schema прямо в запросе к API. Модель видит описание и решает сама — нужно ли вызывать <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span> или ответить текстом.
                 </p>
             </div>
 
@@ -797,6 +1033,7 @@ dotenv.<span class="fn">config</span>();
             { <span class="prop">role</span>: <span class="str">"user"</span>, <span class="prop">content</span>: <span class="str">"Какая погода в Анапе?"</span> }
         ],
         tools,
+        <span class="prop">tool_choice</span>: { <span class="prop">type</span>: <span class="str">"function"</span>, <span class="prop">function</span>: { <span class="prop">name</span>: <span class="str">"get_weather"</span> } }, <span class="cm">// для стабильного демо</span>
     });
 
     <span class="kw">const</span> message = response.choices[<span class="num">0</span>].message;
@@ -810,12 +1047,18 @@ dotenv.<span class="fn">config</span>();
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
 
+            <div class="step-detail">
+                <p>Подсказка: если убрать <code>tool_choice</code>, модель будет решать сама — так реалистичнее, но демо может быть нестабильным.</p>
+            </div>
+
             <div class="run-command">
                 <span class="run-icon">▶</span>
                 <code>npx tsx src/02-with-tool.ts</code>
             </div>
 
-            <div class="terminal-output">
+            <button class="demo-btn" data-demo="demo-step-2">▶ Запустить демо</button>
+
+            <div class="terminal-output demo-output" id="demo-step-2" aria-live="polite">
 <span class="t-dim">Content:</span>
 <span class="t-bold">Tool calls:</span> [
   {
@@ -827,6 +1070,17 @@ dotenv.<span class="fn">config</span>();
     }
   }
 ]</div>
+            <div class="output-note" data-demo-note="demo-step-2">Пример вывода. У тебя может быть иначе — это нормально.</div>
+
+            <div class="mini-block expect">
+                <div class="mini-title">✅ Что должно получиться</div>
+                В выводе видно <code>tool_calls</code> с вызовом <code>get_weather</code> и аргументом <code>city</code>.
+            </div>
+
+            <div class="mini-block trouble">
+                <div class="mini-title">🧯 Если не работает</div>
+                Если <code>tool_calls</code> пустой — проверь, что есть <code>tool_choice</code>, или укажи в промпте «вызови get_weather».
+            </div>
 
             <div class="key-insight">
                 <strong>💡 Обрати внимание:</strong> Content пустой! Модель не стала выдумывать погоду.
@@ -846,7 +1100,7 @@ dotenv.<span class="fn">config</span>();
             <span class="step-badge beginner">Ключевой момент</span>
         </div>
         <p class="step-intro">
-            Вот это и делает агента агентом. Модель вызывает tool → мы выполняем → результат обратно в LLM → repeat.
+            Вот это и делает агента агентом. Модель вызывает <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span> → мы выполняем → результат обратно в <span class="term" data-tip="Большая языковая модель">LLM</span> → repeat.
         </p>
 
         <div class="step-content">
@@ -966,7 +1220,9 @@ dotenv.<span class="fn">config</span>();
                 <code>npx tsx src/03-agent-loop.ts</code>
             </div>
 
-            <div class="terminal-output">
+            <button class="demo-btn" data-demo="demo-step-3">▶ Запустить демо</button>
+
+            <div class="terminal-output demo-output" id="demo-step-3" aria-live="polite">
 <span class="t-dim">--- Итерация 1 ---</span>
 <span class="t-yellow">Tool: get_weather({"city":"Москва"})</span>
 Результат: −5°C, снег
@@ -977,6 +1233,17 @@ dotenv.<span class="fn">config</span>();
 
 <span class="t-dim">--- Итерация 2 ---</span>
 <span class="t-bold">Ответ: Погода: Москва −5°C, снег | Анапа +8°C, облачно. Время: 09:39:53</span></div>
+            <div class="output-note" data-demo-note="demo-step-3">Пример вывода. У тебя может быть иначе — это нормально.</div>
+
+            <div class="mini-block expect">
+                <div class="mini-title">✅ Что должно получиться</div>
+                На первой итерации есть <code>tool_calls</code>, на следующей — финальный ответ без tool‑вызовов.
+            </div>
+
+            <div class="mini-block trouble">
+                <div class="mini-title">🧯 Если не работает</div>
+                Проверь парсинг аргументов (<code>JSON.parse</code>) и что handlers всегда возвращают строку.
+            </div>
 
             <div class="what-happens">
                 <strong>🔍 Что произошло:</strong>
@@ -1004,7 +1271,7 @@ dotenv.<span class="fn">config</span>();
             <span class="step-badge intermediate">Практика</span>
         </div>
         <p class="step-intro">
-            Заменяем фейковые данные настоящими инструментами. Агент теперь может выполнять команды и читать файлы.
+            Заменяем фейковые данные настоящими инструментами. Агент теперь может выполнять команды и читать файлы через <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tools</span>.
         </p>
 
         <div class="step-content">
@@ -1017,8 +1284,24 @@ dotenv.<span class="fn">config</span>();
                 <pre><span class="kw">import</span> { execSync } <span class="kw">from</span> <span class="str">"child_process"</span>;
 <span class="kw">import</span> { readFileSync } <span class="kw">from</span> <span class="str">"fs"</span>;
 
+<span class="kw">const</span> ALLOWLIST = [
+    /^ls\b/,
+    /^pwd\b/,
+    /^cat\b/,
+    /^head\b/,
+    /^tail\b/,
+    /^wc\b/,
+    /^sed\b/,
+];
+
+<span class="kw">const</span> isAllowed = (<span class="param">command</span>: <span class="type">string</span>) =&gt;
+    ALLOWLIST.<span class="fn">some</span>((re) =&gt; re.<span class="fn">test</span>(command.<span class="fn">trim</span>()));
+
 <span class="kw">const</span> toolHandlers: <span class="type">Record</span>&lt;<span class="type">string</span>, (<span class="param">args</span>: <span class="type">any</span>) =&gt; <span class="type">string</span>&gt; = {
     <span class="fn">run_bash</span>: ({ command }) =&gt; {
+        <span class="kw">if</span> (!<span class="fn">isAllowed</span>(command)) {
+            <span class="kw">return</span> <span class="str">`Команда запрещена allowlist: ${command}`</span>;
+        }
         <span class="kw">try</span> {
             <span class="kw">return</span> <span class="fn">execSync</span>(command, {
                 <span class="prop">encoding</span>: <span class="str">"utf-8"</span>,
@@ -1042,7 +1325,18 @@ dotenv.<span class="fn">config</span>();
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
 
-            <div class="terminal-output">
+            <div class="step-detail">
+                <p><strong>Важно:</strong> здесь есть минимальный sandbox через allowlist команд. Если команда не разрешена — агент получит ошибку и сможет попросить другой путь.</p>
+            </div>
+
+            <div class="run-command">
+                <span class="run-icon">▶</span>
+                <code>npx tsx src/04-real-tools.ts</code>
+            </div>
+
+            <button class="demo-btn" data-demo="demo-step-4">▶ Запустить демо</button>
+
+            <div class="terminal-output demo-output" id="demo-step-4" aria-live="polite">
 <span class="t-dim">--- Итерация 1 ---</span>
 <span class="t-yellow">Tool: run_bash({"command":"ls -la"})</span>
 → total 72, drwxr-xr-x 10 ...
@@ -1057,6 +1351,17 @@ dotenv.<span class="fn">config</span>();
 
 <span class="t-dim">--- Итерация 4 ---</span>
 <span class="t-bold">Ответ: Проект simple-agent — учебный проект для AI-агентов...</span></div>
+            <div class="output-note" data-demo-note="demo-step-4">Пример вывода. У тебя может быть иначе — это нормально.</div>
+
+            <div class="mini-block expect">
+                <div class="mini-title">✅ Что должно получиться</div>
+                Агент показывает вывод <code>ls</code>/<code>cat</code>, а затем коротко описывает проект.
+            </div>
+
+            <div class="mini-block trouble">
+                <div class="mini-title">🧯 Если не работает</div>
+                Если команда запрещена — добавь её в allowlist. Если ошибка прав доступа — попробуй другие файлы.
+            </div>
 
             <div class="key-insight">
                 <strong>💡 Resilience агента:</strong> Если tool возвращает ошибку — агент не ломается.
@@ -1076,7 +1381,7 @@ dotenv.<span class="fn">config</span>();
             <span class="step-badge intermediate">Архитектура</span>
         </div>
         <p class="step-intro">
-            Skill — это tool + инструкция. Набор связанных capabilities под конкретную задачу. Агент не меняется — меняются skills.
+            <span class="term" data-tip="Пакет: инструкции + tools + обработчики">Skill</span> — это tool + инструкция. Набор связанных capabilities под конкретную задачу. Агент не меняется — меняются skills.
         </p>
 
         <div class="step-content">
@@ -1120,13 +1425,26 @@ dotenv.<span class="fn">config</span>();
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
 
-            <div class="terminal-output">
+            <button class="demo-btn" data-demo="demo-step-5">▶ Запустить демо</button>
+
+            <div class="terminal-output demo-output" id="demo-step-5" aria-live="polite">
 <span class="t-dim">--- Итерация 1 ---</span>  <span class="t-yellow">list_dir(".")</span>
 <span class="t-dim">--- Итерация 2 ---</span>  <span class="t-yellow">list_dir("src")</span>
 <span class="t-dim">--- Итерация 3 ---</span>  <span class="t-yellow">read_file × 5 файлов</span>
 <span class="t-dim">--- Итерация 4 ---</span>  <span class="t-yellow">run_bash("wc -l src/*.ts")</span> → 542 строки
 <span class="t-dim">--- Итерация 5 ---</span>  <span class="t-yellow">write_file("STATS.md")</span> → ✅
 <span class="t-dim">--- Итерация 6 ---</span>  <span class="t-bold">Готово! STATS.md создан с полным анализом.</span></div>
+            <div class="output-note" data-demo-note="demo-step-5">Пример вывода. У тебя может быть иначе — это нормально.</div>
+
+            <div class="mini-block expect">
+                <div class="mini-title">✅ Что должно получиться</div>
+                Понимание, что агент можно собрать из модулей: skills добавляют tools и инструкции.
+            </div>
+
+            <div class="mini-block trouble">
+                <div class="mini-title">🧯 Если не работает</div>
+                Если делаешь рабочую реализацию — проверь, что нет конфликтующих имён tools между skills.
+            </div>
 
             <div class="key-insight">
                 <strong>💡 Ключевая идея:</strong>
@@ -1142,11 +1460,11 @@ dotenv.<span class="fn">config</span>();
     <div class="step-number">06</div>
     <div class="step-card">
         <div class="step-header">
-            <div class="step-title">Multi-step Planning</div>
+        <div class="step-title">Multi-step Planning</div>
             <span class="step-badge advanced">Продвинутый</span>
         </div>
         <p class="step-intro">
-            Перед тем как действовать, агент составляет план. Два подхода: Plan-then-Execute и ReAct.
+            Перед тем как действовать, агент составляет план. Два подхода: <span class="term" data-tip="Сначала план, потом выполнение по шагам">Plan-then-Execute</span> и <span class="term" data-tip="Чередование рассуждений и действий">ReAct</span>.
         </p>
 
         <div class="step-content">
@@ -1162,8 +1480,8 @@ dotenv.<span class="fn">config</span>();
             </div>
 
             <div class="step-detail">
-                <p><strong>Plan-then-Execute</strong> — два этапа. Сначала LLM (без tools) создаёт JSON-план. Потом другой вызов получает план и выполняет по шагам.</p>
-                <p><strong>ReAct</strong> — один цикл, но с <code>think</code> tool. Перед каждым действием агент «думает вслух»: что знаю, что делать, почему.</p>
+                <p><strong><span class="term" data-tip="Сначала план, потом выполнение по шагам">Plan-then-Execute</span></strong> — два этапа. Сначала <span class="term" data-tip="Большая языковая модель">LLM</span> (без tools) создаёт JSON-план. Потом другой вызов получает план и выполняет по шагам.</p>
+                <p><strong><span class="term" data-tip="Чередование рассуждений и действий">ReAct</span></strong> — один цикл, но с <code>think</code> tool. Перед каждым действием агент «думает вслух»: что знаю, что делать, почему.</p>
             </div>
 
             <div class="code-block">
@@ -1181,7 +1499,9 @@ dotenv.<span class="fn">config</span>();
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
 
-            <div class="terminal-output">
+            <button class="demo-btn" data-demo="demo-step-6">▶ Запустить демо</button>
+
+            <div class="terminal-output demo-output" id="demo-step-6" aria-live="polite">
 <span class="t-cyan">📋 ПЛАН: Анализ дублирования кода</span>
 <span class="t-dim">─────────────────────────────────────</span>
   1. [run_bash] Получить список .ts файлов
@@ -1194,17 +1514,28 @@ dotenv.<span class="fn">config</span>();
   <span class="t-yellow">🔧 run_bash("ls src/*.ts")</span>
   <span class="t-dim">💭 5 файлов. Прочитаю каждый и найду паттерны...</span>
   <span class="t-yellow">🔧 read_file("src/01-basic-call.ts")</span>
-  ...</pre>
+  ...
             </div>
+            <div class="output-note" data-demo-note="demo-step-6">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="run-command">
                 <span class="run-icon">▶</span>
                 <code>npx tsx src/06-planning.ts plan &nbsp;# или "react"</code>
             </div>
 
+            <div class="mini-block expect">
+                <div class="mini-title">✅ Что должно получиться</div>
+                Агент сначала печатает план, затем выполняет шаги. В режиме <code>react</code> видны промежуточные «мысли».
+            </div>
+
+            <div class="mini-block trouble">
+                <div class="mini-title">🧯 Если не работает</div>
+                Убедись, что выбран режим <code>plan</code> или <code>react</code> и что tool <code>think</code> подключён.
+            </div>
+
             <div class="key-insight">
-                <strong>💡 Plan-then-Execute</strong> — предсказуемо, можно показать план юзеру. Минус: план может быть неточным.
-                <br><strong>💡 ReAct</strong> — адаптивно, агент видит реальные данные. Минус: менее предсказуемо, больше итераций.
+                <strong>💡 <span class="term" data-tip="Сначала план, потом выполнение по шагам">Plan-then-Execute</span></strong> — предсказуемо, можно показать план юзеру. Минус: план может быть неточным.
+                <br><strong>💡 <span class="term" data-tip="Чередование рассуждений и действий">ReAct</span></strong> — адаптивно, агент видит реальные данные. Минус: менее предсказуемо, больше итераций.
             </div>
         </div>
     </div>
@@ -1215,7 +1546,7 @@ dotenv.<span class="fn">config</span>();
     <div class="step-number">07</div>
     <div class="step-card">
         <div class="step-header">
-            <div class="step-title">Adaptive Agent — Plan + ReAct + Replan</div>
+            <div class="step-title">Adaptive Agent — Plan + <span class="term" data-tip="Чередование рассуждений и действий">ReAct</span> + Replan</div>
             <span class="step-badge advanced">Продвинутый</span>
         </div>
         <p class="step-intro">
@@ -1238,7 +1569,7 @@ dotenv.<span class="fn">config</span>();
             </div>
 
             <div class="step-detail">
-                <p>Ключевая новинка — <code>request_replan</code> tool. Агент сам решает когда план сломался настолько, что нужно переосмыслить стратегию.</p>
+                <p>Ключевая новинка — <code>request_replan</code> <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span>. Агент сам решает когда план сломался настолько, что нужно переосмыслить стратегию.</p>
             </div>
 
             <div class="code-block">
@@ -1273,6 +1604,35 @@ dotenv.<span class="fn">config</span>();
                 <code>npx tsx src/07-adaptive-agent.ts</code>
             </div>
 
+            <button class="demo-btn" data-demo="demo-step-7">▶ Запустить демо</button>
+
+            <div class="terminal-output demo-output" id="demo-step-7" aria-live="polite">
+<span class="t-cyan">📋 ПЛАН 1</span>
+  1. Сканировать файлы
+  2. Найти паттерны
+  3. Создать отчёт
+
+<span class="t-dim">… Выполнение …</span>
+<span class="t-yellow">🔧 run_bash("ls src")</span>
+<span class="t-dim">💭 План устарел: найден новый подпроект</span>
+<span class="t-yellow">🔧 request_replan({"reason":"Найден новый подпроект","completed_steps":["Сканировать файлы"],"discoveries":["появилась папка services/"]})</span>
+
+<span class="t-cyan">📋 ПЛАН 2</span>
+  1. Учесть services/
+  2. Обновить отчёт
+<span class="t-bold">Готово!</span></div>
+            <div class="output-note" data-demo-note="demo-step-7">Пример вывода. У тебя может быть иначе — это нормально.</div>
+
+            <div class="mini-block expect">
+                <div class="mini-title">✅ Что должно получиться</div>
+                Видно, что агент может перезапланировать, но не зацикливается: есть лимит на реплан.
+            </div>
+
+            <div class="mini-block trouble">
+                <div class="mini-title">🧯 Если не работает</div>
+                Проверь, что <code>request_replan</code> объявлен как tool и обрабатывается в цикле.
+            </div>
+
             <div class="key-insight">
                 <strong>💡 Это отличает адаптивного агента от тупого исполнителя:</strong>
                 он не будет продолжать неактуальный план, но и не будет реплэнить на каждый чих.
@@ -1287,7 +1647,7 @@ dotenv.<span class="fn">config</span>();
     <div class="step-number">08</div>
     <div class="step-card">
         <div class="step-header">
-            <div class="step-title">Human-in-the-Loop + Wizard</div>
+        <div class="step-title"><span class="term" data-tip="Пользователь участвует в принятии решений">Human-in-the-Loop</span> + <span class="term" data-tip="Пошаговый мастер/визард">Wizard</span></div>
             <span class="step-badge advanced">Финал</span>
         </div>
         <p class="step-intro">
@@ -1301,7 +1661,7 @@ dotenv.<span class="fn">config</span>();
                     <strong>Human-in-the-loop</strong> — агент останавливается и спрашивает подтверждение перед опасными действиями (запись файлов).
                 </p>
                 <p>
-                    <strong>Wizard/Guide</strong> — агент анализирует, генерирует варианты, предлагает выбор, и так несколько шагов.
+                    <strong><span class="term" data-tip="Пошаговый мастер/визард">Wizard/Guide</span></strong> — агент анализирует, генерирует варианты, предлагает выбор, и так несколько шагов.
                 </p>
             </div>
 
@@ -1335,7 +1695,9 @@ dotenv.<span class="fn">config</span>();
                 <p>Главная хитрость: модель не знает что эти tool'ы интерактивные. Для неё <code>ask_user_choice</code> — обычный tool, который возвращает строку <code>"Пользователь выбрал: ..."</code>. Вся магия в handlers — они блокируют выполнение и ждут ввод через <code>readline</code>.</p>
             </div>
 
-            <div class="terminal-output">
+            <button class="demo-btn" data-demo="demo-step-8">▶ Запустить демо</button>
+
+            <div class="terminal-output demo-output" id="demo-step-8" aria-live="polite">
 <span class="t-dim">💭 Нужно выяснить тип проекта...</span>
 
 <span class="t-bold">══════════════════════════════════════</span>
@@ -1368,6 +1730,7 @@ dotenv.<span class="fn">config</span>();
 <span class="t-dim">──────────────────────────────────────</span>
 <span class="t-green">Разрешить? [y/n/edit]: </span><span class="t-bold">y</span>
 <span class="t-green">✅ Файл package.json записан</span></div>
+            <div class="output-note" data-demo-note="demo-step-8">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="run-command">
                 <span class="run-icon">▶</span>
@@ -1382,6 +1745,16 @@ dotenv.<span class="fn">config</span>();
             <div class="run-command">
                 <span class="run-icon">▶</span>
                 <code>npx tsx src/08-interactive-agent.ts free</code>
+            </div>
+
+            <div class="mini-block expect">
+                <div class="mini-title">✅ Что должно получиться</div>
+                Агент задаёт вопросы, ждёт ввод пользователя и просит подтверждение перед записью файлов.
+            </div>
+
+            <div class="mini-block trouble">
+                <div class="mini-title">🧯 Если не работает</div>
+                Запускай из терминала (не из браузера). Проверь, что readline/STDIN доступны.
             </div>
 
             <div class="key-insight">
@@ -1400,14 +1773,14 @@ dotenv.<span class="fn">config</span>();
     <div class="footer-title">Что ты построил 🎉</div>
     <p>8 шагов — от простого API-вызова до адаптивного агента с планированием и интерактивным wizard'ом.</p>
     <div class="footer-steps">
-        <span>01 → LLM-вызов</span>
-        <span>02 → + tools (модель вызывает функции)</span>
+        <span>01 → <span class="term" data-tip="Большая языковая модель">LLM</span>-вызов</span>
+        <span>02 → + <span class="term" data-tip="Инструменты/функции, которые модель может вызвать">tools</span> (модель вызывает функции)</span>
         <span>03 → + agent loop (цикл выполнения)</span>
-        <span>04 → + реальные tools (bash, файлы)</span>
+        <span>04 → + реальные <span class="term" data-tip="Инструменты/функции, которые модель может вызвать">tools</span> (bash, файлы)</span>
         <span>05 → + skills (модульная архитектура)</span>
         <span>06 → + planning (think before act)</span>
         <span>07 → + adaptive replan (коррекция курса)</span>
-        <span>08 → + human-in-the-loop + wizard</span>
+        <span>08 → + <span class="term" data-tip="Пользователь участвует в принятии решений">human-in-the-loop</span> + <span class="term" data-tip="Пошаговый мастер/визард">wizard</span></span>
     </div>
     <p style="margin-top: 2rem; color: var(--text-dim); font-size: 0.85rem;">
         Весь код — рабочий TypeScript, запускается через <code style="color: var(--cyan);">npx tsx</code>.<br>
@@ -1430,6 +1803,11 @@ dotenv.<span class="fn">config</span>();
 <script>
     // ====== Step Toggle ======
     document.querySelectorAll('.step-card').forEach(card => {
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        const parentStep = card.closest('.step');
+        card.setAttribute('aria-expanded', parentStep?.classList.contains('active') ? 'true' : 'false');
+
         card.addEventListener('click', (e) => {
             // Don't toggle if clicking inside code or buttons
             if (e.target.closest('pre, button, .run-command, a')) return;
@@ -1438,12 +1816,23 @@ dotenv.<span class="fn">config</span>();
             const wasActive = step.classList.contains('active');
 
             // Close all
-            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active');
+                s.querySelector('.step-card')?.setAttribute('aria-expanded', 'false');
+            });
 
             // Toggle clicked
             if (!wasActive) {
                 step.classList.add('active');
+                step.querySelector('.step-card')?.setAttribute('aria-expanded', 'true');
                 updateProgress(step.dataset.step);
+            }
+        });
+
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                card.click();
             }
         });
     });
@@ -1455,18 +1844,35 @@ dotenv.<span class="fn">config</span>();
             dot.classList.remove('current', 'done');
             if (i + 1 < activeStep) dot.classList.add('done');
             if (i + 1 == activeStep) dot.classList.add('current');
+            dot.setAttribute('aria-current', i + 1 == activeStep ? 'step' : 'false');
         });
     }
 
+    updateProgress(document.querySelector('.step.active')?.dataset.step || 1);
+
     document.querySelectorAll('.progress-dot').forEach(dot => {
+        dot.setAttribute('role', 'button');
+        dot.setAttribute('tabindex', '0');
+        dot.setAttribute('aria-label', dot.getAttribute('title') || 'Step');
         dot.addEventListener('click', () => {
             const targetId = dot.dataset.target;
             const target = document.getElementById(targetId);
             if (target) {
-                document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+                document.querySelectorAll('.step').forEach(s => {
+                    s.classList.remove('active');
+                    s.querySelector('.step-card')?.setAttribute('aria-expanded', 'false');
+                });
                 target.classList.add('active');
+                target.querySelector('.step-card')?.setAttribute('aria-expanded', 'true');
                 updateProgress(target.dataset.step);
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        dot.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                dot.click();
             }
         });
     });
@@ -1484,6 +1890,38 @@ dotenv.<span class="fn">config</span>();
             }, 2000);
         });
     }
+
+    // ====== Demo Buttons ======
+    document.querySelectorAll('.demo-btn').forEach(btn => {
+        const targetId = btn.dataset.demo;
+        const target = targetId ? document.getElementById(targetId) : null;
+        const note = targetId ? document.querySelector(`[data-demo-note="${targetId}"]`) : null;
+        if (targetId) {
+            btn.setAttribute('aria-controls', targetId);
+        }
+        if (target && target.classList.contains('visible')) {
+            btn.textContent = 'Скрыть демо';
+            note?.classList.add('visible');
+            btn.setAttribute('aria-expanded', 'true');
+        } else {
+            btn.setAttribute('aria-expanded', 'false');
+        }
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.demo;
+            const target = document.getElementById(targetId);
+            const note = document.querySelector(`[data-demo-note="${targetId}"]`);
+            if (!target) return;
+            const isVisible = target.classList.toggle('visible');
+            note?.classList.toggle('visible', isVisible);
+            btn.textContent = isVisible ? 'Скрыть демо' : '▶ Запустить демо';
+            btn.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
+        });
+    });
+
+    // ====== Tooltip focus ======
+    document.querySelectorAll('.term').forEach(term => {
+        term.setAttribute('tabindex', '0');
+    });
 
     // ====== Smooth Scroll for CTA ======
     document.querySelector('.hero-cta')?.addEventListener('click', (e) => {
