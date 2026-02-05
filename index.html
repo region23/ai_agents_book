@@ -3514,257 +3514,581 @@ main();
 
     // ====== Demo Player (Step-by-step) ======
     const demoPlayers = {
-        step1: [
-            {
-                label: "Запрос",
-                messages: [
-                    { role: "user", text: "Сколько будет 2 + 2?" },
-                    { role: "llm", text: "2 + 2 = 4" },
-                ],
-            },
+        "step1": [
+                {
+                        "label": "Ответ",
+                        "messages": [
+                                {
+                                        "role": "user",
+                                        "text": "Сколько будет 2 + 2?"
+                                },
+                                {
+                                        "role": "llm",
+                                        "text": "2 + 2 = 4"
+                                }
+                        ]
+                }
         ],
-        step2: [
-            {
-                label: "Tool call",
-                messages: [
-                    { role: "user", text: "Какая погода в Анапе?" },
-                    { role: "tool_call", text: "get_weather({\"city\":\"Анапа\"})" },
-                ],
-            },
+        "step2": [
+                {
+                        "label": "Tool call",
+                        "messages": [
+                                {
+                                        "role": "user",
+                                        "text": "Какая погода в Анапе?"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "get_weather({\"city\": \"Анапа\"})"
+                                }
+                        ]
+                }
         ],
-        step3: [
-            {
-                label: "Итерация 1",
-                messages: [
-                    { role: "user", text: "Какая погода в Москве и Анапе? И сколько сейчас времени?" },
-                    { role: "tool_call", text: "get_weather({\"city\":\"Москва\"})" },
-                    { role: "tool_result", text: "−5°C, снег" },
-                    { role: "tool_call", text: "get_weather({\"city\":\"Анапа\"})" },
-                    { role: "tool_result", text: "+8°C, облачно" },
-                    { role: "tool_call", text: "get_time({\"city\":\"Москва\"})" },
-                    { role: "tool_result", text: "Сейчас в Москва: 18:11:51" },
-                ],
-            },
-            {
-                label: "Итерация 2",
-                messages: [
-                    {
-                        role: "llm",
-                        text: `Вот актуальная информация:\n\nПогода:\n- Москва: −5°C, снег\n- Анапа: +8°C, облачно\n\nВремя:\n- Сейчас в Москве: 18:11:51`,
-                    },
-                ],
-            },
+        "step3": [
+                {
+                        "label": "Итерация 1",
+                        "messages": [
+                                {
+                                        "role": "user",
+                                        "text": "Какая погода в Москве и Анапе? И сколько сейчас времени?"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "get_weather({\"city\":\"Москва\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "−5°C, снег"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "get_weather({\"city\":\"Анапа\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "+8°C, облачно"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "get_time({\"city\":\"Москва\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "Сейчас в Москва: 19:20:10"
+                                }
+                        ]
+                },
+                {
+                        "label": "Итерация 2",
+                        "messages": [
+                                {
+                                        "role": "llm",
+                                        "text": "Вот информация о погоде и времени:\n\n**Погода:**\n- **Москва**: −5°C, снег\n- **Анапа**: +8°C, облачно\n\n**Время:** \n- Сейчас в Москве: 19:20:10"
+                                }
+                        ]
+                }
         ],
-        step4: [
-            {
-                label: "Итерация 1",
-                messages: [
-                    { role: "user", text: "Посмотри что за проект лежит в текущей директории. Какие зависимости установлены?" },
-                    { role: "tool_call", text: "run_bash({\"command\":\"ls -la\"})" },
-                    {
-                        role: "tool_result",
-                        text: `total 16\ndrwxr-xr-x@ 6 pavlenko  wheel  192 Feb  5 18:21 .\ndrwxr-xr-x@ 8 pavlenko  wheel  256 Feb  5 18:03 ..\n-rw-r--r--@ 1 pavlenko  wheel   93 Feb  5 18:21 README.md\n-rw-r--r--@ 1 pavlenko  wheel  143 Feb  5 18:21 package.json\ndrwxr-xr-x@ 3 pavlenko  wheel   96 Feb  5 18:02 services\ndrwxr-xr-x@ 7 pavlenko  wheel  224 Feb  5 18:00 src`,
-                    },
-                ],
-            },
-            {
-                label: "Итерация 2",
-                messages: [
-                    { role: "tool_call", text: "read_file({\"path\":\"README.md\"})" },
-                    { role: "tool_result", text: "# simple-agent\n\nУчебный проект для демонстрации AI-агента." },
-                    { role: "tool_call", text: "read_file({\"path\":\"package.json\"})" },
-                    {
-                        role: "tool_result",
-                        text: `{\n  \"name\": \"simple-agent\",\n  \"version\": \"1.0.0\",\n  \"private\": true,\n  \"description\": \"Учебный проект для AI-агентов\"\n}`,
-                    },
-                ],
-            },
-            {
-                label: "Итерация 3",
-                messages: [
-                    {
-                        role: "tool_call",
-                        text: "run_bash({\"command\":\"find . -type f -name \\\"*.py\\\" -o -name \\\"*.js\\\" -o -name \\\"*.ts\\\" -o -name \\\"*.json\\\" | head -20\"})",
-                    },
-                    {
-                        role: "tool_result",
-                        text: "./package.json\n./services/index.ts\n./src/05-skills.ts\n./src/04-real-tools.ts\n./src/02-with-tool.ts\n./src/03-agent-loop.ts\n./src/01-basic-call.ts",
-                    },
-                    { role: "tool_call", text: "run_bash({\"command\":\"tree -L 2 -I 'node_modules'\"})" },
-                    { role: "tool_result", text: "Команда запрещена allowlist: tree -L 2 -I 'node_modules'" },
-                    { role: "tool_call", text: "run_bash({\"command\":\"ls -R\"})" },
-                    {
-                        role: "tool_result",
-                        text: "README.md\npackage.json\nservices\nsrc\n\n./services:\nindex.ts\n\n./src:\n01-basic-call.ts\n02-with-tool.ts\n03-agent-loop.ts\n04-real-tools.ts\n05-skills.ts",
-                    },
-                ],
-            },
-            {
-                label: "Итерация 4",
-                messages: [
-                    { role: "tool_call", text: "read_file({\"path\":\"src/01-basic-call.ts\"})" },
-                    { role: "tool_result", text: "// basic call example\nexport const add = (a:number,b:number)=>a+b;" },
-                    { role: "tool_call", text: "read_file({\"path\":\"services/index.ts\"})" },
-                    { role: "tool_result", text: "// service placeholder" },
-                    { role: "llm", text: "Проект учебный: README, package.json, пример сервисов и набор demo-скриптов в src/." },
-                ],
-            },
+        "step4": [
+                {
+                        "label": "Итерация 1",
+                        "messages": [
+                                {
+                                        "role": "user",
+                                        "text": "Посмотри что за проект лежит в текущей директории. Какие зависимости установлены?"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"ls -la\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "total 360\ndrwxr-xr-x   10 human  staff     320 Feb  5 19:19 .\ndrwxr-xr-x  110 human  staff    3520 Feb  5 17:19 ..\n-rw-r--r--@   1 human  staff      93 Feb  5 17:57 .env\ndrwxr-xr-x@  14 pavle..."
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"pwd\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "/Users/human/code/ai_agents_book..."
+                                }
+                        ]
+                },
+                {
+                        "label": "Итерация 2",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "read_file({\"path\":\"package.json\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "{\n  \"name\": \"ai_agents_book\",\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"repository\": {\n    \"type..."
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"tree -L 2 -I 'node_modules' 2>/dev/null || find . -maxdepth 2 -not -path '*/node_modules/*' -not -path '*/.git/*' | head -20\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": ".\n./index.html\n./node_modules\n./.gitignore\n./package-lock.json\n./package.json\n./.env\n./.git\n./src\n./src/08-interactive-agent.ts\n./src/05-skills.ts\n./src/06-planning.ts\n./src/07-adaptive-agent.ts\n./src..."
+                                }
+                        ]
+                },
+                {
+                        "label": "Итерация 3",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"npm list --depth=0\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "ai_agents_book@1.0.0 /Users/human/code/ai_agents_book\n├── dotenv@17.2.3\n└── openai@6.17.0..."
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "read_file({\"path\":\"package-lock.json\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "{\n  \"name\": \"ai_agents_book\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\n      \"name\": \"ai_agents_book\",\n      \"version\": \"1.0.0\",\n      \"license\": \"IS..."
+                                }
+                        ]
+                },
+                {
+                        "label": "Итерация 4",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"ls -la src/ | head -20\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "total 152\ndrwxr-xr-x@ 10 human  staff    320 Feb  5 18:47 .\ndrwxr-xr-x  10 human  staff    320 Feb  5 19:19 ..\n-rw-r--r--@  1 human  staff    538 Feb  5 18:47 01-basic-call.ts\n-rw-r--r--@  1 ..."
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"head -50 index.html\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "<!DOCTYPE html>\n<html lang=\"ru\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>ИИ-агенты для самых маленьких — Интерактивный у..."
+                                }
+                        ]
+                },
+                {
+                        "label": "Итог",
+                        "messages": [
+                                {
+                                        "role": "llm",
+                                        "text": "## Резюме по проекту:\n\n### 📚 **Проект: ai_agents_book**\nЭто обучающий проект-книга об ИИ-агентах с интерактивными примерами.\n\n### 🔧 **Установленные зависимости:**\n\n**Production зависимости (2):**\n1. **`dotenv` v17.2.3** - для управления переменными окружения (.env файлы)\n2. **`openai` v6.17.0** - официальная библиотека OpenAI для работы с их API (ChatGPT, GPT-4 и т.д.)\n\n### 📁 **Структура проекта:**\n\n- **`src/`** - содержит 8 TypeScript файлов с примерами:\n  - `01-basic-call.ts` - базовый вызов API\n  - `02-with-tool.ts` - работа с инструментами\n  - `03-agent-loop.ts` - цикл работы агента\n  - `04-real-tools.ts` - реальные инструменты\n  - `05-skills.ts` - навыки агента\n  - `06-planning.ts` - планирование\n  - `07-adaptive-agent.ts` - адаптивный агент\n  - `08-interactive-agent.ts` - интерактивный агент\n\n- **`index.html`** - интерактивный веб-учебник с красивым дизайном\n- **`.env`** - конфигурационный файл с переменными окружения\n\n### 🎯 **Назначение:**\nЭто учебный проект для изучения создания ИИ-агентов с использованием OpenAI API. Проект структурирован как пошаговое руководство от базовых вызовов до сложных интерактивных агентов."
+                                }
+                        ]
+                }
         ],
-        step5: [
-            {
-                label: "Итерация 1",
-                messages: [
-                    { role: "tool_call", text: "list_dir({\"path\":\".\"})" },
-                    { role: "tool_result", text: "README.md\npackage.json\nservices\nsrc" },
-                    { role: "tool_call", text: "list_dir({\"path\":\"src\"})" },
-                    { role: "tool_result", text: "01-basic-call.ts\n02-with-tool.ts\n03-agent-loop.ts\n04-real-tools.ts\n05-skills.ts" },
-                ],
-            },
-            {
-                label: "Итерация 2",
-                messages: [
-                    { role: "tool_call", text: "run_bash({\"command\":\"wc -l src/*.ts\"})" },
-                    { role: "tool_result", text: "2 src/01-basic-call.ts\n       2 src/02-with-tool.ts\n       2 src/03-agent-loop.ts\n       2 src/04-real-tools.ts\n       2 src/05-skills.ts\n      10 total" },
-                    { role: "tool_call", text: "run_bash({\"command\":\"find src -name \\\"*.ts\\\" -type f\"})" },
-                    { role: "tool_result", text: "src/05-skills.ts\nsrc/04-real-tools.ts\nsrc/02-with-tool.ts\nsrc/03-agent-loop.ts\nsrc/01-basic-call.ts" },
-                ],
-            },
-            {
-                label: "Итерация 3",
-                messages: [
-                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/01-basic-call.ts\"})" },
-                    { role: "tool_result", text: "// basic call example\nexport const add = (a:number,b:number)=>a+b;" },
-                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/02-with-tool.ts\"})" },
-                    { role: "tool_result", text: "// tool example\nexport const tool = () => \"ok\";" },
-                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/03-agent-loop.ts\"})" },
-                    { role: "tool_result", text: "// agent loop example\nexport const loop = () => true;" },
-                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/04-real-tools.ts\"})" },
-                    { role: "tool_result", text: "// real tools example\nexport const run = () => null;" },
-                    { role: "tool_call", text: "run_bash({\"command\":\"cat src/05-skills.ts\"})" },
-                    { role: "tool_result", text: "// skills example\nexport const skill = {};" },
-                ],
-            },
-            {
-                label: "Итерация 4",
-                messages: [
-                    { role: "tool_call", text: "write_file({\"path\":\"STATS.md\",\"content\":\"# Статистика кода проекта\\n\\n... (сокращено)\\n\"})" },
-                    { role: "tool_result", text: "OK: записан STATS.md" },
-                    {
-                        role: "llm",
-                        text: `Готово! ✅\n\nЯ создал файл **STATS.md** с кратким отчётом о коде в папке src.\n\n**Основные результаты:**\n- 📁 Всего файлов: **5**\n- 📝 Всего строк кода: **10**\n- 📊 Средний размер файла: **2 строки**\n- 💻 Язык: **TypeScript**\n\nВсе файлы содержат примеры различных концепций (базовый вызов, инструменты, агентский цикл, навыки).`,
-                    },
-                ],
-            },
+        "step5": [
+                {
+                        "label": "Итерация 1",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "list_dir({\"path\":\".\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "total 360\ndrwxr-xr-x   10 human  staff     320 Feb  5 19:19 .\ndrwxr-xr-x  110 human  staff    3520 Feb  5 17:19 ..\n-rw-r--r--@   1 human  sta"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "list_dir({\"path\":\"src\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "total 152\ndrwxr-xr-x@ 10 human  staff    320 Feb  5 18:47 .\ndrwxr-xr-x  10 human  staff    320 Feb  5 19:19 ..\n-rw-r--r--@  1 human  staff   "
+                                }
+                        ]
+                },
+                {
+                        "label": "Итерация 3–4",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"wc -l src/*.ts\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "23 src/01-basic-call.ts\n      61 src/02-with-tool.ts\n     118 src/03-agent-loop.ts\n     123 src/04-real-tools.ts\n     217 src/05-skills.ts\n     353 sr"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"find src -name \\\"*.ts\\\" -type f | wc -l\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "8"
+                                }
+                        ]
+                },
+                {
+                        "label": "Итерация 5–6",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "read_file({\"path\":\"package.json\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "{\n  \"name\": \"ai_agents_book\",\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test speci"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"find src -name \\\"*.ts\\\" -exec grep -c \\\"^import\\\\|^export\\\\|function\\\\|class\\\\|interface\\\\|type \\\" {} \\\\; | awk '{s+=$1} END {print s}'\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "114"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"du -sh src/\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "76K\tsrc/"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"find src -name \\\"*.ts\\\" -exec grep -v \\\"^[[:space:]]*$\\\\|^[[:space:]]*\\\\/\\\\/\\\" {} \\\\; | wc -l\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "1576"
+                                }
+                        ]
+                },
+                {
+                        "label": "Итерация 7–8",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({\"path\":\"STATS.md\",\"content\":\"# Статистика проекта AI Agents Book\\n... (сокращено)\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "Файл STATS.md записан"
+                                },
+                                {
+                                        "role": "llm",
+                                        "text": "Отлично! Я завершил анализ проекта. Вот что я сделал:\n\n## Результаты анализа:\n\n✅ **Просмотрел структуру проекта** - найдено 8 TypeScript файлов в директории `src/`\n\n✅ **Подсчитал строки кода**:\n- **Общее количество строк**: 1,688\n- **Строк кода (без пустых и комментариев)**: 1,576\n\n✅ **Создал файл STATS.md** с подробной статистикой, включающей:\n- Общую информацию о проекте\n- Таблицу с количеством строк в каждом файле\n- Описание файлов (от базовых примеров до интерактивного агента)\n- Информацию о зависимостях проекта\n\n### Основные находки:\n- Проект содержит 8 файлов с примерами, демонстрирующими прогрессивное развитие AI-агентов\n- Самый большой файл: `08-interactive-agent.ts` (434 строки)\n- Самый маленький файл: `01-basic-call.ts` (23 строки)\n- Используются библиотеки OpenAI и dotenv\n\nФайл **STATS.md** создан в корневой директории проекта! 📊"
+                                }
+                        ]
+                }
         ],
-        step6: [
-            {
-                label: "План",
-                messages: [
-                    {
-                        role: "llm",
-                        text: `📋 ПЛАН: Анализ дублирования кода в папке src и создание REFACTORING.md\n  1. [read_file] Прочитать содержимое файла src/01-basic-call.ts для анализа кода\n  2. [read_file] Прочитать содержимое файла src/02-with-tool.ts для анализа кода\n  3. [read_file] Прочитать содержимое файла src/03-agent-loop.ts для анализа кода\n  4. [read_file] Прочитать содержимое файла src/04-real-tools.ts для анализа кода\n  5. [read_file] Прочитать содержимое файла src/05-skills.ts для завершения анализа\n  6. [write_file] Создать файл REFACTORING.md с результатами анализа дублирования кода и рекомендациями по рефакторингу`,
-                    },
-                ],
-            },
-            {
-                label: "Выполнение",
-                messages: [
-                    { role: "llm", text: "💭 Начинаем с чтения первого файла из списка, чтобы понять структуру и найти повторяющиеся паттерны" },
-                    { role: "tool_call", text: "read_file({\"path\":\"src/01-basic-call.ts\"})" },
-                    { role: "tool_result", text: "// basic call example\nexport const add = (a:number,b:number)=>a+b;" },
-                    { role: "llm", text: "💭 Читаем второй файл для сравнения с первым и выявления общих фрагментов" },
-                    { role: "tool_call", text: "read_file({\"path\":\"src/02-with-tool.ts\"})" },
-                    { role: "tool_result", text: "// tool example\nexport const tool = () => \"ok\";" },
-                    { role: "llm", text: "💭 Продолжаем анализ третьего файла для поиска дублирования" },
-                    { role: "tool_call", text: "read_file({\"path\":\"src/03-agent-loop.ts\"})" },
-                    { role: "tool_result", text: "// agent loop example\nexport const loop = () => true;" },
-                    { role: "llm", text: "💭 На основе прочитанных файлов составляем отчёт" },
-                    { role: "tool_call", text: "write_file({\"path\":\"REFACTORING.md\",\"content\":\"# REFACTORING\\n\\n(Заполнить выводы по дублированию кода)\\n\"})" },
-                    { role: "tool_result", text: "OK: записан REFACTORING.md" },
-                ],
-            },
+        "step6": [
+                {
+                        "label": "План",
+                        "messages": [
+                                {
+                                        "role": "llm",
+                                        "text": "📋 ФАЗА 1: ПЛАНИРОВАНИЕ\n\n🎯 Цель: Проанализировать .ts файлы в src/, найти дублирование кода и создать файл с рекомендациями по рефакторингу\n📝 Шагов: 6\n\n   1. [run_bash] Найти все .ts файлы в директории src/\n      └─ Получить список всех TypeScript файлов для анализа\n   2. [read_file] Прочитать содержимое каждого .ts файла по очереди\n      └─ Загрузить код для анализа дублирования\n   3. [run_bash] Проанализировать импорты во всех файлах\n      └─ Найти повторяющиеся шаблоны импортов с помощью grep/awk\n   4. [run_bash] Найти похожие сигнатуры функций\n      └─ Выявить дублирующиеся функции через паттерны в коде\n   5. [run_bash] Идентифицировать общие паттерны кода\n      └─ Найти повторяющиеся блоки кода, конструкции, обработчики ошибок\n   6. [write_file] Создать файл REFACTORING.md с результатами анализа\n      └─ Сохранить структурированные рекомендации по рефакторингу с примерами дублирования и предложениями по улучшению"
+                                }
+                        ]
+                },
+                {
+                        "label": "Сбор данных",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"find src/ -type f -name \\\"*.ts\\\" 2>/dev/null | head -50\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "src/08-interactive-agent.ts\nsrc/05-skills.ts\nsrc/06-planning.ts\nsrc/07-adaptive-agent.ts\nsrc/04-real-tools.ts\nsrc/02-wit"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "read_file({\"path\":\"src/01-basic-call.ts\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "// src/01-basic-call.ts\nimport OpenAI from \"openai\";\nimport dotenv from \"dotenv\";\n\ndotenv.config();\n\nconst client = new "
+                                }
+                        ]
+                },
+                {
+                        "label": "Запись отчёта",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"REFACTORING.md\", content: [22112 chars]})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл REFACTORING.md записан (22112 байт)"
+                                }
+                        ]
+                },
+                {
+                        "label": "Итог",
+                        "messages": [
+                                {
+                                        "role": "llm",
+                                        "text": "✅ Выполнение завершено.\nИтог: ---\n\n## 🎉 ИТОГОВЫЙ ОТЧЕТ\n\nВсе шаги плана **успешно выполнены**!\n\n### ✅ Выполненные задачи:\n\n1. **Найдены все .ts файлы** - обнаружено 8 файлов в директории src/\n2. **Прочитано содержимое** - проанализировано 1,688 строк кода\n3. **Проанализированы импорты** - найдены повторяющиеся паттерны в 100% файлов\n4. **Найдены дублирующиеся функции** - идентифицировано 5+ повторяющихся функций\n5. **Выявлены общие паттерны** - обнаружен агентский цикл в 7 файлах\n6. **Создан REFACTORING.md** - подробный файл с рекомендациями на 794 строки\n\n### 🔍 Ключевые находки:\n\n**Критические дублирования:**\n- ❌ **Инициализация OpenAI клиента** - 8 идентичных копий (все файлы)\n- ❌ **Tool handlers** - 5 копий каждого (run_bash, read_file, write_file)\n- ❌ **Tool definitions** - 5 копий определений инструментов\n- ❌ **Agent loop** - 7 реализаций похожего паттерна\n\n**Уровень дублирования:** ~38.5% кодовой базы (~650 из 1,688 строк)\n\n### 📈 Ожидаемые результаты рефакторинга:\n- 🎯 Уменьшение кода на **46%** (с 1,688 до ~750 строк)\n- 🎯 Снижение дублирования на **92%** (с 650 до ~50 строк)\n- 🎯 Ускорение разработки на **83%** (добавление нового tool)\n- 🎯 **100%** устранение дублирования клиента и handlers\n\nФайл **REFACTORING.md** готов к использованию! 🚀"
+                                }
+                        ]
+                }
         ],
-        step7: [
-            {
-                label: "План 1",
-                messages: [
-                    {
-                        role: "llm",
-                        text: `📋 ПЛАН 1\n  1. Просмотреть структуру проекта и список файлов в корневой директории\n  2. Прочитать основную документацию проекта для понимания его назначения и структуры\n  3. Найти основные исходные файлы проекта для анализа используемых технологий\n  4. Создать файл отчёта с результатами анализа проекта`,
-                    },
-                ],
-            },
-            {
-                label: "Replan",
-                messages: [
-                    { role: "tool_call", text: "list_dir({\"path\":\".\"})" },
-                    { role: "tool_result", text: "README.md\npackage.json\nservices\nsrc" },
-                    {
-                        role: "tool_call",
-                        text: "request_replan({\"reason\":\"Найдены новые данные\",\"completed_steps\":[\"Просмотреть структуру проекта и список файлов в корневой директории\"],\"discoveries\":[\"обнаружена папка services/\"]})",
-                    },
-                    { role: "tool_result", text: "Запрос на реплан принят" },
-                ],
-            },
-            {
-                label: "План 2",
-                messages: [
-                    {
-                        role: "llm",
-                        text: `📋 ПЛАН 2\n  1. Изучить содержимое папки services/ для понимания архитектуры сервисов\n  2. Прочитать основную документацию проекта для понимания его назначения\n  3. Найти основные исходные файлы для определения используемых технологий\n  4. Создать итоговый отчёт с результатами анализа проекта`,
-                    },
-                ],
-            },
-            {
-                label: "Выполнение",
-                messages: [
-                    { role: "tool_call", text: "list_dir({\"path\":\"services\"})" },
-                    { role: "tool_result", text: "index.ts" },
-                    { role: "tool_call", text: "read_file({\"path\":\"README.md\"})" },
-                    { role: "tool_result", text: "# simple-agent\n\nУчебный проект для демонстрации AI-агента." },
-                    { role: "llm", text: "Готово!" },
-                ],
-            },
+        "step7": [
+                {
+                        "label": "План",
+                        "messages": [
+                                {
+                                        "role": "user",
+                                        "text": "Проанализируй все .ts файлы в директории src/. Найди дублирование кода между файлами (общие паттерны, повторяющиеся импорты, похожие функции). Создай файл REFACTORING.md с конкретными рекомендациями."
+                                },
+                                {
+                                        "role": "llm",
+                                        "text": "📋 ПЛАН: Проанализировать .ts файлы в src/, найти дублирование кода и создать REFACTORING.md с рекомендациями\n──────────────────────────────────────────────────\n  1. [run_bash] Найти все .ts файлы в директории src/\n     └─ Получить список всех TypeScript файлов для анализа\n  2. [read_file] Прочитать содержимое каждого найденного .ts файла\n     └─ Загрузить код для анализа дублирования, импортов и паттернов\n  3. [run_bash] Проанализировать импорты во всех файлах\n     └─ Извлечь все import-строки для выявления повторяющихся зависимостей\n  4. [run_bash] Сравнить содержимое файлов на схожесть функций и паттернов\n     └─ Использовать grep/awk для поиска похожих сигнатур функций и структур кода\n  5. [write_file] Создать файл REFACTORING.md с детальными рекомендациями по рефакторингу\n     └─ Записать найденные дубликаты, общие паттерны и конкретные рекомендации по улучшению кода\n──────────────────────────────────────────────────"
+                                }
+                        ]
+                },
+                {
+                        "label": "Сбор файлов",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"find src/ -name \\\"*.ts\\\" -type f 2>/dev/null | sort\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "src/01-basic-call.ts\nsrc/02-with-tool.ts\nsrc/03-agent-loop.ts\nsrc/04-real-tools.ts\nsrc/05-skills.ts\nsrc/06-planning.ts\ns"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "read_file({\"path\":\"src/01-basic-call.ts\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "// src/01-basic-call.ts\nimport OpenAI from \"openai\";\nimport dotenv from \"dotenv\";\n\ndotenv.config();\n\nconst client = new "
+                                }
+                        ]
+                },
+                {
+                        "label": "Статистика",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"grep -h \\\"^import\\\" src/*.ts | sort | uniq -c | sort -rn\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "8 import dotenv from \"dotenv\";\n   8 import OpenAI from \"openai\";\n   5 import { execSync } from \"child_process\";\n   2 imp"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"grep -n \\\"const client = new OpenAI\\\" src/*.ts\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "src/01-basic-call.ts:7:const client = new OpenAI({\nsrc/02-with-tool.ts:7:const client = new OpenAI({\nsrc/03-agent-loop.t"
+                                }
+                        ]
+                },
+                {
+                        "label": "Запись отчёта",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"REFACTORING.md\", content: [18967 chars]})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл REFACTORING.md записан (18967 байт)"
+                                },
+                                {
+                                        "role": "llm",
+                                        "text": "Отлично! Я успешно создал детальный файл REFACTORING.md с конкретными рекомендациями. Документ включает:\n\n1. Executive Summary с ключевыми метриками\n2. Детальный анализ 6 категорий дублирования кода\n3. Конкретные примеры кода с локациями\n4. Предлагаемую новую структуру проекта\n5. План рефакторинга в 4 фазы с приоритетами\n6. Дополнительные рекомендации (конфиг, логирование, тесты)\n7. Метрики улучшения\n8. Чек-лист для выполнения\n\nДокумент составлен профессионально, с конкретными примерами кода, точными локациями файлов и строк, а также с реалистичными оценками времени и эффекта от рефакторинга.\n\nЗадача выполнена успешно!"
+                                }
+                        ]
+                }
         ],
-        step8: [
-            {
-                label: "Выбор типа",
-                messages: [
-                    { role: "user", text: "Помоги создать небольшой REST API проект" },
-                    { role: "llm", text: "Понимаю задачу. Сначала уточню тип REST API проекта." },
-                    { role: "tool_call", text: "ask_user_choice({\n  question: \"Какой тип REST API проекта ты хочешь создать?\",\n  options: [Express, Fastify, NestJS, Koa]\n})" },
-                    { role: "tool_result", text: "Пользователь выбрал: Fastify (Node.js)" },
-                    { role: "llm", text: "Отлично. Теперь нужно имя проекта." },
-                ],
-            },
-            {
-                label: "Имя проекта",
-                messages: [
-                    { role: "llm", text: "Спрашиваю название проекта для генерации конфигурации." },
-                    { role: "tool_call", text: "ask_user_input({\n  question: \"Как назовём проект?\",\n  placeholder: \"my-rest-api\"\n})" },
-                    { role: "tool_result", text: "todo-api" },
-                    { role: "llm", text: "Готовлю конфиг и попрошу подтверждение перед записью файла." },
-                ],
-            },
-            {
-                label: "Подтверждение",
-                messages: [
-                    { role: "llm", text: "Собрал package.json. Надо подтвердить запись." },
-                    { role: "tool_call", text: "ask_user_confirm({\n  question: \"Создать проект с этой конфигурацией?\",\n  preview: \"{ name: 'todo-api', scripts: { dev: 'nodemon src/index.js' } }\"\n})" },
-                    { role: "tool_result", text: "y" },
-                    { role: "llm", text: "Записываю файл package.json." },
-                ],
-            },
-            {
-                label: "Запись",
-                messages: [
-                    { role: "tool_call", text: "write_file({ path: \"package.json\", content: \"...\" })" },
-                    { role: "tool_result", text: "✅ Файл package.json записан" },
-                    { role: "llm", text: "Готово! Проект создан. Могу подсказать следующие шаги." },
-                ],
-            },
-        ],
-    };
+        "step8": [
+                {
+                        "label": "Запрос",
+                        "messages": [
+                                {
+                                        "role": "user",
+                                        "text": "Помоги мне создать новый TypeScript проект. Спроси что за проект, предложи варианты структуры, настрой всё."
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "ask_user_input({ question: \"Какой проект ты хочешь создать? Опиши его назначение и что он будет делать\", hint: \"REST API сервер, CLI утилита, библиотека...\" })"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "Пользователь ввёл: \"REST API\""
+                                }
+                        ]
+                },
+                {
+                        "label": "Выборы",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "ask_user_choice({ question: \"Какой подход к созданию REST API предпочитаешь?\", options: [\"Express.js (классика) — Минималистичный фреймворк, полный контроль, огромная экосистема. Подходит для опытных разработчиков и проектов любого размера.\", \"Fastify (производительность) — Быстрый современный фреймворк с встроенной валидацией схем (JSON Schema), TypeScript-friendly. Для высоконагруженных API.\", \"NestJS (enterprise) — Полнофункциональный фреймворк с DI, модульной архитектурой, декораторами. Похож на Angular/Spring. Для больших команд и проектов.\", \"Минималистичный (чистый Node.js) — Без фреймворков, только TypeScript + Node.js HTTP. Максимальная гибкость, минимум зависимостей. Для обучения или микросервисов.\"] })"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "Пользователь выбрал: \"Express.js (классика)\" — Минималистичный фреймворк, полный контроль, огромная экосистема. Подходит для опытных разработчиков и проектов любого размера."
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "ask_user_choice({ question: \"Какую архитектуру проекта предпочитаешь?\", options: [\"Простая структура — routes/ + controllers/ + models/. Просто, понятно, быстрый старт. Для маленьких/средних проектов.\", \"Clean Architecture — domain/ + application/ + infrastructure/ + presentation/. Четкое разделение слоев, тестируемость. Для больших проектов.\", \"Feature-based — Структура по фичам (users/, products/, orders/), каждая с своими route/controller/service. Модульность, масштабируемость.\"] })"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "Пользователь выбрал: \"Простая структура\" — routes/ + controllers/ + models/. Просто, понятно, быстрый старт. Для маленьких/средних проектов."
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "ask_user_choice({ question: \"Какие дополнительные инструменты хочешь включить?\", options: [\"Минимальный набор — TypeScript + Express + ESLint + Prettier + nodemon. Без баз данных и сложных инструментов. Чистый старт.\", \"Стандартный — Все из минимального + валидация (zod), логирование (winston/pino), переменные окружения (dotenv). Рекомендуется.\", \"Полный — Все из стандартного + Jest (тесты), пример подключения к БД, Swagger/OpenAPI документация. Production-ready.\"] })"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "Пользователь выбрал: \"Минимальный набор\" — TypeScript + Express + ESLint + Prettier + nodemon. Без баз данных и сложных инструментов. Чистый старт."
+                                }
+                        ]
+                },
+                {
+                        "label": "Имя проекта",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "ask_user_input({ question: \"Как назовём проект?\", default_value: \"my-api\" })"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "Пользователь ввёл: \"mini-api\""
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "ask_user_confirm({ question: \"Создать проект mini-api в текущей директории?\" })"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "Пользователь подтвердил: ДА"
+                                }
+                        ]
+                },
+                {
+                        "label": "Создание файлов",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"mkdir -p mini-api/src/{controllers,routes,models,middlewares,types}\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": ""
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"mini-api/package.json\", content: \"... (ещё 19 строк)\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл mini-api/package.json записан (одобрено пользователем)"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"mini-api/tsconfig.json\", content: \"... (ещё 10 строк)\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл mini-api/tsconfig.json записан (одобрено пользователем)"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"mini-api/.eslintrc.json\", content: \"... (ещё 3 строк)\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл mini-api/.eslintrc.json записан (одобрено пользователем)"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"mini-api/.prettierrc\", content: \"...\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл mini-api/.prettierrc записан (одобрено пользователем)"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"mini-api/nodemon.json\", content: \"...\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл mini-api/nodemon.json записан (одобрено пользователем)"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"mini-api/.gitignore\", content: \"...\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл mini-api/.gitignore записан (одобрено пользователем)"
+                                }
+                        ]
+                },
+                {
+                        "label": "Доп. файлы",
+                        "messages": [
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"mini-api/src/app.ts\", content: \"...\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл mini-api/src/app.ts записан (одобрено пользователем)"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "write_file({path: \"mini-api/src/server.ts\", content: \"...\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✅ Файл mini-api/src/server.ts записан (одобрено пользователем)"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"cat > mini-api/src/routes/health.routes.ts << 'EOF' ...\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✓ health.routes.ts created"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"cat > mini-api/README.md << 'EOF' ...\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✓ README.md created"
+                                },
+                                {
+                                        "role": "tool_call",
+                                        "text": "run_bash({\"command\":\"cat > mini-api/.env.example << 'EOF' ...\"})"
+                                },
+                                {
+                                        "role": "tool_result",
+                                        "text": "✓ .env.example created"
+                                }
+                        ]
+                }
+        ]
+};
 
     const escapeHtml = (value) => String(value ?? "")
         .replace(/&/g, "&amp;")
