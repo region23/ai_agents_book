@@ -480,8 +480,8 @@ ${prepSection}
 ${conceptSection}
 <section class="book-outline-section" id="toc">
     <div class="concept-header" style="margin-bottom: 1.5rem;">
-        <h2>Оглавление уроков</h2>
-        <p>Каждый урок открыт на отдельной странице. Структура, текст и демо-блоки сохранены как в исходном учебнике.</p>
+        <h2>Оглавление</h2>
+        
     </div>
     <div class="book-outline-grid">
 ${outlineCardsHtml}

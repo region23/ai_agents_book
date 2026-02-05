@@ -83,6 +83,7 @@
                 opacity: 0;
                 transform: translateY(28px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -142,6 +143,7 @@
             0% {
                 transform: translate(0, 0) rotate(0deg) scale(1);
             }
+
             100% {
                 transform: translate(-3%, 2%) rotate(3deg) scale(1.03);
             }
@@ -162,9 +164,12 @@
         }
 
         @keyframes float {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: translateY(0) scale(1);
             }
+
             50% {
                 transform: translateY(-14px) scale(1.02);
             }
@@ -313,8 +318,17 @@
         }
 
         @keyframes scrollPulse {
-            0%, 100% { opacity: 0.5; transform: translateX(-50%) translateY(0); }
-            50% { opacity: 0.8; transform: translateX(-50%) translateY(4px); }
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: translateX(-50%) translateY(4px);
+            }
         }
 
         /* ====== CONCEPT SECTION ====== */
@@ -906,8 +920,8 @@
         }
 
         .prep-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            display: flex;
+            flex-direction: column;
             gap: 1rem;
         }
 
@@ -1652,8 +1666,10 @@
 
                 <div class="step-content">
                     <div class="step-detail">
-                        <p>Мы будем использовать <strong>OpenRouter</strong> — универсальный прокси ко всем LLM-провайдерам (Anthropic, OpenAI, Google, Meta и др.).
-                            А библиотека <code>openai</code> совместима с любым API, который поддерживает OpenAI-формат — достаточно поменять <code>baseURL</code>.
+                        <p>Мы будем использовать <strong>OpenRouter</strong> — универсальный прокси ко всем
+                            LLM-провайдерам (Anthropic, OpenAI, Google, Meta и др.).
+                            А библиотека <code>openai</code> совместима с любым API, который поддерживает OpenAI-формат
+                            — достаточно поменять <code>baseURL</code>.
                             Один клиент, один формат, доступ к любой модели.</p>
                     </div>
 
