@@ -183,8 +183,8 @@ const EXTRA_STYLE = `
     }
 
     .book-outline-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        display: flex;
+        flex-direction: column;
         gap: 0.85rem;
         margin-top: 1.25rem;
     }
@@ -267,7 +267,7 @@ const EXTRA_STYLE = `
         }
 
         .book-outline-grid {
-            grid-template-columns: 1fr;
+            /* already single-column */
         }
     }
 </style>

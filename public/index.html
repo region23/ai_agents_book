@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
 
     <meta charset="UTF-8">
@@ -921,8 +920,8 @@
         }
 
         .prep-grid {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1rem;
         }
 
@@ -1373,264 +1372,263 @@
     </style>
 
 
-    <style>
-        .book-nav {
-            position: sticky;
-            top: 0;
-            z-index: 40;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            background: rgba(6, 6, 12, 0.8);
-            border-bottom: 1px solid var(--border);
-        }
+<style>
+    .book-nav {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        background: rgba(6, 6, 12, 0.8);
+        border-bottom: 1px solid var(--border);
+    }
 
-        .book-nav-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0.75rem 1.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
+    .book-nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
 
-        .book-nav a {
-            color: var(--text);
-            text-decoration: none;
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            padding: 0.35rem 0.85rem;
-            font-size: 0.88rem;
-            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-        }
+    .book-nav a {
+        color: var(--text);
+        text-decoration: none;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.88rem;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
 
-        .book-nav a:hover {
-            border-color: var(--accent);
-            color: var(--text-bright);
-            background: rgba(124, 127, 247, 0.08);
-        }
+    .book-nav a:hover {
+        border-color: var(--accent);
+        color: var(--text-bright);
+        background: rgba(124, 127, 247, 0.08);
+    }
 
-        .book-nav-title {
-            color: var(--text-dim);
-            font-size: 0.82rem;
-            white-space: nowrap;
-            letter-spacing: 0.01em;
-        }
+    .book-nav-title {
+        color: var(--text-dim);
+        font-size: 0.82rem;
+        white-space: nowrap;
+        letter-spacing: 0.01em;
+    }
 
+    .lesson-shell {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 1.25rem;
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 1.25rem;
+        align-items: start;
+    }
+
+    .lesson-sidebar {
+        position: sticky;
+        top: 68px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg, 16px);
+        padding: 1.1rem;
+    }
+
+    .lesson-sidebar h2 {
+        margin: 0 0 0.7rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .lesson-toc {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .lesson-toc a {
+        display: block;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm, 8px);
+        padding: 0.45rem 0.65rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        line-height: 1.35;
+        font-size: 0.82rem;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .lesson-toc a:hover {
+        color: var(--text);
+        border-color: rgba(124, 127, 247, 0.35);
+        background: rgba(124, 127, 247, 0.05);
+    }
+
+    .lesson-toc a.current {
+        color: var(--text-bright);
+        border-color: var(--accent);
+        background: rgba(124, 127, 247, 0.1);
+        box-shadow: 0 0 16px rgba(124, 127, 247, 0.08);
+    }
+
+    .lesson-main .steps-container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .lesson-main .steps-container::before {
+        display: none;
+    }
+
+    .lesson-main .step {
+        margin: 0;
+    }
+
+    .lesson-main .step-card {
+        cursor: default;
+    }
+
+    .lesson-main .step-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .lesson-main .step-card::before {
+        display: none;
+    }
+
+    .lesson-pager {
+        margin: 1.5rem 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        justify-content: center;
+    }
+
+    .lesson-pager-link {
+        color: var(--text);
+        text-decoration: none;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.45rem 0.9rem;
+        font-size: 0.88rem;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .lesson-pager-link:hover {
+        border-color: var(--accent);
+        background: rgba(124, 127, 247, 0.08);
+    }
+
+    .lesson-pager-link.disabled {
+        opacity: 0.35;
+        pointer-events: none;
+    }
+
+    .book-outline-section {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 2rem 5rem;
+    }
+
+    .book-outline-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        margin-top: 1.25rem;
+    }
+
+    .book-outline-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg, 16px);
+        padding: 1.15rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        position: relative;
+    }
+
+    .book-outline-card::before {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        background: linear-gradient(135deg, rgba(124, 127, 247, 0.2), rgba(34, 211, 238, 0.1), transparent 60%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .book-outline-card:hover {
+        border-color: rgba(124, 127, 247, 0.3);
+        background: var(--bg-card-hover);
+        transform: translateY(-3px);
+    }
+
+    .book-outline-card:hover::before {
+        opacity: 1;
+    }
+
+    .book-outline-meta {
+        color: var(--text-dim);
+        font-size: 0.78rem;
+        margin-bottom: 0.4rem;
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: 0.02em;
+    }
+
+    .book-outline-title {
+        font-weight: 700;
+        line-height: 1.35;
+        letter-spacing: -0.01em;
+    }
+
+    .book-outline-intro {
+        color: var(--text-dim);
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        line-height: 1.55;
+    }
+
+    @media (max-width: 980px) {
         .lesson-shell {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 1.25rem;
-            display: grid;
-            grid-template-columns: 280px minmax(0, 1fr);
-            gap: 1.25rem;
-            align-items: start;
+            grid-template-columns: minmax(0, 1fr);
         }
 
         .lesson-sidebar {
-            position: sticky;
-            top: 68px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg, 16px);
-            padding: 1.1rem;
+            position: static;
+        }
+    }
+
+    @media (max-width: 680px) {
+        .book-nav-inner {
+            padding: 0.65rem 0.8rem;
         }
 
-        .lesson-sidebar h2 {
-            margin: 0 0 0.7rem;
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-        }
-
-        .lesson-toc {
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }
-
-        .lesson-toc a {
-            display: block;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm, 8px);
-            padding: 0.45rem 0.65rem;
-            color: var(--text-dim);
-            text-decoration: none;
-            line-height: 1.35;
-            font-size: 0.82rem;
-            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .lesson-toc a:hover {
-            color: var(--text);
-            border-color: rgba(124, 127, 247, 0.35);
-            background: rgba(124, 127, 247, 0.05);
-        }
-
-        .lesson-toc a.current {
-            color: var(--text-bright);
-            border-color: var(--accent);
-            background: rgba(124, 127, 247, 0.1);
-            box-shadow: 0 0 16px rgba(124, 127, 247, 0.08);
-        }
-
-        .lesson-main .steps-container {
-            max-width: 100%;
-            padding: 0;
-            margin: 0;
-        }
-
-        .lesson-main .steps-container::before {
-            display: none;
-        }
-
-        .lesson-main .step {
-            margin: 0;
-        }
-
-        .lesson-main .step-card {
-            cursor: default;
-        }
-
-        .lesson-main .step-card:hover {
-            transform: none;
-            box-shadow: none;
-        }
-
-        .lesson-main .step-card::before {
-            display: none;
-        }
-
-        .lesson-pager {
-            margin: 1.5rem 0 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.55rem;
-            justify-content: center;
-        }
-
-        .lesson-pager-link {
-            color: var(--text);
-            text-decoration: none;
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            padding: 0.45rem 0.9rem;
-            font-size: 0.88rem;
-            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .lesson-pager-link:hover {
-            border-color: var(--accent);
-            background: rgba(124, 127, 247, 0.08);
-        }
-
-        .lesson-pager-link.disabled {
-            opacity: 0.35;
-            pointer-events: none;
+        .lesson-shell {
+            padding: 0.75rem;
         }
 
         .book-outline-section {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 2rem 5rem;
+            padding: 0 0.8rem 2.5rem;
         }
 
         .book-outline-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 0.85rem;
-            margin-top: 1.25rem;
+            /* already single-column */
         }
-
-        .book-outline-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg, 16px);
-            padding: 1.15rem;
-            text-decoration: none;
-            color: inherit;
-            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-            position: relative;
-        }
-
-        .book-outline-card::before {
-            content: '';
-            position: absolute;
-            inset: -1px;
-            border-radius: inherit;
-            background: linear-gradient(135deg, rgba(124, 127, 247, 0.2), rgba(34, 211, 238, 0.1), transparent 60%);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        .book-outline-card:hover {
-            border-color: rgba(124, 127, 247, 0.3);
-            background: var(--bg-card-hover);
-            transform: translateY(-3px);
-        }
-
-        .book-outline-card:hover::before {
-            opacity: 1;
-        }
-
-        .book-outline-meta {
-            color: var(--text-dim);
-            font-size: 0.78rem;
-            margin-bottom: 0.4rem;
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: 0.02em;
-        }
-
-        .book-outline-title {
-            font-weight: 700;
-            line-height: 1.35;
-            letter-spacing: -0.01em;
-        }
-
-        .book-outline-intro {
-            color: var(--text-dim);
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-            line-height: 1.55;
-        }
-
-        @media (max-width: 980px) {
-            .lesson-shell {
-                grid-template-columns: minmax(0, 1fr);
-            }
-
-            .lesson-sidebar {
-                position: static;
-            }
-        }
-
-        @media (max-width: 680px) {
-            .book-nav-inner {
-                padding: 0.65rem 0.8rem;
-            }
-
-            .lesson-shell {
-                padding: 0.75rem;
-            }
-
-            .book-outline-section {
-                padding: 0 0.8rem 2.5rem;
-            }
-
-            .book-outline-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    }
+</style>
 
 </head>
-
 <body>
 
-    <section class="hero">
+<section class="hero">
         <div class="hero-content">
             <span class="hero-emoji">🤖</span>
             <h1>ИИ-агенты для самых маленьких</h1>
@@ -1660,7 +1658,7 @@
         </div>
         <div class="hero-scroll-indicator">scroll</div>
     </section>
-    <section class="prep-section" id="before-start">
+<section class="prep-section" id="before-start">
         <div class="prep-header">
             <h2>Перед стартом</h2>
             <p>Пара минут подготовки — и всё пойдёт гладко. Это важно, особенно если ты делаешь первые шаги.</p>
@@ -1703,7 +1701,7 @@
                     class="term" data-tip="Большая языковая модель">LLM</span> могут отличаться.</p>
         </div>
     </section>
-    <section class="concept-section" id="step-0">
+<section class="concept-section" id="step-0">
         <div class="concept-header">
             <h2>Что такое ИИ-агент?</h2>
             <p>Прежде чем писать код — разберёмся в главной идее. Она на удивление простая.</p>
@@ -1750,86 +1748,63 @@
             </p>
         </div>
     </section>
-    <section class="book-outline-section" id="toc">
-        <div class="concept-header" style="margin-bottom: 1.5rem;">
-            <h2>Оглавление</h2>
+<section class="book-outline-section" id="toc">
+    <div class="concept-header" style="margin-bottom: 1.5rem;">
+        <h2>Оглавление</h2>
+        
+    </div>
+    <div class="book-outline-grid">
 
-        </div>
-        <div class="book-outline-grid">
+<a class="book-outline-card" href="lesson-01-basic-call.html">
+    <div class="book-outline-meta">Урок 01 · Начало</div>
+    <div class="book-outline-title">Базовый <span class="term" data-tip="Большая языковая модель">LLM</span>-вызов</div>
+    <div class="book-outline-intro">Отправляем запрос в <span class="term" data-tip="Большая языковая модель">LLM</span>, получаем ответ. Просто чтобы убедиться что всё работает.</div>
+</a>
 
-            <a class="book-outline-card" href="lesson-01-basic-call.html">
-                <div class="book-outline-meta">Урок 01 · Начало</div>
-                <div class="book-outline-title">Базовый <span class="term"
-                        data-tip="Большая языковая модель">LLM</span>-вызов</div>
-                <div class="book-outline-intro">Отправляем запрос в <span class="term"
-                        data-tip="Большая языковая модель">LLM</span>, получаем ответ. Просто чтобы убедиться что всё
-                    работает.</div>
-            </a>
+<a class="book-outline-card" href="lesson-02-with-tool.html">
+    <div class="book-outline-meta">Урок 02 · Начало</div>
+    <div class="book-outline-title">Добавляем первый Tool</div>
+    <div class="book-outline-intro">Даём модели возможность «действовать» — вызывать функции (<span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span>). Ключевой момент: модель не выдумывает данные, а просит нас выполнить функцию.</div>
+</a>
 
-            <a class="book-outline-card" href="lesson-02-with-tool.html">
-                <div class="book-outline-meta">Урок 02 · Начало</div>
-                <div class="book-outline-title">Добавляем первый Tool</div>
-                <div class="book-outline-intro">Даём модели возможность «действовать» — вызывать функции (<span
-                        class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span>). Ключевой
-                    момент: модель не выдумывает данные, а просит нас выполнить функцию.</div>
-            </a>
+<a class="book-outline-card" href="lesson-03-agent-loop.html">
+    <div class="book-outline-meta">Урок 03 · Ключевой момент</div>
+    <div class="book-outline-title">Agent Loop — замыкаем петлю</div>
+    <div class="book-outline-intro">Вот это и делает агента агентом. Модель вызывает <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span> → мы выполняем → результат обратно в <span class="term" data-tip="Большая языковая модель">LLM</span> → repeat.</div>
+</a>
 
-            <a class="book-outline-card" href="lesson-03-agent-loop.html">
-                <div class="book-outline-meta">Урок 03 · Ключевой момент</div>
-                <div class="book-outline-title">Agent Loop — замыкаем петлю</div>
-                <div class="book-outline-intro">Вот это и делает агента агентом. Модель вызывает <span class="term"
-                        data-tip="Инструмент/функция, которую вызывает модель">tool</span> → мы выполняем → результат
-                    обратно в <span class="term" data-tip="Большая языковая модель">LLM</span> → repeat.</div>
-            </a>
+<a class="book-outline-card" href="lesson-04-real-tools.html">
+    <div class="book-outline-meta">Урок 04 · Практика</div>
+    <div class="book-outline-title">Реальные Tools — bash и файловая система</div>
+    <div class="book-outline-intro">Заменяем фейковые данные настоящими инструментами. Агент теперь может выполнять команды и читать файлы через <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tools</span>. Запусти и посмотри: 5 итераций, модель сама решила что делать на каждом шаге — <code>ls</code>, <code>read_file</code>, ошибка, обходной путь, ответ.</div>
+</a>
 
-            <a class="book-outline-card" href="lesson-04-real-tools.html">
-                <div class="book-outline-meta">Урок 04 · Практика</div>
-                <div class="book-outline-title">Реальные Tools — bash и файловая система</div>
-                <div class="book-outline-intro">Заменяем фейковые данные настоящими инструментами. Агент теперь может
-                    выполнять команды и читать файлы через <span class="term"
-                        data-tip="Инструмент/функция, которую вызывает модель">tools</span>. Запусти и посмотри: 5
-                    итераций, модель сама решила что делать на каждом шаге — <code>ls</code>, <code>read_file</code>,
-                    ошибка, обходной путь, ответ.</div>
-            </a>
+<a class="book-outline-card" href="lesson-05-skills.html">
+    <div class="book-outline-meta">Урок 05 · Архитектура</div>
+    <div class="book-outline-title">Skills — модульная архитектура</div>
+    <div class="book-outline-intro"><span class="term" data-tip="Пакет знаний: инструкция + tools + обработчики">Skill</span> — это пакет знаний, который учит агента выполнять конкретную задачу. Внутри: инструкция (что делать и как), набор tools, и обработчики. Агент не меняется — меняются skills.</div>
+</a>
 
-            <a class="book-outline-card" href="lesson-05-skills.html">
-                <div class="book-outline-meta">Урок 05 · Архитектура</div>
-                <div class="book-outline-title">Skills — модульная архитектура</div>
-                <div class="book-outline-intro"><span class="term"
-                        data-tip="Пакет знаний: инструкция + tools + обработчики">Skill</span> — это пакет знаний,
-                    который учит агента выполнять конкретную задачу. Внутри: инструкция (что делать и как), набор tools,
-                    и обработчики. Агент не меняется — меняются skills.</div>
-            </a>
+<a class="book-outline-card" href="lesson-06-planning.html">
+    <div class="book-outline-meta">Урок 06 · Продвинутый</div>
+    <div class="book-outline-title">Multi-step Planning</div>
+    <div class="book-outline-intro">Перед тем как действовать, агент составляет план. Два подхода: <span class="term" data-tip="Сначала план, потом выполнение по шагам">Plan-then-Execute</span> и <span class="term" data-tip="Чередование рассуждений и действий">ReAct</span>.</div>
+</a>
 
-            <a class="book-outline-card" href="lesson-06-planning.html">
-                <div class="book-outline-meta">Урок 06 · Продвинутый</div>
-                <div class="book-outline-title">Multi-step Planning</div>
-                <div class="book-outline-intro">Перед тем как действовать, агент составляет план. Два подхода: <span
-                        class="term" data-tip="Сначала план, потом выполнение по шагам">Plan-then-Execute</span> и <span
-                        class="term" data-tip="Чередование рассуждений и действий">ReAct</span>.</div>
-            </a>
+<a class="book-outline-card" href="lesson-07-adaptive-agent.html">
+    <div class="book-outline-meta">Урок 07 · Продвинутый</div>
+    <div class="book-outline-title">Adaptive Agent — Plan + <span class="term" data-tip="Чередование рассуждений и действий">ReAct</span> + Replan</div>
+    <div class="book-outline-intro">Объединяем оба подхода: агент планирует, выполняет с рассуждениями, и может пересмотреть план если реальность не совпала с ожиданиями.</div>
+</a>
 
-            <a class="book-outline-card" href="lesson-07-adaptive-agent.html">
-                <div class="book-outline-meta">Урок 07 · Продвинутый</div>
-                <div class="book-outline-title">Adaptive Agent — Plan + <span class="term"
-                        data-tip="Чередование рассуждений и действий">ReAct</span> + Replan</div>
-                <div class="book-outline-intro">Объединяем оба подхода: агент планирует, выполняет с рассуждениями, и
-                    может пересмотреть план если реальность не совпала с ожиданиями.</div>
-            </a>
-
-            <a class="book-outline-card" href="lesson-08-interactive-agent.html">
-                <div class="book-outline-meta">Урок 08 · Финал</div>
-                <div class="book-outline-title"><span class="term"
-                        data-tip="Пользователь участвует в принятии решений">Human-in-the-Loop</span> + <span
-                        class="term" data-tip="Пошаговый мастер/визард">Wizard</span></div>
-                <div class="book-outline-intro">Агент управляет потоком, но человек принимает решения. Три интерактивных
-                    tool'а превращают агент в умного помощника-визарда: агент анализирует, генерирует варианты,
-                    предлагает выбор — и так несколько шагов. Пользователю остаётся только выбрать из готовых
-                    оптимальных решений или ввести свой вариант.</div>
-            </a>
-        </div>
-    </section>
-    <section class="footer">
+<a class="book-outline-card" href="lesson-08-interactive-agent.html">
+    <div class="book-outline-meta">Урок 08 · Финал</div>
+    <div class="book-outline-title"><span class="term" data-tip="Пользователь участвует в принятии решений">Human-in-the-Loop</span> + <span class="term" data-tip="Пошаговый мастер/визард">Wizard</span></div>
+    <div class="book-outline-intro">Агент управляет потоком, но человек принимает решения. Три интерактивных tool'а превращают агент в умного помощника-визарда: агент анализирует, генерирует варианты, предлагает выбор — и так несколько шагов. Пользователю остаётся только выбрать из готовых оптимальных решений или ввести свой вариант.</div>
+</a>
+    </div>
+</section>
+<section class="footer">
         <div class="footer-inner">
             <div class="footer-left">
                 <div class="footer-title">Что ты построишь</div>
@@ -1867,7 +1842,7 @@
         </div>
     </section>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
     <script>
         // ====== Syntax Highlight (full files) ======
@@ -2662,5 +2637,4 @@
         });
     </script>
 </body>
-
 </html>

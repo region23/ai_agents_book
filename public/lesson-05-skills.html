@@ -920,8 +920,8 @@
         }
 
         .prep-grid {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1rem;
         }
 
@@ -1536,8 +1536,8 @@
     }
 
     .book-outline-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        display: flex;
+        flex-direction: column;
         gap: 0.85rem;
         margin-top: 1.25rem;
     }
@@ -1620,7 +1620,7 @@
         }
 
         .book-outline-grid {
-            grid-template-columns: 1fr;
+            /* already single-column */
         }
     }
 </style>
