@@ -378,6 +378,7 @@
             line-height: 1.6;
             color: #aaa;
             overflow-x: auto;
+            white-space: pre-wrap;
         }
 
         .terminal-output .t-green { color: #4ade80; }
@@ -620,6 +621,98 @@
             overflow-x: auto;
         }
 
+        .demo-player {
+            background: #0b0f14;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1rem 1.1rem;
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .demo-player.demo-output.visible { overflow-x: hidden; }
+
+        .demo-player-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .demo-player-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .demo-player-count {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .demo-flow {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin: 0.2rem 0 0.9rem;
+        }
+
+        .demo-player-body {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.8rem;
+        }
+
+        .demo-pane {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 0.75rem 0.85rem;
+            min-height: 120px;
+        }
+
+        .demo-pane-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-pane-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            line-height: 1.6;
+            color: #c9d1d9;
+            white-space: pre-wrap;
+        }
+
+        .demo-player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: 0.9rem;
+        }
+
+        .demo-step-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+            color: var(--text);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .demo-step-btn:hover { background: rgba(255,255,255,0.12); }
+        .demo-step-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .demo-step-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
         .output-note {
             color: var(--text-dim);
             font-size: 0.8rem;
@@ -742,12 +835,14 @@
             .progress-map { display: none; }
             .loop-flow { font-size: 0.7rem; }
             .hero-meta { flex-direction: column; align-items: center; gap: 0.75rem; }
+            .demo-player-body { grid-template-columns: 1fr; }
         }
 
         /* ====== FOCUS VISIBLE ====== */
         .step-card:focus-visible,
         .progress-dot:focus-visible,
         .demo-btn:focus-visible,
+        .demo-step-btn:focus-visible,
         .copy-btn:focus-visible,
         .run-copy-btn:focus-visible,
         .hero-cta:focus-visible {
@@ -959,8 +1054,8 @@ dotenv.<span class="fn">config</span>();
             <button class="demo-btn" data-demo="demo-step-1">▶ Запустить демо</button>
 
             <div class="terminal-output demo-output" id="demo-step-1" aria-live="polite">
-<span class="t-bold">4</span>
-            </div>
+2 + 2 = 4
+</div>
             <div class="output-note" data-demo-note="demo-step-1">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1075,17 +1170,20 @@ dotenv.<span class="fn">config</span>();
             <button class="demo-btn" data-demo="demo-step-2">▶ Запустить демо</button>
 
             <div class="terminal-output demo-output" id="demo-step-2" aria-live="polite">
-<span class="t-dim">Content:</span>
-<span class="t-bold">Tool calls:</span> [
+Content:
+
+Tool calls: [
   {
-    <span class="t-blue">"type"</span>: <span class="t-green">"function"</span>,
-    <span class="t-blue">"id"</span>: <span class="t-green">"toolu_vrtx_01WeGmRZbe85apvYG8zVhFJd"</span>,
-    <span class="t-blue">"function"</span>: {
-      <span class="t-blue">"name"</span>: <span class="t-green">"get_weather"</span>,
-      <span class="t-blue">"arguments"</span>: <span class="t-green">"{\"city\": \"Анапа\"}"</span>
+    "type": "function",
+    "index": 0,
+    "id": "toolu_vrtx_018LcrQKqANi7YFc3aCfyyqL",
+    "function": {
+      "name": "get_weather",
+      "arguments": "{\"city\": \"Анапа\"}"
     }
   }
-]</div>
+]
+</div>
             <div class="output-note" data-demo-note="demo-step-2">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1239,16 +1337,25 @@ dotenv.<span class="fn">config</span>();
             <button class="demo-btn" data-demo="demo-step-3">▶ Запустить демо</button>
 
             <div class="terminal-output demo-output" id="demo-step-3" aria-live="polite">
-<span class="t-dim">--- Итерация 1 ---</span>
-<span class="t-yellow">Tool: get_weather({"city":"Москва"})</span>
-Результат: −5°C, снег
-<span class="t-yellow">Tool: get_weather({"city":"Анапа"})</span>
-Результат: +8°C, облачно
-<span class="t-yellow">Tool: get_time({"city":"Москва"})</span>
-Результат: Сейчас в Москва: 09:39:53
 
-<span class="t-dim">--- Итерация 2 ---</span>
-<span class="t-bold">Ответ: Погода: Москва −5°C, снег | Анапа +8°C, облачно. Время: 09:39:53</span></div>
+--- Итерация 1 ---
+Tool: get_weather({"city":"Москва"})
+Результат: −5°C, снег
+Tool: get_weather({"city":"Анапа"})
+Результат: +8°C, облачно
+Tool: get_time({"city":"Москва"})
+Результат: Сейчас в Москва: 18:11:51
+
+--- Итерация 2 ---
+Ответ: Вот актуальная информация:
+
+**Погода:**
+- **Москва**: −5°C, снег
+- **Анапа**: +8°C, облачно
+
+**Время:**
+- Сейчас в Москве: 18:11:51
+</div>
             <div class="output-note" data-demo-note="demo-step-3">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1353,20 +1460,71 @@ dotenv.<span class="fn">config</span>();
             <button class="demo-btn" data-demo="demo-step-4">▶ Запустить демо</button>
 
             <div class="terminal-output demo-output" id="demo-step-4" aria-live="polite">
-<span class="t-dim">--- Итерация 1 ---</span>
-<span class="t-yellow">Tool: run_bash({"command":"ls -la"})</span>
-→ total 72, drwxr-xr-x 10 ...
 
-<span class="t-dim">--- Итерация 2 ---</span>
-<span class="t-yellow">Tool: run_bash({"command":"cat package.json"})</span>
-→ { "name": "simple-agent", ...
+--- Итерация 1 ---
+Tool: run_bash({"command":"ls -la"})
+→ total 16
+drwxr-xr-x@ 6 pavlenko  wheel  192 Feb  5 18:21 .
+drwxr-xr-x@ 8 pavlenko  wheel  256 Feb  5 18:03 ..
+-rw-r--r--@ 1 pavlenko  wheel   93 Feb  5 18:21 README.md
+-rw-r--r--@ 1 pavlenko  wheel  143 Feb  5 18:21 package.json
+drwxr-xr-x@ 3 pavlenko  wheel   96 Feb  5 18:02 services
+drwxr-xr-x@ 7 pavlenko  wheel  224 Feb  5 18:00 src
 
-<span class="t-dim">--- Итерация 3 ---</span>
-<span class="t-yellow">Tool: run_bash({"command":"ls -la src/"})</span>
-→ 01-basic-call.ts, 02-with-tool.ts ...
+--- Итерация 2 ---
+Tool: read_file({"path":"README.md"})
+→ # simple-agent
 
-<span class="t-dim">--- Итерация 4 ---</span>
-<span class="t-bold">Ответ: Проект simple-agent — учебный проект для AI-агентов...</span></div>
+Учебный проект для демонстрации AI-агента.
+
+Tool: read_file({"path":"package.json"})
+→ {
+  "name": "simple-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Учебный проект для AI-агентов"
+}
+
+
+--- Итерация 3 ---
+Tool: run_bash({"command":"find . -type f -name \"*.py\" -o -name \"*.js\" -o -name \"*.ts\" -o -name \"*.json\" | head -20"})
+→ ./package.json
+./services/index.ts
+./src/05-skills.ts
+./src/04-real-tools.ts
+./src/02-with-tool.ts
+./src/03-agent-loop.ts
+./src/01-basic-call.ts
+
+--- Итерация 4 ---
+Tool: run_bash({"command":"tree -L 2 -I 'node_modules'"})
+→ Команда запрещена allowlist: tree -L 2 -I 'node_modules'
+
+--- Итерация 5 ---
+Tool: run_bash({"command":"ls -R"})
+→ README.md
+package.json
+services
+src
+
+./services:
+index.ts
+
+./src:
+01-basic-call.ts
+02-with-tool.ts
+03-agent-loop.ts
+04-real-tools.ts
+05-skills.ts
+
+--- Итерация 6 ---
+Tool: read_file({"path":"src/01-basic-call.ts"})
+→ // basic call example
+export const add = (a:number,b:number)=&gt;a+b;
+
+Tool: read_file({"path":"services/index.ts"})
+→ // service placeholder
+</div>
             <div class="output-note" data-demo-note="demo-step-4">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1444,12 +1602,106 @@ dotenv.<span class="fn">config</span>();
             <button class="demo-btn" data-demo="demo-step-5">▶ Запустить демо</button>
 
             <div class="terminal-output demo-output" id="demo-step-5" aria-live="polite">
-<span class="t-dim">--- Итерация 1 ---</span>  <span class="t-yellow">list_dir(".")</span>
-<span class="t-dim">--- Итерация 2 ---</span>  <span class="t-yellow">list_dir("src")</span>
-<span class="t-dim">--- Итерация 3 ---</span>  <span class="t-yellow">read_file × 5 файлов</span>
-<span class="t-dim">--- Итерация 4 ---</span>  <span class="t-yellow">run_bash("wc -l src/*.ts")</span> → 542 строки
-<span class="t-dim">--- Итерация 5 ---</span>  <span class="t-yellow">write_file("STATS.md")</span> → ✅
-<span class="t-dim">--- Итерация 6 ---</span>  <span class="t-bold">Готово! STATS.md создан с полным анализом.</span></div>
+
+--- Итерация 1 ---
+list_dir({"path":"."})
+README.md
+package.json
+services
+src
+list_dir({"path":"src"})
+01-basic-call.ts
+02-with-tool.ts
+03-agent-loop.ts
+04-real-tools.ts
+05-skills.ts
+
+--- Итерация 2 ---
+run_bash({"command":"wc -l src/*.ts"})
+2 src/01-basic-call.ts
+       2 src/02-with-tool.ts
+       2 src/03-agent-loop.ts
+       2 src/04-real-tools.ts
+       2 src/05-skills.ts
+      10 total
+run_bash({"command":"find src -name \"*.ts\" -type f"})
+src/05-skills.ts
+src/04-real-tools.ts
+src/02-with-tool.ts
+src/03-agent-loop.ts
+src/01-basic-call.ts
+
+--- Итерация 3 ---
+run_bash({"command":"cat src/01-basic-call.ts"})
+// basic call example
+export const add = (a:number,b:number)=&gt;a+b;
+run_bash({"command":"cat src/02-with-tool.ts"})
+// tool example
+export const tool = () =&gt; "ok";
+run_bash({"command":"cat src/03-agent-loop.ts"})
+// agent loop example
+export const loop = () =&gt; true;
+run_bash({"command":"cat src/04-real-tools.ts"})
+// real tools example
+export const run = () =&gt; null;
+run_bash({"command":"cat src/05-skills.ts"})
+// skills example
+export const skill = {};
+
+--- Итерация 4 ---
+write_file({"path":"STATS.md","content":"# Статистика кода проекта
+
+## Общая информация
+
+**Дата создания отчёта:** 2024  
+**Папка анализа:** `src/`
+
+## Статистика по файлам
+
+| Файл | Строк кода | Описание |
+|------|------------|----------|
+| `01-basic-call.ts` | 2 | Пример базового вызова |
+| `02-with-tool.ts` | 2 | Пример с инструментом |
+| `03-agent-loop.ts` | 2 | Пример агентского цикла |
+| `04-real-tools.ts` | 2 | Пример реальных инструментов |
+| `05-skills.ts` | 2 | Пример навыков |
+
+## Итого
+
+- **Всего файлов:** 5
+- **Всего строк кода:** 10
+- **Средний размер файла:** 2 строки
+- **Язык программирования:** TypeScript
+
+## Структура проекта
+
+```
+src/
+├── 01-basic-call.ts
+├── 02-with-tool.ts
+├── 03-agent-loop.ts
+├── 04-real-tools.ts
+└── 05-skills.ts
+```
+
+---
+*Отчёт сгенерирован автоматически*
+"})
+OK: записан STATS.md
+
+--- Итерация 5 ---
+Готово! ✅ 
+
+Я создал файл **STATS.md** с кратким отчётом о коде в папке `src`. 
+
+**Основные результаты:**
+- 📁 Всего файлов: **5**
+- 📝 Всего строк кода: **10**
+- 📊 Средний размер файла: **2 строки**
+- 💻 Язык: **TypeScript**
+
+Все файлы содержат примеры различных концепций (базовый вызов, инструменты, агентский цикл, навыки).
+</div>
             <div class="output-note" data-demo-note="demo-step-5">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1518,20 +1770,48 @@ dotenv.<span class="fn">config</span>();
             <button class="demo-btn" data-demo="demo-step-6">▶ Запустить демо</button>
 
             <div class="terminal-output demo-output" id="demo-step-6" aria-live="polite">
-<span class="t-cyan">📋 ПЛАН: Анализ дублирования кода</span>
-<span class="t-dim">─────────────────────────────────────</span>
-  1. [run_bash] Получить список .ts файлов
-  2. [read_file] Прочитать каждый файл
-  3. [run_bash] Найти общие паттерны
-  4. [write_file] Создать REFACTORING.md
 
-<span class="t-cyan">⚡ ВЫПОЛНЕНИЕ</span>
-  <span class="t-dim">💭 Начну с просмотра файлов, чтобы понять масштаб...</span>
-  <span class="t-yellow">🔧 run_bash("ls src/*.ts")</span>
-  <span class="t-dim">💭 5 файлов. Прочитаю каждый и найду паттерны...</span>
-  <span class="t-yellow">🔧 read_file("src/01-basic-call.ts")</span>
-  ...
-            </div>
+📋 ПЛАН: Анализ дублирования кода в папке src и создание REFACTORING.md
+  1. [read_file] Прочитать содержимое файла src/01-basic-call.ts для анализа кода
+  2. [read_file] Прочитать содержимое файла src/02-with-tool.ts для анализа кода
+  3. [read_file] Прочитать содержимое файла src/03-agent-loop.ts для анализа кода
+  4. [read_file] Прочитать содержимое файла src/04-real-tools.ts для анализа кода
+  5. [read_file] Прочитать содержимое файла src/05-skills.ts для завершения анализа
+  6. [write_file] Создать файл REFACTORING.md с результатами анализа дублирования кода и рекомендациями по рефакторингу
+
+⚡ ВЫПОЛНЕНИЕ
+  💭 Начинаем с чтения первого файла из списка, чтобы понять структуру и найти повторяющиеся паттерны
+  🔧 read_file({"path":"src/01-basic-call.ts"})
+  → // basic call example
+export const add = (a:number,b:number)=&gt;a+b;
+
+  💭 Читаем второй файл для сравнения с первым и выявления общих фрагментов
+  🔧 read_file({"path":"src/02-with-tool.ts"})
+  → // tool example
+export const tool = () =&gt; "ok";
+
+  💭 Продолжаем анализ третьего файла для поиска дублирования
+  🔧 read_file({"path":"src/03-agent-loop.ts"})
+  → // agent loop example
+export const loop = () =&gt; true;
+
+  💭 Анализируем четвертый файл на предмет повторяющихся конструкций
+  🔧 read_file({"path":"src/04-real-tools.ts"})
+  → // real tools example
+export const run = () =&gt; null;
+
+  💭 Читаем последний файл из списка для полного анализа всех файлов в папке src
+  🔧 read_file({"path":"src/05-skills.ts"})
+  → // skills example
+export const skill = {};
+
+  💭 На основе прочитанных файлов составляем отчет с выявленными дубликатами кода, общими паттернами и предложениями по их устранению через выделение общих функций/утилит
+  🔧 write_file({"path":"REFACTORING.md","content":"# REFACTORING
+
+(Заполнить выводы по дублированию кода)
+"})
+  → OK: записан REFACTORING.md
+</div>
             <div class="output-note" data-demo-note="demo-step-6">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="run-command">
@@ -1623,20 +1903,38 @@ dotenv.<span class="fn">config</span>();
             <button class="demo-btn" data-demo="demo-step-7">▶ Запустить демо</button>
 
             <div class="terminal-output demo-output" id="demo-step-7" aria-live="polite">
-<span class="t-cyan">📋 ПЛАН 1</span>
-  1. Сканировать файлы
-  2. Найти паттерны
-  3. Создать отчёт
 
-<span class="t-dim">… Выполнение …</span>
-<span class="t-yellow">🔧 run_bash("ls src")</span>
-<span class="t-dim">💭 План устарел: найден новый подпроект</span>
-<span class="t-yellow">🔧 request_replan({"reason":"Найден новый подпроект","completed_steps":["Сканировать файлы"],"discoveries":["появилась папка services/"]})</span>
+📋 ПЛАН 1
+  1. Просмотреть структуру проекта и список файлов в корневой директории
+  2. Прочитать основную документацию проекта для понимания его назначения и структуры
+  3. Найти основные исходные файлы проекта для анализа используемых технологий
+  4. Создать файл отчёта с результатами анализа проекта
 
-<span class="t-cyan">📋 ПЛАН 2</span>
-  1. Учесть services/
-  2. Обновить отчёт
-<span class="t-bold">Готово!</span></div>
+🔧 list_dir({"path":"."})
+→ README.md
+package.json
+services
+src
+
+🔧 request_replan({"reason":"Найдены новые данные","completed_steps":["Просмотреть структуру проекта и список файлов в корневой директории"],"discoveries":["обнаружена папка services/"]})
+
+📋 ПЛАН 2
+  1. Изучить содержимое папки services/ для понимания архитектуры сервисов
+  2. Прочитать основную документацию проекта для понимания его назначения
+  3. Найти основные исходные файлы для определения используемых технологий
+  4. Создать итоговый отчёт с результатами анализа проекта
+
+🔧 list_dir({"path":"services"})
+→ index.ts
+
+🔧 read_file({"path":"README.md"})
+→ # simple-agent
+
+Учебный проект для демонстрации AI-агента.
+
+
+Готово!
+</div>
             <div class="output-note" data-demo-note="demo-step-7">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="mini-block expect">
@@ -1713,39 +2011,36 @@ dotenv.<span class="fn">config</span>();
 
             <button class="demo-btn" data-demo="demo-step-8">▶ Запустить демо</button>
 
-            <div class="terminal-output demo-output" id="demo-step-8" aria-live="polite">
-<span class="t-dim">💭 Нужно выяснить тип проекта...</span>
-
-<span class="t-bold">══════════════════════════════════════</span>
-<span class="t-cyan">🤔 Какой тип проекта вы хотите создать?</span>
-<span class="t-dim">──────────────────────────────────────</span>
-  <span class="t-bold">1)</span> CLI-утилита
-     <span class="t-dim">Инструмент для терминала</span>
-  <span class="t-bold">2)</span> REST API
-     <span class="t-dim">Бэкенд-сервис с Express/Fastify</span>
-  <span class="t-bold">3)</span> Telegram-бот
-     <span class="t-dim">Бот с grammY/Telegraf</span>
-  <span class="t-bold">4)</span> Свой вариант...
-<span class="t-dim">──────────────────────────────────────</span>
-<span class="t-green">Выбор [1-4]: </span><span class="t-bold">2</span>
-
-<span class="t-dim">💭 REST API. Нужно уточнить фреймворк...</span>
-
-<span class="t-bold">══════════════════════════════════════</span>
-<span class="t-cyan">📝 Как назвать проект?</span>
-   <span class="t-dim">💡 Например: my-cool-api</span>
-<span class="t-dim">──────────────────────────────────────</span>
-<span class="t-green">&gt; </span><span class="t-bold">todo-api</span>
-
-<span class="t-dim">💭 Генерирую структуру проекта...</span>
-
-<span class="t-bold">══════════════════════════════════════</span>
-<span class="t-yellow">⚠️  Агент хочет создать файл: package.json</span>
-<span class="t-dim">──────────────────────────────────────</span>
-{ "name": "todo-api", "version": "1.0.0" ...}
-<span class="t-dim">──────────────────────────────────────</span>
-<span class="t-green">Разрешить? [y/n/edit]: </span><span class="t-bold">y</span>
-<span class="t-green">✅ Файл package.json записан</span></div>
+            <div class="demo-output demo-player" id="demo-step-8" data-demo-player="step8" aria-live="polite">
+                <div class="demo-player-header">
+                    <div class="demo-player-title">Демо по шагам</div>
+                    <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>4</span></div>
+                </div>
+                <div class="demo-flow">LLM → tool_call → tool_result → LLM</div>
+                <div class="demo-player-body">
+                    <div class="demo-pane">
+                        <div class="demo-pane-title">LLM</div>
+                        <div class="demo-pane-text" data-demo-llm1></div>
+                    </div>
+                    <div class="demo-pane">
+                        <div class="demo-pane-title">tool_call</div>
+                        <div class="demo-pane-text" data-demo-toolcall></div>
+                    </div>
+                    <div class="demo-pane">
+                        <div class="demo-pane-title">tool_result</div>
+                        <div class="demo-pane-text" data-demo-toolresult></div>
+                    </div>
+                    <div class="demo-pane">
+                        <div class="demo-pane-title">LLM</div>
+                        <div class="demo-pane-text" data-demo-llm2></div>
+                    </div>
+                </div>
+                <div class="demo-player-controls">
+                    <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                    <div class="demo-step-label" data-demo-label></div>
+                    <button class="demo-step-btn" data-demo-next>Далее →</button>
+                </div>
+            </div>
             <div class="output-note" data-demo-note="demo-step-8">Пример вывода. У тебя может быть иначе — это нормально.</div>
 
             <div class="run-command">
@@ -1826,7 +2121,7 @@ dotenv.<span class="fn">config</span>();
 
         card.addEventListener('click', (e) => {
             // Don't toggle if clicking inside code or buttons
-            if (e.target.closest('pre, button, .run-command, a')) return;
+            if (e.target.closest('pre, button, .run-command, a, .demo-player')) return;
 
             const step = card.closest('.step');
             const wasActive = step.classList.contains('active');
@@ -1960,6 +2255,89 @@ dotenv.<span class="fn">config</span>();
             btn.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
         });
     });
+
+    // ====== Demo Player (Step-by-step) ======
+    const demoPlayers = {
+        step8: [
+            {
+                label: "Выбор типа",
+                llm1: "Понимаю задачу. Сначала уточню тип REST API проекта.",
+                tool_call: `ask_user_choice({\n  question: \"Какой тип REST API проекта ты хочешь создать?\",\n  options: [Express, Fastify, NestJS, Koa]\n})`,
+                tool_result: "Пользователь выбрал: Fastify (Node.js)",
+                llm2: "Отлично. Теперь нужно имя проекта.",
+            },
+            {
+                label: "Имя проекта",
+                llm1: "Спрашиваю название проекта для генерации конфигурации.",
+                tool_call: `ask_user_input({\n  question: \"Как назовём проект?\",\n  placeholder: \"my-rest-api\"\n})`,
+                tool_result: "todo-api",
+                llm2: "Готовлю конфиг и попрошу подтверждение перед записью файла.",
+            },
+            {
+                label: "Подтверждение",
+                llm1: "Собрал package.json. Надо подтвердить запись.",
+                tool_call: `ask_user_confirm({\n  question: \"Создать проект с этой конфигурацией?\",\n  preview: \"{ name: 'todo-api', scripts: { dev: 'nodemon src/index.js' } }\"\n})`,
+                tool_result: "y",
+                llm2: "Записываю файл package.json.",
+            },
+            {
+                label: "Запись",
+                llm1: "Выполняю запись конфигурации на диск.",
+                tool_call: `write_file({ path: \"package.json\", content: \"...\" })`,
+                tool_result: "✅ Файл package.json записан",
+                llm2: "Готово! Проект создан. Могу подсказать следующие шаги.",
+            },
+        ],
+    };
+
+    function initDemoPlayer(player) {
+        const key = player.dataset.demoPlayer;
+        const steps = demoPlayers[key];
+        if (!steps || steps.length === 0) return;
+
+        const llm1El = player.querySelector('[data-demo-llm1]');
+        const toolCallEl = player.querySelector('[data-demo-toolcall]');
+        const toolResultEl = player.querySelector('[data-demo-toolresult]');
+        const llm2El = player.querySelector('[data-demo-llm2]');
+        const labelEl = player.querySelector('[data-demo-label]');
+        const indexEl = player.querySelector('[data-demo-index]');
+        const totalEl = player.querySelector('[data-demo-total]');
+        const prevBtn = player.querySelector('[data-demo-prev]');
+        const nextBtn = player.querySelector('[data-demo-next]');
+
+        let index = 0;
+        totalEl.textContent = String(steps.length);
+
+        const render = () => {
+            const step = steps[index];
+            llm1El.textContent = step.llm1 || "";
+            toolCallEl.textContent = step.tool_call || "";
+            toolResultEl.textContent = step.tool_result || "";
+            llm2El.textContent = step.llm2 || "";
+            labelEl.textContent = step.label || `Шаг ${index + 1}`;
+            indexEl.textContent = String(index + 1);
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === steps.length - 1;
+        };
+
+        prevBtn.addEventListener('click', () => {
+            if (index > 0) {
+                index -= 1;
+                render();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (index < steps.length - 1) {
+                index += 1;
+                render();
+            }
+        });
+
+        render();
+    }
+
+    document.querySelectorAll('[data-demo-player]').forEach(initDemoPlayer);
 
     // ====== Tooltip focus ======
     document.querySelectorAll('.term').forEach(term => {
