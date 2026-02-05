@@ -2,6 +2,7 @@
 import OpenAI from "openai";
 import { execSync } from "child_process";
 import { readFileSync, writeFileSync, existsSync } from "fs";
+import { join } from "path";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -14,15 +15,32 @@ const client = new OpenAI({
 // === SKILL: определение ===
 interface Skill {
     name: string;
-    description: string;           // для system prompt
+    description: string;           // короткое описание для выбора skill
+    instructions?: string;         // полный текст из SKILL.md для system prompt
     tools: OpenAI.ChatCompletionTool[];
     handlers: Record<string, (args: any) => string>;
 }
 
+// === Загрузка метаданных из SKILL.md ===
+function loadSkillMeta(skillDir: string) {
+    const raw = readFileSync(join(skillDir, "SKILL.md"), "utf-8");
+    const [, frontmatter, ...rest] = raw.split("---");
+    const body = rest.join("---").trim();
+
+    const meta: Record<string, string> = {};
+    for (const line of frontmatter.trim().split("\n")) {
+        const idx = line.indexOf(":");
+        if (idx > 0) meta[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+    }
+
+    return { name: meta.name, description: meta.description, instructions: body };
+}
+
 // === SKILL: файловая система ===
+const fsMeta = loadSkillMeta("./skills/filesystem");
+
 const filesystemSkill: Skill = {
-    name: "filesystem",
-    description: "Умеешь работать с файлами: читать, писать, просматривать директории.",
+    ...fsMeta,                     // name, description, instructions из SKILL.md
     tools: [
         {
             type: "function",
@@ -148,12 +166,16 @@ function createAgent(skills: Skill[]) {
     const allHandlers = Object.assign({}, ...skills.map(s => s.handlers));
 
     // Собираем system prompt из описаний skills
-    const skillDescriptions = skills
-        .map(s => `- ${s.name}: ${s.description}`)
-        .join("\n");
+    const skillSections = skills
+        .map(s => s.instructions
+            ? `## ${s.name}\n${s.instructions}`
+            : `## ${s.name}\n${s.description}`)
+        .join("\n\n");
 
     const systemPrompt = `Ты полезный ассистент. У тебя есть следующие навыки:
-${skillDescriptions}
+
+${skillSections}
+
 Используй инструменты когда нужно. Отвечай на русском.`;
 
     return async function run(userMessage: string) {

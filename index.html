@@ -2158,17 +2158,55 @@ agentLoop("Посмотри что за проект лежит в текуще�
                     <div class="step-detail">
                         <p>В индустрии формируется стандарт <a href="https://agentskills.io"
                                 target="_blank">agentskills.io</a> —
-                            открытый формат для описания skills. Каждый skill — это папка с <code>SKILL.md</code>
-                            (инструкция на естественном языке),
-                            <code>scripts/</code> (исполняемые файлы), <code>references/</code> (документация) и
-                            <code>assets/</code> (шаблоны, примеры).
-                            Принцип progressive disclosure: агент сначала читает короткий <code>SKILL.md</code>, и
-                            только если нужно — заглядывает в references.
-                        </p>
-                        <p>Ниже — упрощённая учебная реализация этой идеи на TypeScript. Мы определяем Skill как
-                            интерфейс с <code>name</code>,
-                            <code>description</code>, <code>tools</code> и <code>handlers</code>, и подключаем skills к
-                            агенту через <code>createAgent([...skills])</code>.
+                            открытый формат для описания skills. Каждый skill — это папка с
+                            <code>SKILL.md</code> и вспомогательными файлами. Вот реальная структура из нашего
+                            репозитория:</p>
+
+                        <div class="code-block">
+                            <div class="code-filename"><span class="dot"></span>Структура папки skill</div>
+                            <pre>skills/
+└── filesystem/
+    ├── SKILL.md              # frontmatter + инструкции для агента
+    └── references/
+        └── REFERENCE.md      # детальная документация по tools</pre>
+                        </div>
+
+                        <p>Внутри <code>SKILL.md</code> — YAML-frontmatter с метаданными и инструкция на естественном
+                            языке:</p>
+
+                        <div class="code-block">
+                            <div class="code-filename"><span class="dot"></span>skills/filesystem/SKILL.md</div>
+                            <pre>---
+name: filesystem
+description: Read, write, and list files. Use when the agent needs to work with the file system.
+metadata:
+  author: ai-agents-book
+  version: "1.0"
+---
+
+# Filesystem Skill
+
+Ты умеешь работать с файлами: читать, записывать и просматривать директории.
+
+## Доступные инструменты
+- **read_file** — прочитать содержимое файла по пути
+- **write_file** — записать содержимое в файл
+- **list_dir** — получить список файлов в директории
+
+## Правила
+- Перед записью всегда проверяй, существует ли файл
+- Подробности по каждому инструменту — см. references/REFERENCE.md</pre>
+                        </div>
+
+                        <p>Принцип <strong>progressive disclosure</strong>: агент сначала видит только
+                            <code>name</code> + <code>description</code> из frontmatter (~100 токенов) и решает,
+                            нужен ли этот skill. Затем читает body <code>SKILL.md</code> с инструкциями.
+                            И только по необходимости заглядывает в <code>references/</code> за деталями конкретного
+                            tool. Три уровня — минимум токенов на каждом шаге.</p>
+
+                        <p>Ниже — TypeScript-реализация этой идеи. Мы определяем Skill как
+                            интерфейс и загружаем skills программно через
+                            <code>createAgent([...skills])</code>.
                         </p>
                     </div>
 
@@ -2178,6 +2216,7 @@ agentLoop("Посмотри что за проект лежит в текуще�
 import OpenAI from "openai";
 import { execSync } from "child_process";
 import { readFileSync, writeFileSync, existsSync } from "fs";
+import { join } from "path";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -2190,15 +2229,32 @@ const client = new OpenAI({
 // === SKILL: определение ===
 interface Skill {
     name: string;
-    description: string;           // для system prompt
+    description: string;           // короткое описание для выбора skill
+    instructions?: string;         // полный текст из SKILL.md для system prompt
     tools: OpenAI.ChatCompletionTool[];
     handlers: Record&lt;string, (args: any) =&gt; string&gt;;
 }
 
+// === Загрузка метаданных из SKILL.md ===
+function loadSkillMeta(skillDir: string) {
+    const raw = readFileSync(join(skillDir, "SKILL.md"), "utf-8");
+    const [, frontmatter, ...rest] = raw.split("---");
+    const body = rest.join("---").trim();
+
+    const meta: Record&lt;string, string&gt; = {};
+    for (const line of frontmatter.trim().split("\n")) {
+        const idx = line.indexOf(":");
+        if (idx &gt; 0) meta[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+    }
+
+    return { name: meta.name, description: meta.description, instructions: body };
+}
+
 // === SKILL: файловая система ===
+const fsMeta = loadSkillMeta("./skills/filesystem");
+
 const filesystemSkill: Skill = {
-    name: "filesystem",
-    description: "Умеешь работать с файлами: читать, писать, просматривать директории.",
+    ...fsMeta,                     // name, description, instructions из SKILL.md
     tools: [
         {
             type: "function",
@@ -2324,12 +2380,16 @@ function createAgent(skills: Skill[]) {
     const allHandlers = Object.assign({}, ...skills.map(s =&gt; s.handlers));
 
     // Собираем system prompt из описаний skills
-    const skillDescriptions = skills
-        .map(s =&gt; `- ${s.name}: ${s.description}`)
-        .join("\n");
+    const skillSections = skills
+        .map(s =&gt; s.instructions
+            ? `## ${s.name}\n${s.instructions}`
+            : `## ${s.name}\n${s.description}`)
+        .join("\n\n");
 
     const systemPrompt = `Ты полезный ассистент. У тебя есть следующие навыки:
-${skillDescriptions}
+
+${skillSections}
+
 Используй инструменты когда нужно. Отвечай на русском.`;
 
     return async function run(userMessage: string) {
@@ -2434,6 +2494,10 @@ main();
                         который агент читает как инструкцию. Стандарт <a href="https://agentskills.io"
                             target="_blank">agentskills.io</a>
                         определяет структуру папки skill'а, чтобы разные агенты могли подключать одни и те же skills.
+                        <br><br>
+                        Загляни в папку <code>skills/filesystem/</code> в репозитории — это настоящий skill
+                        в формате agentskills.io. В продакшене агент парсит <code>SKILL.md</code> и получает из него
+                        инструкции + описания tools.
                     </div>
                 </div>
             </div>
