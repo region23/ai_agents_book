@@ -1762,13 +1762,13 @@
 <a class="book-outline-card" href="lesson-04-real-tools.html">
     <div class="book-outline-meta">Урок 04 · Практика</div>
     <div class="book-outline-title">Реальные Tools — bash и файловая система</div>
-    <div class="book-outline-intro">Заменяем фейковые данные настоящими инструментами. Агент теперь может выполнять команды и читать файлы через <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tools</span>.</div>
+    <div class="book-outline-intro">Заменяем фейковые данные настоящими инструментами. Агент теперь может выполнять команды и читать файлы через <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tools</span>. Запусти и посмотри: 5 итераций, модель сама решила что делать на каждом шаге — <code>ls</code>, <code>read_file</code>, ошибка, обходной путь, ответ.</div>
 </a>
 
 <a class="book-outline-card" href="lesson-05-skills.html">
     <div class="book-outline-meta">Урок 05 · Архитектура</div>
     <div class="book-outline-title">Skills — модульная архитектура</div>
-    <div class="book-outline-intro"><span class="term" data-tip="Пакет: инструкции + tools + обработчики">Skill</span> — это tool + инструкция. Набор связанных capabilities под конкретную задачу. Агент не меняется — меняются skills.</div>
+    <div class="book-outline-intro"><span class="term" data-tip="Пакет знаний: инструкция + tools + обработчики">Skill</span> — это пакет знаний, который учит агента выполнять конкретную задачу. Внутри: инструкция (что делать и как), набор tools, и обработчики. Агент не меняется — меняются skills.</div>
 </a>
 
 <a class="book-outline-card" href="lesson-06-planning.html">
@@ -1786,7 +1786,7 @@
 <a class="book-outline-card" href="lesson-08-interactive-agent.html">
     <div class="book-outline-meta">Урок 08 · Финал</div>
     <div class="book-outline-title"><span class="term" data-tip="Пользователь участвует в принятии решений">Human-in-the-Loop</span> + <span class="term" data-tip="Пошаговый мастер/визард">Wizard</span></div>
-    <div class="book-outline-intro">Агент управляет потоком, но человек принимает решения. Три интерактивных tool'а превращают агент в умного помощника-визарда.</div>
+    <div class="book-outline-intro">Агент управляет потоком, но человек принимает решения. Три интерактивных tool'а превращают агент в умного помощника-визарда: агент анализирует, генерирует варианты, предлагает выбор — и так несколько шагов. Пользователю остаётся только выбрать из готовых оптимальных решений или ввести свой вариант.</div>
 </a>
     </div>
 </section>

@@ -1651,6 +1651,11 @@
                 </p>
 
                 <div class="step-content">
+                    <div class="step-detail">
+                        <p>Всё что описано выше укладывается в ~80 строк кода. Весь агент — это <code>while</code> loop + массив <code>messages</code>.
+                            Цикл крутится, пока модель возвращает <code>tool_calls</code>. Когда она решает, что задача выполнена — возвращает обычный текст, и цикл завершается.</p>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-filename"><span class="dot"></span>src/03-agent-loop.ts</div>
                         <pre>// src/03-agent-loop.ts
