@@ -1,0 +1,153 @@
+<div class="step active" data-step="1" id="step-1">
+            <div class="step-number">01</div>
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-title">Базовый <span class="term"
+                            data-tip="Большая языковая модель">LLM</span>-вызов</div>
+                    <span class="step-badge beginner">Начало</span>
+                </div>
+                <p class="step-intro">
+                    Отправляем запрос в <span class="term" data-tip="Большая языковая модель">LLM</span>, получаем
+                    ответ. Просто чтобы убедиться что всё работает.
+                </p>
+
+                <div class="step-content">
+                    <div class="step-detail">
+                        <p>Мы будем использовать <strong>OpenRouter</strong> — универсальный прокси ко всем
+                            LLM-провайдерам (Anthropic, OpenAI, Google, Meta и др.).
+                            А библиотека <code>openai</code> совместима с любым API, который поддерживает OpenAI-формат
+                            — достаточно поменять <code>baseURL</code>.
+                            Один клиент, один формат, доступ к любой модели.</p>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>Сначала создаём проект и ставим зависимости:</p>
+                    </div>
+
+                    <div class="run-command">
+                        <span class="run-icon">▶</span>
+                        <code>mkdir simple-agent && cd simple-agent && npm init -y && npm install openai typescript tsx @types/node dotenv</code>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>Создай папку <code>src</code> и добавь <code>.gitignore</code>, чтобы случайно не закоммитить
+                            ключ:</p>
+                    </div>
+
+                    <div class="run-command">
+                        <span class="run-icon">▶</span>
+                        <code>mkdir src</code>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>.gitignore</div>
+                        <pre>node_modules
+.env</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>Теперь создай файл <code>.env</code> с ключом от OpenRouter:</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>.env</div>
+                        <pre>OPENROUTER_API_KEY=sk-or-v1-ваш-ключ-от-openrouter</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>Теперь — первый вызов:</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>src/01-basic-call.ts</div>
+                        <pre>// src/01-basic-call.ts
+import OpenAI from "openai";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+async function main() {
+    const response = await client.chat.completions.create({
+        model: "anthropic/claude-sonnet-4.5",
+        messages: [
+            { role: "user", content: "Сколько будет 2 + 2?" }
+        ],
+    });
+
+    console.log(response.choices[0].message.content);
+}
+
+main();
+</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="run-command">
+                        <span class="run-icon">▶</span>
+                        <code>npx tsx src/01-basic-call.ts</code>
+                    </div>
+
+                    <button class="demo-btn" data-demo="demo-step-1">▶ Запустить демо</button>
+
+                    <div class="demo-output demo-player" id="demo-step-1" data-demo-chat="step1" aria-live="polite">
+                        <div class="demo-player-header">
+                            <div class="demo-player-title">Демо в формате диалога</div>
+                            <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span>
+                            </div>
+                        </div>
+                        <div class="demo-chat-body" data-demo-chat-body></div>
+                        <div class="demo-player-controls">
+                            <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                            <div class="demo-step-label" data-demo-label></div>
+                            <button class="demo-step-btn" data-demo-next>Далее →</button>
+                        </div>
+                    </div>
+                    <div class="output-note" data-demo-note="demo-step-1">Пример вывода. У тебя может быть иначе — это
+                        нормально.</div>
+
+                    <div class="mini-block expect">
+                        <div class="mini-title">✅ Что должно получиться</div>
+                        В терминале появляется ответ модели (обычно «4») без ошибок.
+                    </div>
+
+                    <div class="mini-block trouble">
+                        <div class="mini-title">🧯 Если не работает</div>
+                        Проверь <code>OPENROUTER_API_KEY</code> в <code>.env</code>, наличие интернета и версии
+                        <code>node</code>/<code>npm</code>.
+                    </div>
+
+                    <div class="key-insight">
+                        <strong>💡 Что произошло:</strong> Мы отправили запрос через OpenRouter (универсальный прокси ко
+                        всем LLM-провайдерам),
+                        получили ответ. Используем библиотеку <code>openai</code> — она совместима с любым API,
+                        поддерживающим OpenAI-формат.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Демо-данные урока -->
+<script type="application/json" data-demo-steps="step1">
+[
+    {
+        "label": "Ответ",
+        "messages": [
+            {
+                "role": "user",
+                "text": "Сколько будет 2 + 2?"
+            },
+            {
+                "role": "llm",
+                "text": "2 + 2 = 4"
+            }
+        ]
+    }
+]
+</script>

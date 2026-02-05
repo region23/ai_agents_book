@@ -1,0 +1,548 @@
+<div class="step" data-step="6" id="step-6">
+            <div class="step-number">06</div>
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-title">Multi-step Planning</div>
+                    <span class="step-badge advanced">Продвинутый</span>
+                </div>
+                <p class="step-intro">
+                    Перед тем как действовать, агент составляет план. Два подхода: <span class="term"
+                        data-tip="Сначала план, потом выполнение по шагам">Plan-then-Execute</span> и <span class="term"
+                        data-tip="Чередование рассуждений и действий">ReAct</span>.
+                </p>
+
+                <div class="step-content">
+                    <div class="arch-diagram">
+                        <div class="arch-row">
+                            <span class="loop-node llm">Plan-then-Execute</span>
+                        </div>
+                        <div style="color: var(--text-dim); margin: 0.5rem 0;">Отдельный LLM-вызов для плана → потом
+                            выполнение</div>
+                        <div class="arch-row" style="margin-top: 1rem;">
+                            <span class="loop-node output">ReAct</span>
+                        </div>
+                        <div style="color: var(--text-dim); margin: 0.5rem 0;">Think → Act → Think → Act на каждом шаге
+                        </div>
+                    </div>
+
+                    <div class="step-detail">
+                        <p><strong><span class="term"
+                                    data-tip="Сначала план, потом выполнение по шагам">Plan-then-Execute</span></strong>
+                            — два отдельных этапа. Сначала <span class="term"
+                                data-tip="Большая языковая модель">LLM</span> (без tools)
+                            создаёт структурированный JSON-план, не зная реального состояния системы. Потом другой вызов
+                            получает план
+                            и выполняет по шагам. Плюс: предсказуемо, план можно показать пользователю. Минус: план
+                            может не совпасть с реальностью.</p>
+                        <p><strong><span class="term"
+                                    data-tip="Чередование рассуждений и действий">ReAct</span></strong> — один цикл, но
+                            с <code>think</code> tool. Перед каждым действием агент «думает вслух»: что я знаю, что
+                            делать дальше, почему.
+                            Плюс: агент адаптируется на лету, видит реальные данные. Минус: менее предсказуемо, больше
+                            итераций.</p>
+                        <p><code>think</code> tool — хитрый приём. Он ничего не делает технически, просто возвращает
+                            <code>"OK"</code>.
+                            Но заставляет модель <em>вербализовать рассуждение</em> перед действием — и это сильно
+                            повышает качество решений.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>think tool — хитрый приём</div>
+                        <pre><span class="cm">// Think tool ничего не делает! Просто возвращает "OK".</span>
+<span class="cm">// Но заставляет модель ВЕРБАЛИЗОВАТЬ рассуждение</span>
+<span class="cm">// перед действием — и это сильно повышает качество.</span>
+{
+    <span class="prop">name</span>: <span class="str">"think"</span>,
+    <span class="prop">description</span>: <span class="str">"Внутренний блокнот для рассуждений"</span>,
+}
+
+<span class="cm">// Handler:</span>
+<span class="fn">think</span>: () =&gt; <span class="str">"OK"</span>  <span class="cm">// вот и всё</span></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>src/06-planning.ts</div>
+                        <pre>// src/06-planning.ts
+// Агент с планированием: сначала думает, потом делает
+import OpenAI from "openai";
+import { execSync } from "child_process";
+import { readFileSync, writeFileSync } from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+const MODEL = "anthropic/claude-sonnet-4.5";
+
+// ============================================================
+// TOOLS (те же что в 05, но добавляем think tool)
+// ============================================================
+
+const tools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: "function",
+        function: {
+            name: "think",
+            description:
+                "Используй этот инструмент чтобы подумать, спланировать или порассуждать. " +
+                "Результат не виден пользователю — это твой внутренний блокнот.",
+            parameters: {
+                type: "object",
+                properties: {
+                    thought: {
+                        type: "string",
+                        description: "Твои мысли, план, рассуждения",
+                    },
+                },
+                required: ["thought"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "run_bash",
+            description: "Выполнить bash-команду",
+            parameters: {
+                type: "object",
+                properties: {
+                    command: { type: "string", description: "Команда" },
+                },
+                required: ["command"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "read_file",
+            description: "Прочитать файл",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "Путь к файлу" },
+                },
+                required: ["path"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "write_file",
+            description: "Записать содержимое в файл",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: { type: "string", description: "Путь к файлу" },
+                    content: { type: "string", description: "Содержимое" },
+                },
+                required: ["path", "content"],
+            },
+        },
+    },
+];
+
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    think: ({ thought }) =&gt; {
+        // Think tool ничего не делает — просто возвращает подтверждение.
+        // Вся ценность в том, что модель "проговорила" мысль.
+        return "OK";
+    },
+    run_bash: ({ command }) =&gt; {
+        try {
+            return execSync(command, { encoding: "utf-8", timeout: 10000 }).trim();
+        } catch (e: any) {
+            return `Ошибка: ${e.stderr || e.message}`;
+        }
+    },
+    read_file: ({ path }) =&gt; {
+        try {
+            return readFileSync(path, "utf-8");
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+    write_file: ({ path, content }) =&gt; {
+        try {
+            writeFileSync(path, content, "utf-8");
+            return `✅ Файл ${path} записан (${content.length} байт)`;
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+};
+
+// ============================================================
+// ПОДХОД 1: Plan-then-Execute
+// Два отдельных этапа: сначала план, потом выполнение
+// ============================================================
+
+async function planThenExecute(userMessage: string) {
+    console.log("╔══════════════════════════════════════════╗");
+    console.log("║   ПОДХОД 1: Plan-then-Execute            ║");
+    console.log("╚══════════════════════════════════════════╝\n");
+
+    // --- ФАЗА 1: Планирование (без tools!) ---
+    console.log("📋 ФАЗА 1: ПЛАНИРОВАНИЕ\n");
+
+    const planResponse = await client.chat.completions.create({
+        model: MODEL,
+        messages: [
+            {
+                role: "system",
+                content: `Ты планировщик задач. Получив запрос пользователя, составь пошаговый план.
+
+Правила:
+- Каждый шаг должен быть конкретным и выполнимым
+- Используй формат JSON
+- НЕ выполняй задачу, только спланируй
+
+Доступные инструменты:
+- run_bash: выполнить bash-команду
+- read_file: прочитать файл
+- write_file: записать файл
+
+Ответь ТОЛЬКО валидным JSON в формате:
+{
+  "goal": "краткое описание цели",
+  "steps": [
+    { "id": 1, "action": "описание шага", "tool": "имя_tool", "reason": "зачем" },
+    ...
+  ]
+}`,
+            },
+            { role: "user", content: userMessage },
+        ],
+    });
+
+    const planText = planResponse.choices[0].message.content ?? "";
+
+    // Парсим план
+    let plan: { goal: string; steps: { id: number; action: string; tool: string; reason: string }[] };
+    try {
+        // Убираем возможные markdown-обёртки
+        const cleanJson = planText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        plan = JSON.parse(cleanJson);
+    } catch (e) {
+        console.log("❌ Не удалось распарсить план:");
+        console.log(planText);
+        return;
+    }
+
+    console.log(`🎯 Цель: ${plan.goal}`);
+    console.log(`📝 Шагов: ${plan.steps.length}\n`);
+    plan.steps.forEach((s) =&gt; {
+        console.log(`   ${s.id}. [${s.tool}] ${s.action}`);
+        console.log(`      └─ ${s.reason}`);
+    });
+
+    // --- ФАЗА 2: Выполнение (с tools) ---
+    console.log("\n\n⚡ ФАЗА 2: ВЫПОЛНЕНИЕ\n");
+
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: "system",
+            content: `Ты исполнитель задач. Выполни план пошагово, используя инструменты.
+
+ПЛАН:
+${JSON.stringify(plan, null, 2)}
+
+Выполняй шаги по порядку. После каждого шага сообщай прогресс.
+Если шаг не получился — адаптируй план.
+Когда все шаги выполнены — подведи итог.`,
+        },
+        { role: "user", content: userMessage },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 15) {
+        iteration++;
+        console.log(`\n--- Выполнение: итерация ${iteration} ---`);
+
+        const response = await client.chat.completions.create({
+            model: MODEL,
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log("\n✅ Выполнение завершено.");
+            console.log("Итог:", message.content);
+            return;
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+            const argsPreview =
+                name === "write_file"
+                    ? `{path: "${args.path}", content: [${args.content.length} chars]}`
+                    : JSON.stringify(args);
+
+            console.log(`   🔧 ${name}(${argsPreview})`);
+
+            const result = toolHandlers[name]?.(args) ?? `Tool "${name}" не найден`;
+            console.log(`   → ${result.slice(0, 120)}`);
+
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: result,
+            });
+        }
+    }
+}
+
+// ============================================================
+// ПОДХОД 2: ReAct (Reasoning + Acting)
+// Думает и действует на каждом шаге через think tool
+// ============================================================
+
+async function reactAgent(userMessage: string) {
+    console.log("╔══════════════════════════════════════════╗");
+    console.log("║   ПОДХОД 2: ReAct (Reason + Act)         ║");
+    console.log("╚══════════════════════════════════════════╝\n");
+
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: "system",
+            content: `Ты агент, который решает задачи пошагово.
+
+МЕТОД РАБОТЫ:
+1. Перед КАЖДЫМ действием сначала вызови tool "think" — обдумай:
+   - Что уже известно?
+   - Какой следующий шаг?
+   - Почему именно этот шаг?
+2. Затем выполни действие нужным tool
+3. После получения результата снова "think" — оцени:
+   - Получилось ли?
+   - Что это значит?
+   - Какой следующий шаг?
+
+ВАЖНО: Всегда чередуй think → action → think → action.
+Не делай действий без предварительного обдумывания.
+
+Доступные инструменты: think, run_bash, read_file, write_file.`,
+        },
+        { role: "user", content: userMessage },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 20) {
+        iteration++;
+
+        const response = await client.chat.completions.create({
+            model: MODEL,
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log(`\n✅ Агент завершил работу (${iteration} итераций).`);
+            console.log("Ответ:", message.content);
+            return;
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+
+            if (name === "think") {
+                // Красиво выводим мысли агента
+                console.log(`\n💭 [Мысль]: ${args.thought}`);
+            } else {
+                const argsPreview =
+                    name === "write_file"
+                        ? `{path: "${args.path}", content: [${args.content.length} chars]}`
+                        : JSON.stringify(args);
+                console.log(`   🔧 ${name}(${argsPreview})`);
+
+                const result = toolHandlers[name]?.(args) ?? `Tool "${name}" не найден`;
+                console.log(`   → ${result.slice(0, 120)}`);
+
+                messages.push({
+                    role: "tool",
+                    tool_call_id: toolCall.id,
+                    content: result,
+                });
+                continue;
+            }
+
+            // Think всегда возвращает OK
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: "OK",
+            });
+        }
+    }
+}
+
+// ============================================================
+// MAIN: выбери подход
+// ============================================================
+
+async function main() {
+    const task =
+        "Проанализируй все .ts файлы в директории src/. " +
+        "Найди дублирование кода между файлами (общие паттерны, " +
+        "повторяющиеся импорты, похожие функции). " +
+        "Создай файл REFACTORING.md с конкретными рекомендациями по рефакторингу.";
+
+    // Раскомментируй нужный подход:
+    const approach = process.argv[2] ?? "plan";
+
+    if (approach === "plan") {
+        await planThenExecute(task);
+    } else if (approach === "react") {
+        await reactAgent(task);
+    } else {
+        console.log("Использование: npx tsx src/06-planning.ts [plan|react]");
+    }
+}
+
+main();
+</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <button class="demo-btn" data-demo="demo-step-6">▶ Запустить демо</button>
+
+                    <div class="demo-output demo-player" id="demo-step-6" data-demo-chat="step6" aria-live="polite">
+                        <div class="demo-player-header">
+                            <div class="demo-player-title">Демо в формате диалога</div>
+                            <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span>
+                            </div>
+                        </div>
+                        <div class="demo-chat-body" data-demo-chat-body></div>
+                        <div class="demo-player-controls">
+                            <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                            <div class="demo-step-label" data-demo-label></div>
+                            <button class="demo-step-btn" data-demo-next>Далее →</button>
+                        </div>
+                    </div>
+                    <div class="output-note" data-demo-note="demo-step-6">Пример вывода. У тебя может быть иначе — это
+                        нормально.</div>
+
+                    <div class="run-command">
+                        <span class="run-icon">▶</span>
+                        <code>npx tsx src/06-planning.ts plan &nbsp;# или "react"</code>
+                    </div>
+
+                    <div class="mini-block expect">
+                        <div class="mini-title">✅ Что должно получиться</div>
+                        Агент сначала печатает план, затем выполняет шаги. В режиме <code>react</code> видны
+                        промежуточные «мысли».
+                    </div>
+
+                    <div class="mini-block trouble">
+                        <div class="mini-title">🧯 Если не работает</div>
+                        Убедись, что выбран режим <code>plan</code> или <code>react</code> и что tool <code>think</code>
+                        подключён.
+                    </div>
+
+                    <div class="key-insight">
+                        <strong>💡 Сравнение подходов:</strong><br>
+                        <strong><span class="term"
+                                data-tip="Сначала план, потом выполнение по шагам">Plan-then-Execute</span>:</strong>
+                        ✅ предсказуемо, план виден юзеру · ❌ план может не совпасть с реальностью<br>
+                        <strong><span class="term" data-tip="Чередование рассуждений и действий">ReAct</span>:</strong>
+                        ✅ адаптивно, агент видит реальные данные · ❌ менее предсказуемо, больше итераций<br>
+                        На практике лучший результат даёт <strong>комбинация обоих</strong> — именно это мы сделаем в
+                        следующем шаге.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Демо-данные урока -->
+<script type="application/json" data-demo-steps="step6">
+[
+    {
+        "label": "План",
+        "messages": [
+            {
+                "role": "llm",
+                "text": "🎯 Цель: Проанализировать TypeScript файлы в src/, найти дублирование кода и создать отчёт с рекомендациями по рефакторингу\n📝 Шагов: 6\n\n   1. [run_bash] Найти все .ts файлы в директории src/\n      └─ Получить список всех TypeScript файлов для последующего анализа\n   2. [read_file] Прочитать содержимое каждого найденного .ts файла\n      └─ Загрузить код файлов для анализа дублирования\n   3. [run_bash] Проанализировать импорты во всех файлах\n      └─ Извлечь строки импортов из всех файлов для поиска повторяющихся зависимостей\n   4. [run_bash] Найти похожие функции и паттерны кода\n      └─ Использовать grep/awk для поиска повторяющихся сигнатур функций и кодовых паттернов\n   5. [run_bash] Подсчитать статистику по дублированию\n      └─ Агрегировать данные о частоте встречаемости импортов и паттернов\n   6. [write_file] Создать файл REFACTORING.md с рекомендациями\n      └─ Записать структурированный отчёт с найденными дублированиями и конкретными предложениями по рефакторингу"
+            }
+        ]
+    },
+    {
+        "label": "Сбор данных",
+        "messages": [
+            {
+                "role": "tool_call",
+                "text": "run_bash({\"command\":\"find src/ -type f -name \\\"*.ts\\\" 2>/dev/null | sort\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "src/01-basic-call.ts\nsrc/02-with-tool.ts\nsrc/03-agent-loop.ts\nsrc/04-real-tools.ts\nsrc/05-skills.ts\nsrc/06-planning.ts\ns"
+            },
+            {
+                "role": "tool_call",
+                "text": "read_file({\"path\":\"src/01-basic-call.ts\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "// src/01-basic-call.ts\nimport OpenAI from \"openai\";\nimport dotenv from \"dotenv\";\n\ndotenv.config();\n\nconst client = new "
+            }
+        ]
+    },
+    {
+        "label": "Статистика",
+        "messages": [
+            {
+                "role": "tool_call",
+                "text": "run_bash({\"command\":\"grep -h \\\"^import\\\" src/*.ts | sort | uniq -c | sort -rn\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "8 import dotenv from \"dotenv\";\n   8 import OpenAI from \"openai\";\n   5 import { execSync } from \"child_process\";\n   2 imp"
+            },
+            {
+                "role": "tool_call",
+                "text": "run_bash({\"command\":\"wc -l src/*.ts | tail -1\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "1688 total"
+            }
+        ]
+    },
+    {
+        "label": "Запись отчёта",
+        "messages": [
+            {
+                "role": "tool_call",
+                "text": "write_file({path: \"REFACTORING.md\", content: [19189 chars]})"
+            },
+            {
+                "role": "tool_result",
+                "text": "✅ Файл REFACTORING.md записан (19189 байт)"
+            }
+        ]
+    },
+    {
+        "label": "Итог",
+        "messages": [
+            {
+                "role": "llm",
+                "text": "✅ Выполнение завершено.\nИтог: ## ✅ Задача выполнена!\n\n### Итоги анализа:\n\n📊 **Проанализировано**: 8 TypeScript файлов (1688 строк кода)\n\n🔍 **Найдено дублирование**:\n\n1. **Критичное**:\n   - Инициализация OpenAI клиента (8 файлов) - ~40 строк дублирования\n   - Tool definitions (run_bash, read_file, write_file, think) - ~200 строк дублирования\n   - Tool handlers (5 файлов) - ~150 строк дублирования\n\n2. **Среднее**:\n   - Логика Agent Loop (2 файла) - ~80 строк дублирования\n\n3. **Статистика упоминаний**:\n   - `run_bash`: 14 упоминаний\n   - `read_file`: 14 упоминаний\n   - `write_file`: 18 упоминаний\n   - `think`: 11 упоминаний\n\n📝 **Создан отчёт**: `REFACTORING.md` (19KB)\n\n### Основные рекомендации:\n\n1. ✅ **Высокий приоритет** - Создать модули:\n   - `src/lib/client.ts` - централизованный OpenAI клиент\n   - `src/lib/tools-registry.ts` - определения инструментов\n   - `src/lib/tool-handlers.ts` - реализации обработчиков\n\n2. ⚠️ **Средний приоритет** - Унифицировать:\n   - `src/lib/agent-loop.ts` - базовая логика агента\n\n3. ℹ️ **Низкий приоритет** - Организовать:\n   - Структуру skills в отдельные модули\n\n### Потенциальная экономия:\n- **~480 строк кода** (28% от общего объёма)\n- **Снижение дублирования** с 35% до <5%\n- **Улучшение поддерживаемости** и тестируемости\n\nОтчёт содержит конкретные примеры кода, пошаговый план рефакторинга и дополнительные рекомендации по улучшению архитектуры проекта."
+            }
+        ]
+    }
+]
+</script>

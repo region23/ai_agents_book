@@ -5,6 +5,7 @@ const path = require("path");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
 const SOURCE_INDEX_PATH = path.join(ROOT_DIR, "index.html");
+const LESSONS_DIR = path.join(ROOT_DIR, "lessons");
 const PUBLIC_DIR = path.join(ROOT_DIR, "public");
 
 const LESSON_FILES = [
@@ -420,6 +421,31 @@ function getStepMeta(stepHtml, id) {
     };
 }
 
+function readLessonFile(lessonId) {
+    const pad = String(lessonId).padStart(2, "0");
+    const raw = fs.readFileSync(path.join(LESSONS_DIR, `lesson-${pad}.html`), "utf8");
+
+    const demoMatch = raw.match(/<script type="application\/json" data-demo-steps="([^"]+)">([\s\S]*?)<\/script>/);
+    const demoKey = demoMatch ? demoMatch[1] : null;
+    const demoData = demoMatch ? JSON.parse(demoMatch[2]) : null;
+
+    const htmlEnd = demoMatch ? raw.indexOf(demoMatch[0]) : raw.length;
+    // Strip trailing HTML comments (e.g. <!-- Демо-данные урока -->)
+    const stepHtml = raw.slice(0, htmlEnd).replace(/\s*<!--[\s\S]*?-->\s*$/, "").trim();
+
+    return { stepHtml, demoKey, demoData };
+}
+
+function buildDemoPlayersObject(lessons) {
+    const obj = {};
+    for (const lesson of lessons) {
+        if (lesson.demoKey && lesson.demoData) {
+            obj[lesson.demoKey] = lesson.demoData;
+        }
+    }
+    return obj;
+}
+
 function build() {
     const sourceHtml = readSourceHtml();
     const sourceHead = extractMatch(sourceHtml, /<head>([\s\S]*?)<\/head>/i, "head");
@@ -435,29 +461,31 @@ function build() {
     }
     const scriptsHtml = sourceBody.slice(scriptsStart).trim();
 
-    const stepsContainer = extractByToken(sourceBody, '<div class="steps-container">', "div");
-
     const lessons = LESSON_FILES.map((lessonInfo) => {
-        const marker = `id="step-${lessonInfo.id}"`;
-        const markerIndex = stepsContainer.indexOf(marker);
-        if (markerIndex === -1) {
-            throw new Error(`Cannot find step ${lessonInfo.id} in source index.html`);
-        }
-
-        const stepStart = stepsContainer.lastIndexOf('<div class="step', markerIndex);
-        if (stepStart === -1) {
-            throw new Error(`Cannot find step start for step ${lessonInfo.id}`);
-        }
-
-        const stepHtml = extractBalancedElement(stepsContainer, stepStart, "div");
+        const { stepHtml, demoKey, demoData } = readLessonFile(lessonInfo.id);
         const meta = getStepMeta(stepHtml, lessonInfo.id);
 
         return {
             ...lessonInfo,
             ...meta,
             stepHtml,
+            demoKey,
+            demoData,
         };
     });
+
+    const demoPlayersObj = buildDemoPlayersObject(lessons);
+
+    // Inject assembled demoPlayers into the scripts block
+    const demoPlaceholder = "// ====== Demo Player Data (собирается из lessons/) ======\n        const demoPlayers = {}; // PLACEHOLDER — заполняется build-скриптом";
+    const demoJson = JSON.stringify(demoPlayersObj, null, 4);
+    // Re-indent to match original 8-space base indent inside <script> block
+    const demoIndented = demoJson.split("\n").map((line, i) => i === 0 ? line : "        " + line).join("\n");
+    const demoReplacement = `// ====== Demo Player (Step-by-step) ======\n        const demoPlayers = ${demoIndented};`;
+
+    function injectDemoPlayers(scripts) {
+        return scripts.replace(demoPlaceholder, demoReplacement);
+    }
 
     ensurePublicDir();
 
@@ -492,7 +520,7 @@ ${footerSection}
         sourceHead,
         title: "ИИ-агенты для самых маленьких — Оглавление",
         bodyContent: homeBody,
-        scripts: scriptsHtml,
+        scripts: injectDemoPlayers(scriptsHtml),
     });
 
     fs.writeFileSync(path.join(PUBLIC_DIR, "index.html"), homeHtml, "utf8");
@@ -542,7 +570,7 @@ ${ensureActiveStep(lesson.stepHtml)}
             sourceHead,
             title: `Урок ${lessonNumber} — ${lesson.titleText}`,
             bodyContent: lessonBody,
-            scripts: scriptsHtml,
+            scripts: injectDemoPlayers(scriptsHtml),
         });
 
         fs.writeFileSync(path.join(PUBLIC_DIR, lesson.file), lessonHtml, "utf8");

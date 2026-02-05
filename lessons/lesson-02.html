@@ -1,0 +1,176 @@
+<div class="step" data-step="2" id="step-2">
+            <div class="step-number">02</div>
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-title">Добавляем первый Tool</div>
+                    <span class="step-badge beginner">Начало</span>
+                </div>
+                <p class="step-intro">
+                    Даём модели возможность «действовать» — вызывать функции (<span class="term"
+                        data-tip="Инструмент/функция, которую вызывает модель">tool</span>). Ключевой момент: модель не
+                    выдумывает данные, а просит нас выполнить функцию.
+                </p>
+
+                <div class="step-content">
+                    <div class="step-detail">
+                        <p>
+                            Современные LLM API уже имеют <strong>нативную поддержку tools</strong> — ты описываешь
+                            tools в запросе через JSON Schema,
+                            и модель сама возвращает <code>tool_calls</code> в структурированном виде.
+                            Не нужно просить «верни JSON» — это уже встроено в протокол.
+                        </p>
+                        <p>
+                            Ключевой момент: <strong>модель решает сама</strong> — вызвать tool или ответить текстом.
+                            Ты не пишешь <code>if/else</code> — модель видит описание tools и контекст вопроса,
+                            и принимает решение за тебя.
+                        </p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>src/02-with-tool.ts</div>
+                        <pre>// src/02-with-tool.ts
+import OpenAI from "openai";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+// 1. Описываем tools — это просто JSON Schema
+const tools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: "function",
+        function: {
+            name: "get_weather",
+            description: "Получить текущую погоду в городе",
+            parameters: {
+                type: "object",
+                properties: {
+                    city: {
+                        type: "string",
+                        description: "Название города",
+                    },
+                },
+                required: ["city"],
+            },
+        },
+    },
+];
+
+// 2. Реализация tool — обычная функция
+function get_weather(city: string): string {
+    // Пока фейковая, потом можно реальный API
+    const data: Record&lt;string, string&gt; = {
+        "Москва": "−5°C, снег",
+        "Анапа": "+8°C, облачно",
+        "Лондон": "+3°C, дождь",
+    };
+    return data[city] ?? `Нет данных для города ${city}`;
+}
+
+async function main() {
+    const response = await client.chat.completions.create({
+        model: "anthropic/claude-sonnet-4.5",
+        messages: [
+            { role: "user", content: "Какая погода в Анапе?" },
+        ],
+        tools,
+    });
+
+    const message = response.choices[0].message;
+
+    // 3. Смотрим что вернула модель
+    console.log("=== Ответ модели ===");
+    console.log("Content:", message.content);
+    console.log("Tool calls:", JSON.stringify(message.tool_calls, null, 2));
+}
+
+main();
+</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>Подсказка: если убрать <code>tool_choice</code>, модель будет решать сама — так реалистичнее,
+                            но демо может быть нестабильным.</p>
+                    </div>
+
+                    <div class="run-command">
+                        <span class="run-icon">▶</span>
+                        <code>npx tsx src/02-with-tool.ts</code>
+                    </div>
+
+                    <button class="demo-btn" data-demo="demo-step-2">▶ Запустить демо</button>
+
+                    <div class="demo-output demo-player" id="demo-step-2" data-demo-chat="step2" aria-live="polite">
+                        <div class="demo-player-header">
+                            <div class="demo-player-title">Демо в формате диалога</div>
+                            <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span>
+                            </div>
+                        </div>
+                        <div class="demo-chat-body" data-demo-chat-body></div>
+                        <div class="demo-player-controls">
+                            <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                            <div class="demo-step-label" data-demo-label></div>
+                            <button class="demo-step-btn" data-demo-next>Далее →</button>
+                        </div>
+                    </div>
+                    <div class="output-note" data-demo-note="demo-step-2">Пример вывода. У тебя может быть иначе — это
+                        нормально.</div>
+
+                    <div class="mini-block expect">
+                        <div class="mini-title">✅ Что должно получиться</div>
+                        В выводе видно <code>tool_calls</code> с вызовом <code>get_weather</code> и аргументом
+                        <code>city</code>.
+                    </div>
+
+                    <div class="mini-block trouble">
+                        <div class="mini-title">🧯 Если не работает</div>
+                        Если <code>tool_calls</code> пустой — проверь, что есть <code>tool_choice</code>, или укажи в
+                        промпте «вызови get_weather».
+                    </div>
+
+                    <div class="key-insight">
+                        <strong>💡 Обрати внимание:</strong> Content пустой! Модель не стала выдумывать погоду.
+                        Она вернула <code>tool_calls</code> с именем функции и аргументами — попросила <em>нас</em>
+                        выполнить <code>get_weather</code>.
+                        Вот это и есть structured output — нативный, не нужно просить «верни JSON».
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Демо-данные урока -->
+<script type="application/json" data-demo-steps="step2">
+[
+    {
+        "label": "Tool call",
+        "messages": [
+            {
+                "role": "user",
+                "text": "Какая погода в Анапе?"
+            },
+            {
+                "role": "tool_call",
+                "text": "get_weather({\"city\": \"Анапа\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "+8°C, облачно"
+            }
+        ]
+    },
+    {
+        "label": "Ответ",
+        "messages": [
+            {
+                "role": "llm",
+                "text": "Сейчас в Анапе +8°C, облачно ☁️"
+            }
+        ]
+    }
+]
+</script>

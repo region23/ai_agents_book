@@ -1,0 +1,276 @@
+<div class="step" data-step="4" id="step-4">
+            <div class="step-number">04</div>
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-title">Реальные Tools — bash и файловая система</div>
+                    <span class="step-badge intermediate">Практика</span>
+                </div>
+                <p class="step-intro">
+                    Заменяем фейковые данные настоящими инструментами. Агент теперь может выполнять команды и читать
+                    файлы через <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tools</span>.
+                    Запусти и посмотри: 5 итераций, модель сама решила что делать на каждом шаге — <code>ls</code>,
+                    <code>read_file</code>, ошибка, обходной путь, ответ.
+                </p>
+
+                <div class="step-content">
+                    <div class="step-detail">
+                        <p>Структура та же — agent loop. Но tools теперь взаимодействуют с реальной системой:</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>src/04-real-tools.ts</div>
+                        <pre>// src/04-real-tools.ts
+import OpenAI from "openai";
+import { execSync } from "child_process";
+import { readFileSync } from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+const tools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: "function",
+        function: {
+            name: "run_bash",
+            description: "Выполнить bash-команду и вернуть результат. Только безопасные read-only команды.",
+            parameters: {
+                type: "object",
+                properties: {
+                    command: {
+                        type: "string",
+                        description: "Bash-команда для выполнения",
+                    },
+                },
+                required: ["command"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "read_file",
+            description: "Прочитать содержимое файла",
+            parameters: {
+                type: "object",
+                properties: {
+                    path: {
+                        type: "string",
+                        description: "Путь к файлу",
+                    },
+                },
+                required: ["path"],
+            },
+        },
+    },
+];
+
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    run_bash: ({ command }) =&gt; {
+        try {
+            return execSync(command, {
+                encoding: "utf-8",
+                timeout: 5000,
+            }).trim();
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+    read_file: ({ path }) =&gt; {
+        try {
+            return readFileSync(path, "utf-8");
+        } catch (e: any) {
+            return `Ошибка: ${e.message}`;
+        }
+    },
+};
+
+async function agentLoop(userMessage: string) {
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        {
+            role: "system",
+            content: `Ты полезный ассистент с доступом к файловой системе.
+Можешь выполнять bash-команды и читать файлы.
+Отвечай на русском.`,
+        },
+        { role: "user", content: userMessage },
+    ];
+
+    let iteration = 0;
+
+    while (iteration &lt; 10) {
+        iteration++;
+        console.log(`\n--- Итерация ${iteration} ---`);
+
+        const response = await client.chat.completions.create({
+            model: "anthropic/claude-sonnet-4.5",
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+        messages.push(message);
+
+        if (!message.tool_calls?.length) {
+            console.log("\nАгент завершил работу.");
+            console.log("Ответ:", message.content);
+            return;
+        }
+
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+            console.log(`Tool: ${name}(${JSON.stringify(args)})`);
+
+            const result = toolHandlers[name]?.(args)
+                ?? `Tool "${name}" не найден`;
+
+            console.log(`Результат: ${result.slice(0, 200)}...`);
+
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: result,
+            });
+        }
+    }
+}
+
+// Теперь агент может реально исследовать твою систему
+agentLoop("Посмотри что за проект лежит в текущей директории. Какие зависимости установлены?");
+</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="run-command">
+                        <span class="run-icon">▶</span>
+                        <code>npx tsx src/04-real-tools.ts</code>
+                    </div>
+
+                    <button class="demo-btn" data-demo="demo-step-4">▶ Запустить демо</button>
+
+                    <div class="demo-output demo-player" id="demo-step-4" data-demo-chat="step4" aria-live="polite">
+                        <div class="demo-player-header">
+                            <div class="demo-player-title">Демо в формате диалога</div>
+                            <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span>
+                            </div>
+                        </div>
+                        <div class="demo-chat-body" data-demo-chat-body></div>
+                        <div class="demo-player-controls">
+                            <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                            <div class="demo-step-label" data-demo-label></div>
+                            <button class="demo-step-btn" data-demo-next>Далее →</button>
+                        </div>
+                    </div>
+                    <div class="output-note" data-demo-note="demo-step-4">Пример вывода. У тебя может быть иначе — это
+                        нормально.</div>
+
+                    <div class="mini-block expect">
+                        <div class="mini-title">✅ Что должно получиться</div>
+                        Агент показывает вывод <code>ls</code>/<code>cat</code>, а затем коротко описывает проект.
+                    </div>
+
+                    <div class="mini-block trouble">
+                        <div class="mini-title">🧯 Если не работает</div>
+                        Если ошибка прав доступа — попробуй другие файлы или директории.
+                        Если <code>read_file</code> падает — это баг с <code>require</code> в ESM, агент обойдёт через <code>cat</code>.
+                    </div>
+
+                    <div class="key-insight">
+                        <strong>💡 Resilience агента — реальная история:</strong>
+                        В ESM-контексте <code>require</code> не работает. Агент вызвал <code>read_file</code>, получил
+                        ошибку —
+                        и не сломался. Он просто переключился на <code>cat</code> через <code>run_bash</code>, прочитал
+                        файл и продолжил работу.
+                        LLM адаптируется к ошибкам — это одна из его суперспособностей.
+                        Ты можешь даже не фиксить баг: агент найдёт обходной путь сам.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Демо-данные урока -->
+<script type="application/json" data-demo-steps="step4">
+[
+    {
+        "label": "Итерация 1",
+        "messages": [
+            {
+                "role": "user",
+                "text": "Посмотри что за проект лежит в текущей директории. Какие зависимости установлены?"
+            },
+            {
+                "role": "tool_call",
+                "text": "run_bash({\"command\":\"ls -la\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "total 424\ndrwxr-xr-x   11 human  staff     352 Feb  5 19:57 .\ndrwxr-xr-x  110 human  staff    3520 Feb  5 17:19 ..\n-rw-r--r--@   1 human  staff      93 Feb  5 17:57 .env\ndrwxr-xr-x@  14 ..."
+            },
+            {
+                "role": "tool_call",
+                "text": "run_bash({\"command\":\"pwd\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "/Users/human/code/ai_agents_book..."
+            }
+        ]
+    },
+    {
+        "label": "Итерация 2",
+        "messages": [
+            {
+                "role": "tool_call",
+                "text": "read_file({\"path\":\"package.json\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "{\n  \"name\": \"ai_agents_book\",\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"repository\": {\n    \"type..."
+            },
+            {
+                "role": "tool_call",
+                "text": "run_bash({\"command\":\"head -20 index.html\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "<!DOCTYPE html>\n<html lang=\"ru\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>ИИ-агенты для самых маленьких — Интерактивный у..."
+            },
+            {
+                "role": "tool_call",
+                "text": "run_bash({\"command\":\"ls -la src/\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "total 152\ndrwxr-xr-x@ 10 human  staff    320 Feb  5 18:47 .\ndrwxr-xr-x  11 human  staff    352 Feb  5 19:57 ..\n-rw-r--r--@  1 human  staff    538 Feb  5 18:47 01-basic-call.ts\n-rw-r--r--@  1 ..."
+            }
+        ]
+    },
+    {
+        "label": "Итерация 3",
+        "messages": [
+            {
+                "role": "tool_call",
+                "text": "run_bash({\"command\":\"ls -la node_modules/\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "total 8\ndrwxr-xr-x@   6 human  staff   192 Feb  5 19:19 .\ndrwxr-xr-x   11 human  staff   352 Feb  5 19:57 ..\ndrwxr-xr-x@   3 human  staff    96 Feb  5 19:19 .bin\n-rw-r--r--@   1 human  sta..."
+            }
+        ]
+    },
+    {
+        "label": "Итог",
+        "messages": [
+            {
+                "role": "llm",
+                "text": "## Описание проекта\n\nВ текущей директории находится проект **\"ai_agents_book\"** - это интерактивный учебник \"ИИ-агенты для самых маленьких\".\n\n### Структура проекта:\n- 📁 **src/** - содержит 8 TypeScript файлов с примерами агентов (от базовых до интерактивных)\n- 📄 **index.html** - интерактивный веб-учебник на русском языке\n- 📄 **package.json** - конфигурация npm проекта\n- 📄 **.env** - файл с переменными окружения\n- 📁 **.git/** - Git репозиторий\n\n### Установленные зависимости:\n\nСогласно `package.json`, в проекте установлены **2 основные зависимости**:\n\n1. **`dotenv`** (версия ^17.2.3) - для работы с переменными окружения из .env файла\n2. **`openai`** (версия ^6.17.0) - официальная библиотека OpenAI API для работы с GPT моделями\n\n### Примеры кода в проекте:\nПроект содержит последовательные примеры создания ИИ-агентов:\n- 01-basic-call.ts - базовый вызов API\n- 02-with-tool.ts - работа с инструментами\n- 03-agent-loop.ts - цикл агента\n- 04-real-tools.ts - реальные инструменты\n- 05-skills.ts - навыки агента\n- 06-planning.ts - планирование действий\n- 07-adaptive-agent.ts - адаптивный агент\n- 08-interactive-agent.ts - интерактивный агент\n\nЭто образовательный проект для изучения разработки ИИ-агентов с использованием OpenAI API! 🤖"
+            }
+        ]
+    }
+]
+</script>

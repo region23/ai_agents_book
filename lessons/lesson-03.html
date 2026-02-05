@@ -1,0 +1,245 @@
+<div class="step" data-step="3" id="step-3">
+            <div class="step-number">03</div>
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-title">Agent Loop — замыкаем петлю</div>
+                    <span class="step-badge beginner">Ключевой момент</span>
+                </div>
+                <p class="step-intro">
+                    Вот это и делает агента агентом. Модель вызывает <span class="term"
+                        data-tip="Инструмент/функция, которую вызывает модель">tool</span> → мы выполняем → результат
+                    обратно в <span class="term" data-tip="Большая языковая модель">LLM</span> → repeat.
+                </p>
+
+                <div class="step-content">
+                    <div class="step-detail">
+                        <p>Всё что описано выше укладывается в ~80 строк кода. Весь агент — это <code>while</code> loop
+                            + массив <code>messages</code>.
+                            Цикл крутится, пока модель возвращает <code>tool_calls</code>. Когда она решает, что задача
+                            выполнена — возвращает обычный текст, и цикл завершается.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>src/03-agent-loop.ts</div>
+                        <pre>// src/03-agent-loop.ts
+import OpenAI from "openai";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+const tools: OpenAI.ChatCompletionTool[] = [
+    {
+        type: "function",
+        function: {
+            name: "get_weather",
+            description: "Получить текущую погоду в городе",
+            parameters: {
+                type: "object",
+                properties: {
+                    city: { type: "string", description: "Название города" },
+                },
+                required: ["city"],
+            },
+        },
+    },
+    {
+        type: "function",
+        function: {
+            name: "get_time",
+            description: "Получить текущее время в городе",
+            parameters: {
+                type: "object",
+                properties: {
+                    city: { type: "string", description: "Название города" },
+                },
+                required: ["city"],
+            },
+        },
+    },
+];
+
+// Реестр функций — маппинг имя → реализация
+const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
+    get_weather: ({ city }) =&gt; {
+        const data: Record&lt;string, string&gt; = {
+            "Москва": "−5°C, снег",
+            "Анапа": "+8°C, облачно",
+        };
+        return data[city] ?? `Нет данных для ${city}`;
+    },
+    get_time: ({ city }) =&gt; {
+        const now = new Date();
+        return `Сейчас в ${city}: ${now.toLocaleTimeString("ru-RU")}`;
+    },
+};
+
+async function agentLoop(userMessage: string) {
+    // Начальный контекст
+    const messages: OpenAI.ChatCompletionMessageParam[] = [
+        { role: "system", content: "Ты полезный ассистент. Используй tools когда нужно." },
+        { role: "user", content: userMessage },
+    ];
+
+    let iteration = 0;
+    const MAX_ITERATIONS = 10; // защита от бесконечного цикла
+
+    while (iteration &lt; MAX_ITERATIONS) {
+        iteration++;
+        console.log(`\n--- Итерация ${iteration} ---`);
+
+        const response = await client.chat.completions.create({
+            model: "anthropic/claude-sonnet-4.5",
+            messages,
+            tools,
+        });
+
+        const message = response.choices[0].message;
+
+        // Добавляем ответ модели в контекст
+        messages.push(message);
+
+        // Если нет tool_calls — модель решила остановиться
+        if (!message.tool_calls || message.tool_calls.length === 0) {
+            console.log("Агент завершил работу.");
+            console.log("Ответ:", message.content);
+            return message.content;
+        }
+
+        // Выполняем каждый tool call
+        for (const toolCall of message.tool_calls) {
+            const name = toolCall.function.name;
+            const args = JSON.parse(toolCall.function.arguments);
+
+            console.log(`Tool: ${name}(${JSON.stringify(args)})`);
+
+            const handler = toolHandlers[name];
+            const result = handler
+                ? handler(args)
+                : `Ошибка: tool "${name}" не найден`;
+
+            console.log(`Результат: ${result}`);
+
+            // Добавляем результат в контекст
+            messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id,
+                content: result,
+            });
+        }
+        // Цикл продолжается — отправляем обратно в LLM
+    }
+
+    console.log("Достигнут лимит итераций!");
+}
+
+// Тестируем — запрос, требующий ДВА tool call
+agentLoop("Какая погода в Москве и Анапе? И сколько сейчас времени?");
+</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="run-command">
+                        <span class="run-icon">▶</span>
+                        <code>npx tsx src/03-agent-loop.ts</code>
+                    </div>
+
+                    <button class="demo-btn" data-demo="demo-step-3">▶ Запустить демо</button>
+
+                    <div class="demo-output demo-player" id="demo-step-3" data-demo-chat="step3" aria-live="polite">
+                        <div class="demo-player-header">
+                            <div class="demo-player-title">Демо в формате диалога</div>
+                            <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span>
+                            </div>
+                        </div>
+                        <div class="demo-chat-body" data-demo-chat-body></div>
+                        <div class="demo-player-controls">
+                            <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                            <div class="demo-step-label" data-demo-label></div>
+                            <button class="demo-step-btn" data-demo-next>Далее →</button>
+                        </div>
+                    </div>
+                    <div class="output-note" data-demo-note="demo-step-3">Пример вывода. У тебя может быть иначе — это
+                        нормально.</div>
+
+                    <div class="mini-block expect">
+                        <div class="mini-title">✅ Что должно получиться</div>
+                        На первой итерации есть <code>tool_calls</code>, на следующей — финальный ответ без
+                        tool‑вызовов.
+                    </div>
+
+                    <div class="mini-block trouble">
+                        <div class="mini-title">🧯 Если не работает</div>
+                        Проверь парсинг аргументов (<code>JSON.parse</code>) и что handlers всегда возвращают строку.
+                    </div>
+
+                    <div class="what-happens">
+                        <strong>🔍 Что произошло:</strong>
+                        <strong>Итерация 1</strong> — модель вернула сразу 3 tool_calls (поняла, что нужны все три). Мы
+                        выполнили, добавили результаты в контекст.
+                        <strong>Итерация 2</strong> — модель получила все данные, решила что хватит, и ответила текстом.
+                        Цикл завершился.
+                    </div>
+
+                    <div class="key-insight">
+                        <strong>💡 Ключевые моменты:</strong>
+                        <code>while</code> loop — крутимся пока модель не перестанет возвращать <code>tool_calls</code>.
+                        <code>messages</code> массив растёт — каждый tool result добавляется, модель видит всю историю.
+                        Модель <em>сама решает</em> когда остановиться.
+                        <code>MAX_ITERATIONS</code> — защита, чтобы агент не ушёл в бесконечность.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Демо-данные урока -->
+<script type="application/json" data-demo-steps="step3">
+[
+    {
+        "label": "Итерация 1",
+        "messages": [
+            {
+                "role": "user",
+                "text": "Какая погода в Москве и Анапе? И сколько сейчас времени?"
+            },
+            {
+                "role": "tool_call",
+                "text": "get_weather({\"city\":\"Москва\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "−5°C, снег"
+            },
+            {
+                "role": "tool_call",
+                "text": "get_weather({\"city\":\"Анапа\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "+8°C, облачно"
+            },
+            {
+                "role": "tool_call",
+                "text": "get_time({\"city\":\"Москва\"})"
+            },
+            {
+                "role": "tool_result",
+                "text": "Сейчас в Москва: 20:04:51"
+            }
+        ]
+    },
+    {
+        "label": "Итерация 2",
+        "messages": [
+            {
+                "role": "llm",
+                "text": "Вот информация:\n\n**Погода:**\n- **Москва:** −5°C, снег ❄️\n- **Анапа:** +8°C, облачно ☁️\n\n**Время:**\n- Сейчас в Москве: 20:04:51"
+            }
+        ]
+    }
+]
+</script>
