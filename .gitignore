@@ -57,6 +57,11 @@ dist/
 .next
 out
 
+# Generated artifacts (lessons demos)
+REFACTORING.md
+STATS.md
+mini-api/
+
 # OS Specific
 .DS_Store
 .AppleDouble
