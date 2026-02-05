@@ -426,7 +426,6 @@ function build() {
     const sourceBody = extractMatch(sourceHtml, /<body>([\s\S]*?)<\/body>/i, "body");
 
     const heroSection = extractByToken(sourceBody, '<section class="hero">', "section");
-    const prepSection = extractByToken(sourceBody, '<section class="prep-section" id="before-start">', "section");
     const conceptSection = extractByToken(sourceBody, '<section class="concept-section" id="step-0">', "section");
     const footerSection = extractByToken(sourceBody, '<section class="footer">', "section");
 
@@ -476,7 +475,6 @@ function build() {
 
     const homeBody = `
 ${heroSection}
-${prepSection}
 ${conceptSection}
 <section class="book-outline-section" id="toc">
     <div class="concept-header" style="margin-bottom: 1.5rem;">

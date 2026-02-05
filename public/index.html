@@ -1658,49 +1658,6 @@
         </div>
         <div class="hero-scroll-indicator">scroll</div>
     </section>
-<section class="prep-section" id="before-start">
-        <div class="prep-header">
-            <h2>Перед стартом</h2>
-            <p>Пара минут подготовки — и всё пойдёт гладко. Это важно, особенно если ты делаешь первые шаги.</p>
-        </div>
-        <div class="prep-grid">
-            <div class="prep-card">
-                <div class="prep-title">✅ Что нужно</div>
-                <p>Node.js 18+ и npm. Проверь версии: <code style="color: var(--cyan);">node -v</code> и <code
-                        style="color: var(--cyan);">npm -v</code>.</p>
-            </div>
-            <div class="prep-card">
-                <div class="prep-title">🔑 OpenRouter</div>
-                <p>Нужен аккаунт и API‑ключ. Расход зависит от модели, но для первых шагов обычно хватает лимита $1–$5.
-                    Следи за балансом в кабинете.</p>
-            </div>
-            <div class="prep-card">
-                <div class="prep-title">🛡 Безопасность ключа</div>
-                <p>Ключ храним только в <code style="color: var(--cyan);">.env</code>. Не публикуй его и не коммить в
-                    репозиторий.</p>
-            </div>
-        </div>
-
-        <div class="prep-card" style="margin-top: 1.5rem;">
-            <div class="prep-title">Быстрый чек‑лист проекта</div>
-            <div class="run-command" style="margin-top: 0.75rem;">
-                <span class="run-icon">▶</span>
-                <code>mkdir simple-agent && cd simple-agent</code>
-            </div>
-            <div class="run-command">
-                <span class="run-icon">▶</span>
-                <code>mkdir src</code>
-            </div>
-            <div class="code-block">
-                <div class="code-filename"><span class="dot"></span>.gitignore</div>
-                <pre>node_modules
-.env</pre>
-                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-            </div>
-            <p class="prep-note">В учебнике есть кнопки «Запустить демо» — это симуляция вывода. Реальные ответы <span
-                    class="term" data-tip="Большая языковая модель">LLM</span> могут отличаться.</p>
-        </div>
-    </section>
 <section class="concept-section" id="step-0">
         <div class="concept-header">
             <h2>Что такое ИИ-агент?</h2>
@@ -1745,6 +1702,10 @@
                 Claude Code, Cursor, GitHub Copilot — все работают на этом же фундаменте. Разница в количестве <span
                     class="term" data-tip="Инструменты/функции, которые модель может вызвать">tools</span>,
                 quality of prompts и UX вокруг. Ядро — одно и то же. Давай построим его с нуля.
+            </p>
+            <p style="color: var(--text-dim); font-size: 0.88rem; margin-top: 1.5rem;">
+                В учебнике есть кнопки «Запустить демо» — это симуляция вывода. Реальные ответы <span class="term"
+                    data-tip="Большая языковая модель">LLM</span> могут отличаться.
             </p>
         </div>
     </section>
