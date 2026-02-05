@@ -24,15 +24,16 @@ const EXTRA_STYLE = `
         position: sticky;
         top: 0;
         z-index: 40;
-        backdrop-filter: blur(8px);
-        background: rgba(10, 10, 15, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        background: rgba(6, 6, 12, 0.8);
         border-bottom: 1px solid var(--border);
     }
 
     .book-nav-inner {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 0.8rem 1.25rem;
+        padding: 0.75rem 1.25rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -45,20 +46,22 @@ const EXTRA_STYLE = `
         text-decoration: none;
         border: 1px solid var(--border);
         border-radius: 999px;
-        padding: 0.35rem 0.75rem;
-        font-size: 0.9rem;
-        transition: all 0.2s;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.88rem;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .book-nav a:hover {
         border-color: var(--accent);
         color: var(--text-bright);
+        background: rgba(124, 127, 247, 0.08);
     }
 
     .book-nav-title {
         color: var(--text-dim);
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         white-space: nowrap;
+        letter-spacing: 0.01em;
     }
 
     .lesson-shell {
@@ -66,57 +69,66 @@ const EXTRA_STYLE = `
         margin: 0 auto;
         padding: 1.25rem;
         display: grid;
-        grid-template-columns: 300px minmax(0, 1fr);
-        gap: 1rem;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 1.25rem;
         align-items: start;
     }
 
     .lesson-sidebar {
         position: sticky;
-        top: 76px;
+        top: 68px;
         background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 1rem;
+        border-radius: var(--radius-lg, 16px);
+        padding: 1.1rem;
     }
 
     .lesson-sidebar h2 {
-        margin: 0 0 0.6rem;
-        font-size: 1rem;
+        margin: 0 0 0.7rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
     }
 
     .lesson-toc {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.35rem;
     }
 
     .lesson-toc a {
         display: block;
         border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 0.45rem 0.6rem;
+        border-radius: var(--radius-sm, 8px);
+        padding: 0.45rem 0.65rem;
         color: var(--text-dim);
         text-decoration: none;
         line-height: 1.35;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .lesson-toc a:hover {
         color: var(--text);
-        border-color: var(--accent);
+        border-color: rgba(124, 127, 247, 0.35);
+        background: rgba(124, 127, 247, 0.05);
     }
 
     .lesson-toc a.current {
         color: var(--text-bright);
         border-color: var(--accent);
-        background: rgba(99, 102, 241, 0.12);
+        background: rgba(124, 127, 247, 0.1);
+        box-shadow: 0 0 16px rgba(124, 127, 247, 0.08);
     }
 
     .lesson-main .steps-container {
         max-width: 100%;
         padding: 0;
         margin: 0;
+    }
+
+    .lesson-main .steps-container::before {
+        display: none;
     }
 
     .lesson-main .step {
@@ -132,11 +144,16 @@ const EXTRA_STYLE = `
         box-shadow: none;
     }
 
+    .lesson-main .step-card::before {
+        display: none;
+    }
+
     .lesson-pager {
-        margin: 1rem 0 0;
+        margin: 1.5rem 0 0;
         display: flex;
         flex-wrap: wrap;
         gap: 0.55rem;
+        justify-content: center;
     }
 
     .lesson-pager-link {
@@ -144,63 +161,86 @@ const EXTRA_STYLE = `
         text-decoration: none;
         border: 1px solid var(--border);
         border-radius: 999px;
-        padding: 0.45rem 0.8rem;
-        font-size: 0.9rem;
+        padding: 0.45rem 0.9rem;
+        font-size: 0.88rem;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .lesson-pager-link:hover {
         border-color: var(--accent);
+        background: rgba(124, 127, 247, 0.08);
     }
 
     .lesson-pager-link.disabled {
-        opacity: 0.5;
+        opacity: 0.35;
         pointer-events: none;
     }
 
     .book-outline-section {
         max-width: 1100px;
         margin: 0 auto;
-        padding: 0 2rem 4rem;
+        padding: 0 2rem 5rem;
     }
 
     .book-outline-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 0.75rem;
-        margin-top: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 0.85rem;
+        margin-top: 1.25rem;
     }
 
     .book-outline-card {
         background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 1rem;
+        border-radius: var(--radius-lg, 16px);
+        padding: 1.15rem;
         text-decoration: none;
         color: inherit;
-        transition: all 0.2s;
+        transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        position: relative;
+    }
+
+    .book-outline-card::before {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        background: linear-gradient(135deg, rgba(124, 127, 247, 0.2), rgba(34, 211, 238, 0.1), transparent 60%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: -1;
+        pointer-events: none;
     }
 
     .book-outline-card:hover {
-        border-color: var(--accent);
+        border-color: rgba(124, 127, 247, 0.3);
         background: var(--bg-card-hover);
-        transform: translateY(-2px);
+        transform: translateY(-3px);
+    }
+
+    .book-outline-card:hover::before {
+        opacity: 1;
     }
 
     .book-outline-meta {
         color: var(--text-dim);
-        font-size: 0.8rem;
-        margin-bottom: 0.35rem;
+        font-size: 0.78rem;
+        margin-bottom: 0.4rem;
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: 0.02em;
     }
 
     .book-outline-title {
         font-weight: 700;
         line-height: 1.35;
+        letter-spacing: -0.01em;
     }
 
     .book-outline-intro {
         color: var(--text-dim);
-        margin-top: 0.45rem;
-        font-size: 0.92rem;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        line-height: 1.55;
     }
 
     @media (max-width: 980px) {
@@ -215,7 +255,7 @@ const EXTRA_STYLE = `
 
     @media (max-width: 680px) {
         .book-nav-inner {
-            padding: 0.7rem 0.8rem;
+            padding: 0.65rem 0.8rem;
         }
 
         .lesson-shell {
@@ -224,6 +264,10 @@ const EXTRA_STYLE = `
 
         .book-outline-section {
             padding: 0 0.8rem 2.5rem;
+        }
+
+        .book-outline-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -431,13 +475,6 @@ function build() {
         .join("\n");
 
     const homeBody = `
-<nav class="book-nav">
-    <div class="book-nav-inner">
-        <a href="#step-0">Что такое агент</a>
-        <div class="book-nav-title">8 уроков от первого вызова до интерактивного агента</div>
-        <a href="${lessons[0].file}">Начать с урока 01</a>
-    </div>
-</nav>
 ${heroSection}
 ${prepSection}
 ${conceptSection}
