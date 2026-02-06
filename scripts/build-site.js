@@ -19,6 +19,18 @@ const LESSON_FILES = [
     { id: 8, file: "lesson-08-interactive-agent.html" },
 ];
 
+const LITE_LESSONS_DIR = path.join(ROOT_DIR, "lessons-lite");
+const LITE_LESSON_FILES = [
+    { id: 1, file: "lite-lesson-01-basic-call.html" },
+    { id: 2, file: "lite-lesson-02-with-tool.html" },
+    { id: 3, file: "lite-lesson-03-agent-loop.html" },
+    { id: 4, file: "lite-lesson-04-real-tools.html" },
+    { id: 5, file: "lite-lesson-05-skills.html" },
+    { id: 6, file: "lite-lesson-06-planning.html" },
+    { id: 7, file: "lite-lesson-07-adaptive-agent.html" },
+    { id: 8, file: "lite-lesson-08-interactive-agent.html" },
+];
+
 const EXTRA_STYLE = `
 <style>
     .book-nav {
@@ -374,6 +386,261 @@ const EXTRA_STYLE = `
             padding-left: 2.2rem;
         }
     }
+
+    /* ====== Track Toggle ====== */
+    .track-toggle {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .track-toggle-btn {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.55rem 1.25rem;
+        color: var(--text-dim);
+        font-size: 0.92rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        min-height: 44px;
+    }
+
+    .track-toggle-btn:hover {
+        border-color: rgba(124, 127, 247, 0.4);
+        color: var(--text);
+        background: rgba(124, 127, 247, 0.06);
+    }
+
+    .track-toggle-btn.active[data-track="dev"] {
+        border-color: var(--accent);
+        color: var(--text-bright);
+        background: rgba(124, 127, 247, 0.12);
+        box-shadow: 0 0 20px rgba(124, 127, 247, 0.15);
+    }
+
+    .track-toggle-btn.active[data-track="lite"] {
+        border-color: var(--accent-secondary, #a78bfa);
+        color: var(--text-bright);
+        background: rgba(167, 139, 250, 0.12);
+        box-shadow: 0 0 20px rgba(167, 139, 250, 0.15);
+    }
+
+    /* ====== Lite Card Gradient ====== */
+    .book-outline-card--lite::before {
+        background: linear-gradient(135deg, rgba(167, 139, 250, 0.2), rgba(244, 114, 182, 0.15), transparent 60%);
+    }
+
+    .book-outline-card--lite:hover {
+        border-color: rgba(167, 139, 250, 0.3);
+    }
+
+    /* ====== Analogy Block ====== */
+    .analogy-block {
+        border-left: 3px solid var(--accent-secondary, #a78bfa);
+        background: rgba(167, 139, 250, 0.06);
+        border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+    }
+
+    .analogy-block-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-bright);
+    }
+
+    .analogy-block p {
+        color: var(--text);
+        line-height: 1.65;
+        margin: 0;
+        font-size: 0.92rem;
+    }
+
+    /* ====== Scenario Block (Dialog) ====== */
+    .scenario-block {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg, 16px);
+        padding: 1.15rem;
+        margin: 1rem 0;
+    }
+
+    .scenario-block-title {
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--text-dim);
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .scenario-line {
+        display: flex;
+        gap: 0.65rem;
+        padding: 0.45rem 0;
+        font-size: 0.9rem;
+        line-height: 1.55;
+    }
+
+    .scenario-line + .scenario-line {
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .scenario-role {
+        font-weight: 700;
+        font-size: 0.78rem;
+        min-width: 3.8rem;
+        text-align: right;
+        padding-top: 0.1rem;
+        flex-shrink: 0;
+    }
+
+    .scenario-role.user { color: var(--accent-cyan, #22d3ee); }
+    .scenario-role.llm { color: var(--accent, #7c7ff7); }
+    .scenario-role.tool { color: var(--accent-warm, #f59e0b); }
+    .scenario-role.system { color: var(--text-dim); }
+
+    .scenario-text {
+        color: var(--text);
+    }
+
+    /* ====== Business Example ====== */
+    .biz-example {
+        border-left: 3px solid var(--accent-warm, #f59e0b);
+        background: rgba(245, 158, 11, 0.06);
+        border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+    }
+
+    .biz-example-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-bright);
+    }
+
+    .biz-example p {
+        color: var(--text);
+        line-height: 1.65;
+        margin: 0;
+        font-size: 0.92rem;
+    }
+
+    /* ====== Lite Summary ====== */
+    .lite-summary {
+        border: 1px solid rgba(52, 211, 153, 0.25);
+        background: rgba(52, 211, 153, 0.06);
+        border-radius: var(--radius-lg, 16px);
+        padding: 1.15rem 1.25rem;
+        margin: 1.25rem 0;
+    }
+
+    .lite-summary-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #34d399;
+        margin-bottom: 0.65rem;
+    }
+
+    .lite-summary ul {
+        margin: 0;
+        padding-left: 1.25rem;
+        color: var(--text);
+        font-size: 0.92rem;
+        line-height: 1.7;
+    }
+
+    .lite-summary li + li {
+        margin-top: 0.25rem;
+    }
+
+    /* ====== Compare Table ====== */
+    .compare-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+    }
+
+    .compare-table th,
+    .compare-table td {
+        border: 1px solid var(--border);
+        padding: 0.65rem 0.85rem;
+        text-align: left;
+    }
+
+    .compare-table th {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-bright);
+        font-weight: 700;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .compare-table td {
+        color: var(--text);
+        line-height: 1.5;
+    }
+
+    .compare-table tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* ====== Lite Cross-link ====== */
+    .lite-crosslink {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--accent-secondary, #a78bfa);
+        text-decoration: none;
+        font-size: 0.88rem;
+        padding: 0.35rem 0.75rem;
+        border: 1px solid rgba(167, 139, 250, 0.25);
+        border-radius: 999px;
+        transition: all 0.3s ease;
+    }
+
+    .lite-crosslink:hover {
+        border-color: rgba(167, 139, 250, 0.5);
+        background: rgba(167, 139, 250, 0.08);
+    }
+
+    @media (max-width: 680px) {
+        .track-toggle {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .track-toggle-btn {
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .scenario-line {
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .scenario-role {
+            text-align: left;
+            min-width: auto;
+        }
+
+        .compare-table {
+            font-size: 0.82rem;
+        }
+
+        .compare-table th,
+        .compare-table td {
+            padding: 0.45rem 0.55rem;
+        }
+    }
 </style>
 `;
 
@@ -540,6 +807,13 @@ function readLessonFile(lessonId) {
     return { stepHtml, demoKey, demoData };
 }
 
+function readLiteLessonFile(lessonId) {
+    const pad = String(lessonId).padStart(2, "0");
+    const raw = fs.readFileSync(path.join(LITE_LESSONS_DIR, `lesson-${pad}.html`), "utf8");
+    const stepHtml = raw.replace(/\s*<!--[\s\S]*?-->\s*$/, "").trim();
+    return { stepHtml };
+}
+
 function buildDemoPlayersObject(lessons) {
     const obj = {};
     for (const lesson of lessons) {
@@ -578,6 +852,17 @@ function build() {
         };
     });
 
+    const liteLessons = LITE_LESSON_FILES.map((lessonInfo) => {
+        const { stepHtml } = readLiteLessonFile(lessonInfo.id);
+        const meta = getStepMeta(stepHtml, lessonInfo.id);
+
+        return {
+            ...lessonInfo,
+            ...meta,
+            stepHtml,
+        };
+    });
+
     const demoPlayersObj = buildDemoPlayersObject(lessons);
 
     // Inject assembled demoPlayers into the scripts block
@@ -605,19 +890,66 @@ function build() {
         })
         .join("\n");
 
+    const liteOutlineCardsHtml = liteLessons
+        .map((lesson) => {
+            const lessonNumber = String(lesson.id).padStart(2, "0");
+            return `
+<a class="book-outline-card book-outline-card--lite" href="${lesson.file}">
+    <div class="book-outline-meta">Урок ${lessonNumber}${lesson.badgeText ? ` · ${escapeHtml(lesson.badgeText)}` : ""}</div>
+    <div class="book-outline-title">${lesson.titleHtml}</div>
+    <div class="book-outline-intro">${escapeHtml(lesson.introText)}</div>
+</a>`;
+        })
+        .join("\n");
+
     const homeBody = `
 ${heroSection}
 ${conceptSection}
 <section class="book-outline-section" id="toc">
     <div class="concept-header" style="margin-bottom: 1.5rem;">
         <h2>Оглавление</h2>
-        
     </div>
-    <div class="book-outline-grid">
+    <div class="track-toggle" id="trackToggle">
+        <button class="track-toggle-btn active" data-track="dev">&lt;/&gt; Для разработчиков</button>
+        <button class="track-toggle-btn" data-track="lite">💡 Для самых маааленьких!</button>
+    </div>
+    <div class="book-outline-grid" id="devTrack">
 ${outlineCardsHtml}
+    </div>
+    <div class="book-outline-grid" id="liteTrack" style="display:none">
+${liteOutlineCardsHtml}
     </div>
 </section>
 ${footerSection}
+<script>
+(function() {
+    var STORAGE_KEY = 'agentbook-track';
+    var toggle = document.getElementById('trackToggle');
+    var devTrack = document.getElementById('devTrack');
+    var liteTrack = document.getElementById('liteTrack');
+    if (!toggle || !devTrack || !liteTrack) return;
+
+    function setTrack(track) {
+        var btns = toggle.querySelectorAll('.track-toggle-btn');
+        btns.forEach(function(btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-track') === track);
+        });
+        devTrack.style.display = track === 'dev' ? '' : 'none';
+        liteTrack.style.display = track === 'lite' ? '' : 'none';
+        try { localStorage.setItem(STORAGE_KEY, track); } catch(e) {}
+    }
+
+    toggle.addEventListener('click', function(e) {
+        var btn = e.target.closest('.track-toggle-btn');
+        if (btn) setTrack(btn.getAttribute('data-track'));
+    });
+
+    try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved === 'lite') setTrack('lite');
+    } catch(e) {}
+})();
+</script>
 `;
 
     const homeHtml = buildDocument({
@@ -648,7 +980,7 @@ ${footerSection}
         <button class="sidebar-toggle" aria-label="Меню уроков">☰</button>
         <a href="index.html">← Оглавление</a>
         <div class="book-nav-title">Урок ${lessonNumber} из ${String(lessons.length).padStart(2, "0")}</div>
-        ${nextLesson ? `<a href="${nextLesson.file}">Следующий урок →</a>` : '<a href="index.html">К оглавлению</a>'}
+        ${nextLesson ? `<a href="${nextLesson.file}">Следующий урок →</a>` : ''}
     </div>
 </nav>
 <div class="sidebar-backdrop"></div>
@@ -707,9 +1039,90 @@ ${ensureActiveStep(lesson.stepHtml)}
         fs.writeFileSync(path.join(PUBLIC_DIR, lesson.file), lessonHtml, "utf8");
     });
 
+    // Generate lite lesson pages
+    liteLessons.forEach((lesson, index) => {
+        const lessonNumber = String(lesson.id).padStart(2, "0");
+        const prevLesson = index > 0 ? liteLessons[index - 1] : null;
+        const nextLesson = index < liteLessons.length - 1 ? liteLessons[index + 1] : null;
+        const devCounterpart = lessons[index];
+
+        const tocHtml = liteLessons
+            .map((entry) => {
+                const entryNumber = String(entry.id).padStart(2, "0");
+                const classAttr = entry.id === lesson.id ? ' class="current"' : "";
+                return `<a${classAttr} href="${entry.file}">${entryNumber}. ${escapeHtml(entry.titleText)}</a>`;
+            })
+            .join("\n");
+
+        const lessonBody = `
+<nav class="book-nav">
+    <div class="book-nav-inner">
+        <button class="sidebar-toggle" aria-label="Меню уроков">☰</button>
+        <a href="index.html">← Оглавление</a>
+        <div class="book-nav-title">Урок ${lessonNumber} из ${String(liteLessons.length).padStart(2, "0")} · Lite</div>
+        ${devCounterpart ? `<a class="lite-crosslink" href="${devCounterpart.file}">Версия с кодом →</a>` : ''}
+        ${nextLesson ? `<a href="${nextLesson.file}">Следующий урок →</a>` : ''}
+    </div>
+</nav>
+<div class="sidebar-backdrop"></div>
+<div class="lesson-shell lesson-page lesson-page--lite">
+    <aside class="lesson-sidebar">
+        <h2>Навигация по урокам</h2>
+        <div class="lesson-toc">
+${tocHtml}
+        </div>
+    </aside>
+    <main class="lesson-main">
+        <div class="steps-container">
+${ensureActiveStep(lesson.stepHtml)}
+        </div>
+        <div class="lesson-pager">
+            ${buildLessonPagerLink(prevLesson, "Предыдущий урок", "prev")}
+            <a class="lesson-pager-link" href="index.html">Оглавление</a>
+            ${buildLessonPagerLink(nextLesson, "Следующий урок", "next")}
+        </div>
+    </main>
+</div>
+<script>
+(function() {
+    const toggle = document.querySelector('.sidebar-toggle');
+    const sidebar = document.querySelector('.lesson-sidebar');
+    const backdrop = document.querySelector('.sidebar-backdrop');
+    if (!toggle || !sidebar || !backdrop) return;
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        backdrop.classList.add('visible');
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('visible');
+    }
+
+    toggle.addEventListener('click', () => {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    backdrop.addEventListener('click', closeSidebar);
+    sidebar.querySelectorAll('.lesson-toc a').forEach(link => {
+        link.addEventListener('click', closeSidebar);
+    });
+})();
+</script>
+`;
+
+        const lessonHtml = buildDocument({
+            sourceHead,
+            title: `Урок ${lessonNumber} (Lite) — ${lesson.titleText}`,
+            bodyContent: lessonBody,
+            scripts: scriptsHtml,
+        });
+
+        fs.writeFileSync(path.join(PUBLIC_DIR, lesson.file), lessonHtml, "utf8");
+    });
+
     copyStaticFiles();
 
-    console.log(`Built ${lessons.length + 1} pages to ${PUBLIC_DIR}`);
+    console.log(`Built ${lessons.length + liteLessons.length + 1} pages to ${PUBLIC_DIR}`);
 }
 
 build();

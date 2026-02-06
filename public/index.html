@@ -1822,6 +1822,261 @@
             padding-left: 2.2rem;
         }
     }
+
+    /* ====== Track Toggle ====== */
+    .track-toggle {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .track-toggle-btn {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.55rem 1.25rem;
+        color: var(--text-dim);
+        font-size: 0.92rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        min-height: 44px;
+    }
+
+    .track-toggle-btn:hover {
+        border-color: rgba(124, 127, 247, 0.4);
+        color: var(--text);
+        background: rgba(124, 127, 247, 0.06);
+    }
+
+    .track-toggle-btn.active[data-track="dev"] {
+        border-color: var(--accent);
+        color: var(--text-bright);
+        background: rgba(124, 127, 247, 0.12);
+        box-shadow: 0 0 20px rgba(124, 127, 247, 0.15);
+    }
+
+    .track-toggle-btn.active[data-track="lite"] {
+        border-color: var(--accent-secondary, #a78bfa);
+        color: var(--text-bright);
+        background: rgba(167, 139, 250, 0.12);
+        box-shadow: 0 0 20px rgba(167, 139, 250, 0.15);
+    }
+
+    /* ====== Lite Card Gradient ====== */
+    .book-outline-card--lite::before {
+        background: linear-gradient(135deg, rgba(167, 139, 250, 0.2), rgba(244, 114, 182, 0.15), transparent 60%);
+    }
+
+    .book-outline-card--lite:hover {
+        border-color: rgba(167, 139, 250, 0.3);
+    }
+
+    /* ====== Analogy Block ====== */
+    .analogy-block {
+        border-left: 3px solid var(--accent-secondary, #a78bfa);
+        background: rgba(167, 139, 250, 0.06);
+        border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+    }
+
+    .analogy-block-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-bright);
+    }
+
+    .analogy-block p {
+        color: var(--text);
+        line-height: 1.65;
+        margin: 0;
+        font-size: 0.92rem;
+    }
+
+    /* ====== Scenario Block (Dialog) ====== */
+    .scenario-block {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg, 16px);
+        padding: 1.15rem;
+        margin: 1rem 0;
+    }
+
+    .scenario-block-title {
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--text-dim);
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .scenario-line {
+        display: flex;
+        gap: 0.65rem;
+        padding: 0.45rem 0;
+        font-size: 0.9rem;
+        line-height: 1.55;
+    }
+
+    .scenario-line + .scenario-line {
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .scenario-role {
+        font-weight: 700;
+        font-size: 0.78rem;
+        min-width: 3.8rem;
+        text-align: right;
+        padding-top: 0.1rem;
+        flex-shrink: 0;
+    }
+
+    .scenario-role.user { color: var(--accent-cyan, #22d3ee); }
+    .scenario-role.llm { color: var(--accent, #7c7ff7); }
+    .scenario-role.tool { color: var(--accent-warm, #f59e0b); }
+    .scenario-role.system { color: var(--text-dim); }
+
+    .scenario-text {
+        color: var(--text);
+    }
+
+    /* ====== Business Example ====== */
+    .biz-example {
+        border-left: 3px solid var(--accent-warm, #f59e0b);
+        background: rgba(245, 158, 11, 0.06);
+        border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+    }
+
+    .biz-example-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-bright);
+    }
+
+    .biz-example p {
+        color: var(--text);
+        line-height: 1.65;
+        margin: 0;
+        font-size: 0.92rem;
+    }
+
+    /* ====== Lite Summary ====== */
+    .lite-summary {
+        border: 1px solid rgba(52, 211, 153, 0.25);
+        background: rgba(52, 211, 153, 0.06);
+        border-radius: var(--radius-lg, 16px);
+        padding: 1.15rem 1.25rem;
+        margin: 1.25rem 0;
+    }
+
+    .lite-summary-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #34d399;
+        margin-bottom: 0.65rem;
+    }
+
+    .lite-summary ul {
+        margin: 0;
+        padding-left: 1.25rem;
+        color: var(--text);
+        font-size: 0.92rem;
+        line-height: 1.7;
+    }
+
+    .lite-summary li + li {
+        margin-top: 0.25rem;
+    }
+
+    /* ====== Compare Table ====== */
+    .compare-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+    }
+
+    .compare-table th,
+    .compare-table td {
+        border: 1px solid var(--border);
+        padding: 0.65rem 0.85rem;
+        text-align: left;
+    }
+
+    .compare-table th {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-bright);
+        font-weight: 700;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .compare-table td {
+        color: var(--text);
+        line-height: 1.5;
+    }
+
+    .compare-table tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* ====== Lite Cross-link ====== */
+    .lite-crosslink {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--accent-secondary, #a78bfa);
+        text-decoration: none;
+        font-size: 0.88rem;
+        padding: 0.35rem 0.75rem;
+        border: 1px solid rgba(167, 139, 250, 0.25);
+        border-radius: 999px;
+        transition: all 0.3s ease;
+    }
+
+    .lite-crosslink:hover {
+        border-color: rgba(167, 139, 250, 0.5);
+        background: rgba(167, 139, 250, 0.08);
+    }
+
+    @media (max-width: 680px) {
+        .track-toggle {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .track-toggle-btn {
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .scenario-line {
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .scenario-role {
+            text-align: left;
+            min-width: auto;
+        }
+
+        .compare-table {
+            font-size: 0.82rem;
+        }
+
+        .compare-table th,
+        .compare-table td {
+            padding: 0.45rem 0.55rem;
+        }
+    }
 </style>
 
 </head>
@@ -1911,9 +2166,12 @@
 <section class="book-outline-section" id="toc">
     <div class="concept-header" style="margin-bottom: 1.5rem;">
         <h2>Оглавление</h2>
-        
     </div>
-    <div class="book-outline-grid">
+    <div class="track-toggle" id="trackToggle">
+        <button class="track-toggle-btn active" data-track="dev">&lt;/&gt; Для разработчиков</button>
+        <button class="track-toggle-btn" data-track="lite">💡 Для самых маааленьких!</button>
+    </div>
+    <div class="book-outline-grid" id="devTrack">
 
 <a class="book-outline-card" href="lesson-01-basic-call.html">
     <div class="book-outline-meta">Урок 01 · Начало</div>
@@ -1963,6 +2221,56 @@
     <div class="book-outline-intro">У нас есть skills для файлов, bash и рассуждений. Теперь добавляем ещё один: interaction — три tool&#39;а для общения с пользователем. Добавить human-in-the-loop = добавить ещё один skill. Agent loop не меняется.</div>
 </a>
     </div>
+    <div class="book-outline-grid" id="liteTrack" style="display:none">
+
+<a class="book-outline-card book-outline-card--lite" href="lite-lesson-01-basic-call.html">
+    <div class="book-outline-meta">Урок 01 · Начало</div>
+    <div class="book-outline-title">Что такое LLM и как задать вопрос</div>
+    <div class="book-outline-intro">Большие языковые модели (LLM) уже меняют бизнес. Разберёмся, что это такое на самом деле и как с ними общаться — без единой строчки кода.</div>
+</a>
+
+<a class="book-outline-card book-outline-card--lite" href="lite-lesson-02-with-tool.html">
+    <div class="book-outline-meta">Урок 02 · Инструменты</div>
+    <div class="book-outline-title">ИИ учится пользоваться инструментами</div>
+    <div class="book-outline-intro">LLM умная, но ограниченная. Что если дать ей доступ к калькулятору, базе данных или CRM? Именно так рождается настоящая польза.</div>
+</a>
+
+<a class="book-outline-card book-outline-card--lite" href="lite-lesson-03-agent-loop.html">
+    <div class="book-outline-meta">Урок 03 · Ключевой момент</div>
+    <div class="book-outline-title">Цикл: думай, делай, повторяй</div>
+    <div class="book-outline-intro">Обычный чат-бот отвечает один раз. Агент — работает, пока не решит задачу. Разница в одном слове: цикл. Это самый важный урок в курсе.</div>
+</a>
+
+<a class="book-outline-card book-outline-card--lite" href="lite-lesson-04-real-tools.html">
+    <div class="book-outline-meta">Урок 04 · Практика</div>
+    <div class="book-outline-title">Агент работает с реальным миром</div>
+    <div class="book-outline-intro">До сих пор агент работал с учебными примерами. Пора выпустить его в реальный мир: файлы, интернет, базы данных, email. Но с большой силой приходит большая ответственность.</div>
+</a>
+
+<a class="book-outline-card book-outline-card--lite" href="lite-lesson-05-skills.html">
+    <div class="book-outline-meta">Урок 05 · Архитектура</div>
+    <div class="book-outline-title">Плагины и маркетплейс навыков</div>
+    <div class="book-outline-intro">Агент из прошлых уроков умеет работать с инструментами. Но все инструменты зашиты в него намертво. Хотите добавить новый — переписывайте агента. Skills (навыки) решают эту проблему: агент подключает возможности как приложения на смартфоне.</div>
+</a>
+
+<a class="book-outline-card book-outline-card--lite" href="lite-lesson-06-planning.html">
+    <div class="book-outline-meta">Урок 06 · Стратегия</div>
+    <div class="book-outline-title">Сначала план, потом действие</div>
+    <div class="book-outline-intro">Агент, который сразу бросается выполнять задачу, похож на строителя без чертежа. Иногда получается, иногда — нет. Агент-планировщик сначала думает, потом делает. Это кардинально повышает качество и предсказуемость результата.</div>
+</a>
+
+<a class="book-outline-card book-outline-card--lite" href="lite-lesson-07-adaptive-agent.html">
+    <div class="book-outline-meta">Урок 07 · Продвинутый</div>
+    <div class="book-outline-title">Адаптация, когда план не работает</div>
+    <div class="book-outline-intro">В прошлом уроке агент научился планировать. Но в реальном мире планы ломаются: сервис недоступен, данные не те, клиент передумал. Хороший агент не сдаётся — он адаптируется и находит обходной путь.</div>
+</a>
+
+<a class="book-outline-card book-outline-card--lite" href="lite-lesson-08-interactive-agent.html">
+    <div class="book-outline-meta">Урок 08 · Безопасность</div>
+    <div class="book-outline-title">Человек у руля</div>
+    <div class="book-outline-intro">Агент научился планировать и адаптироваться. Но должен ли он всегда действовать полностью самостоятельно? Нет. Лучшие AI-системы работают в партнёрстве с человеком: автоматизируют рутину, но ключевые решения оставляют за людьми.</div>
+</a>
+    </div>
 </section>
 <section class="footer">
         <div class="footer-inner">
@@ -2001,6 +2309,35 @@
             </div>
         </div>
     </section>
+<script>
+(function() {
+    var STORAGE_KEY = 'agentbook-track';
+    var toggle = document.getElementById('trackToggle');
+    var devTrack = document.getElementById('devTrack');
+    var liteTrack = document.getElementById('liteTrack');
+    if (!toggle || !devTrack || !liteTrack) return;
+
+    function setTrack(track) {
+        var btns = toggle.querySelectorAll('.track-toggle-btn');
+        btns.forEach(function(btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-track') === track);
+        });
+        devTrack.style.display = track === 'dev' ? '' : 'none';
+        liteTrack.style.display = track === 'lite' ? '' : 'none';
+        try { localStorage.setItem(STORAGE_KEY, track); } catch(e) {}
+    }
+
+    toggle.addEventListener('click', function(e) {
+        var btn = e.target.closest('.track-toggle-btn');
+        if (btn) setTrack(btn.getAttribute('data-track'));
+    });
+
+    try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved === 'lite') setTrack('lite');
+    } catch(e) {}
+})();
+</script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>

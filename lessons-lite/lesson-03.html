@@ -1,0 +1,150 @@
+<div class="step active" data-step="3" id="step-3">
+            <div class="step-number">03</div>
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-title">Цикл: думай, делай, повторяй</div>
+                    <span class="step-badge beginner">Ключевой момент</span>
+                </div>
+                <p class="step-intro">
+                    Обычный чат-бот отвечает один раз. Агент — работает, пока не решит задачу.
+                    Разница в одном слове: цикл. Это самый важный урок в курсе.
+                </p>
+
+                <div class="step-content">
+                    <div class="analogy-block">
+                        <div class="analogy-block-title">Аналогия: настойчивый секретарь</div>
+                        <p>
+                            Обычный чат-бот — это справочная по телефону. Вы задаёте один вопрос,
+                            вам дают один ответ, связь обрывается. Агент — это ваш личный секретарь.
+                            Вы говорите: «Найди мне рейс в Стамбул на следующую пятницу». Секретарь
+                            проверяет одну авиакомпанию — нет билетов. Пробует другую — слишком дорого.
+                            Проверяет соседние даты — нашёл отличный вариант! «Шеф, прямых на пятницу нет,
+                            но в четверг есть Turkish Airlines за 28 000. Бронировать?»
+                        </p>
+                        <p>
+                            Секретарь не сдался после первой неудачи. Он думал, действовал, наблюдал
+                            результат и повторял — пока задача не решена. Вот что делает агент.
+                        </p>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>
+                            <strong>Agent loop (цикл агента)</strong> — это ключевая идея, которая
+                            превращает чат-бота в исполнителя задач. Принцип простой: LLM отвечает,
+                            и если ей нужно что-то сделать (вызвать инструмент), мы это выполняем,
+                            а результат отправляем обратно. LLM смотрит на результат, думает снова,
+                            и либо вызывает ещё один инструмент, либо выдаёт финальный ответ.
+                            Цикл крутится до тех пор, пока задача не будет решена.
+                        </p>
+                    </div>
+
+                    <div class="arch-diagram">
+                        <div class="arch-row">
+                            <span class="loop-node llm">Думай</span>
+                            <span class="loop-arrow">&#8594;</span>
+                            <span class="loop-node tool">Делай</span>
+                            <span class="loop-arrow">&#8594;</span>
+                            <span class="loop-node context">Наблюдай</span>
+                            <span class="loop-arrow">&#8635;</span>
+                        </div>
+                        <div class="arch-row" style="margin-top: 1rem;">
+                            <span class="loop-arrow">&#8595;</span>
+                        </div>
+                        <div class="arch-row">
+                            <span class="loop-node output">Ответ пользователю</span>
+                        </div>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>
+                            Этот цикл называют <strong>Think-Act-Observe</strong>. На каждом витке
+                            агент: (1) думает — анализирует текущую ситуацию, (2) действует — вызывает
+                            нужный инструмент, (3) наблюдает — получает результат и решает, что делать
+                            дальше. Если задача решена — отвечает пользователю. Если нет — ещё один виток.
+                        </p>
+                    </div>
+
+                    <div class="scenario-block">
+                        <div class="scenario-block-title">Пример: многошаговый запрос</div>
+                        <div class="scenario-line">
+                            <span class="scenario-role user">Вы</span>
+                            <span class="scenario-text">Какая погода в Москве и который сейчас час?</span>
+                        </div>
+                        <div class="scenario-line">
+                            <span class="scenario-role llm">LLM</span>
+                            <span class="scenario-text">(думает) Нужны два инструмента: погода и время. Начну с погоды...</span>
+                        </div>
+                        <div class="scenario-line">
+                            <span class="scenario-role tool">Tool</span>
+                            <span class="scenario-text">get_weather("Москва") = -5°C, облачно, снег</span>
+                        </div>
+                        <div class="scenario-line">
+                            <span class="scenario-role llm">LLM</span>
+                            <span class="scenario-text">(думает) Погоду получил. Теперь нужно узнать время...</span>
+                        </div>
+                        <div class="scenario-line">
+                            <span class="scenario-role tool">Tool</span>
+                            <span class="scenario-text">get_time("Europe/Moscow") = 14:32</span>
+                        </div>
+                        <div class="scenario-line">
+                            <span class="scenario-role llm">LLM</span>
+                            <span class="scenario-text">В Москве сейчас 14:32, температура -5°C, облачно с небольшим снегом. Одевайтесь теплее!</span>
+                        </div>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>
+                            Обратите внимание: пользователь задал <strong>один вопрос</strong>, а агент
+                            сделал <strong>два вызова инструментов</strong>. Он сам разбил задачу на шаги,
+                            сам решил порядок выполнения и сам собрал результат в красивый ответ.
+                            Пользователю не нужно было делать два отдельных запроса.
+                        </p>
+                    </div>
+
+                    <div class="biz-example">
+                        <div class="biz-example-title">Бизнес-пример: умный бот поддержки</div>
+                        <p>
+                            Клиент пишет: «Где мой заказ?». Обычный бот выдаёт шаблон: «Проверьте
+                            в личном кабинете». Агент действует иначе:
+                        </p>
+                        <p>
+                            <strong>Шаг 1:</strong> Ищет заказ клиента в CRM по номеру телефона.
+                            Находит заказ #7823.
+                        </p>
+                        <p>
+                            <strong>Шаг 2:</strong> Проверяет статус доставки. Заказ в пути,
+                            курьер выехал.
+                        </p>
+                        <p>
+                            <strong>Шаг 3:</strong> Находит ближайший пункт выдачи на случай,
+                            если клиент хочет забрать сам.
+                        </p>
+                        <p>
+                            <strong>Ответ:</strong> «Ваш заказ #7823 уже у курьера, будет доставлен
+                            сегодня до 18:00. Если хотите забрать раньше — ближайший пункт выдачи
+                            на ул. Ленина, 15 (700 м от вас)».
+                        </p>
+                        <p>
+                            Три инструмента, один запрос, довольный клиент.
+                        </p>
+                    </div>
+
+                    <div class="key-insight">
+                        <strong>Ключевая мысль:</strong> Именно цикл превращает LLM из «умного
+                        собеседника» в «исполнителя задач». Без цикла — это чат. С циклом — это агент.
+                        Вся разница между ChatGPT и AI-агентом сводится к этому: агент может думать,
+                        действовать и повторять до результата.
+                    </div>
+
+                    <div class="lite-summary">
+                        <div class="lite-summary-title">Главное из этого урока</div>
+                        <ul>
+                            <li><strong>Agent loop = LLM + tools + цикл.</strong> Агент не просто отвечает — он работает над задачей в несколько шагов.</li>
+                            <li><strong>Один запрос — несколько инструментов.</strong> Агент сам разбивает задачу на шаги и вызывает нужные tools.</li>
+                            <li><strong>Агент сам решает, когда остановиться.</strong> Он продолжает цикл, пока задача не решена, и выдаёт финальный ответ, когда всё готово.</li>
+                            <li><strong>Think-Act-Observe.</strong> Думай, делай, наблюдай — три шага, которые повторяются на каждом витке цикла.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>

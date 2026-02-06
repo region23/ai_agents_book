@@ -1,0 +1,157 @@
+<div class="step active" data-step="2" id="step-2">
+            <div class="step-number">02</div>
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-title">ИИ учится пользоваться инструментами</div>
+                    <span class="step-badge beginner">Инструменты</span>
+                </div>
+                <p class="step-intro">
+                    LLM умная, но ограниченная. Что если дать ей доступ к калькулятору,
+                    базе данных или CRM? Именно так рождается настоящая польза.
+                </p>
+
+                <div class="step-content">
+                    <div class="analogy-block">
+                        <div class="analogy-block-title">Аналогия: стажёр + калькулятор</div>
+                        <p>
+                            Ваш стажёр-эрудит прочитал все книги мира и блестяще рассуждает.
+                            Но попросите его посчитать 147 x 38 в уме — и он, скорее всего, ошибётся.
+                            Это не значит, что он глупый. Просто считать в уме — не его сильная сторона.
+                            Но дайте ему калькулятор — и ответ будет точным. Инструмент (tool) — это
+                            именно такой «калькулятор» для LLM.
+                        </p>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>
+                            <strong>Tool (инструмент)</strong> — это любая функция, к которой LLM
+                            может обратиться за помощью. Это может быть калькулятор, поиск по базе
+                            данных, проверка статуса заказа, конвертер валют — что угодно.
+                        </p>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>
+                            Важный нюанс: <strong>LLM не вызывает инструмент сама.</strong> Она только
+                            <em>просит</em> его вызвать. Как стажёр не может сам залезть в сейф —
+                            он говорит: «Мне нужно проверить документ из сейфа». А вы (ваш код)
+                            решаете: открыть сейф или нет. Вы остаётесь главным.
+                        </p>
+                    </div>
+
+                    <div class="arch-diagram">
+                        <div class="arch-row">
+                            <span class="loop-node context">Пользователь</span>
+                            <span class="loop-arrow">&#8594;</span>
+                            <span class="loop-node llm">LLM</span>
+                            <span class="loop-arrow">&#8594;</span>
+                            <span class="loop-node tool">&#171;Хочу вызвать tool&#187;</span>
+                        </div>
+                        <div class="arch-row" style="margin-top: 0.75rem;">
+                            <span class="loop-node tool">&#171;Хочу вызвать tool&#187;</span>
+                            <span class="loop-arrow">&#8594;</span>
+                            <span class="loop-node output">Наш код</span>
+                            <span class="loop-arrow">&#8594;</span>
+                            <span class="loop-node tool">Инструмент</span>
+                        </div>
+                        <div class="arch-row" style="margin-top: 0.75rem;">
+                            <span class="loop-node tool">Результат</span>
+                            <span class="loop-arrow">&#8594;</span>
+                            <span class="loop-node llm">LLM</span>
+                            <span class="loop-arrow">&#8594;</span>
+                            <span class="loop-node output">Ответ пользователю</span>
+                        </div>
+                    </div>
+
+                    <div class="scenario-block">
+                        <div class="scenario-block-title">Пример: точный расчёт</div>
+                        <div class="scenario-line">
+                            <span class="scenario-role user">Вы</span>
+                            <span class="scenario-text">Сколько будет 147 умножить на 38?</span>
+                        </div>
+                        <div class="scenario-line">
+                            <span class="scenario-role llm">LLM</span>
+                            <span class="scenario-text">(думает) Мне нужен калькулятор для точного ответа...</span>
+                        </div>
+                        <div class="scenario-line">
+                            <span class="scenario-role tool">Tool</span>
+                            <span class="scenario-text">calculator(147 * 38) = 5586</span>
+                        </div>
+                        <div class="scenario-line">
+                            <span class="scenario-role llm">LLM</span>
+                            <span class="scenario-text">147 x 38 = 5 586. Результат получен с помощью калькулятора.</span>
+                        </div>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>
+                            Обратите внимание на цепочку: LLM <em>сама решила</em>, что нужен калькулятор.
+                            Никто ей не приказывал. Она проанализировала запрос, поняла, что арифметика
+                            может быть неточной, и попросила помощь у инструмента. Это и есть магия:
+                            LLM <strong>решает КОГДА</strong> вызвать инструмент, а ваш код
+                            <strong>решает КАК</strong> его выполнить.
+                        </p>
+                    </div>
+
+                    <div class="biz-example">
+                        <div class="biz-example-title">Бизнес-пример: CRM-бот с доступом к данным</div>
+                        <p>
+                            Представьте чат-бота в поддержке интернет-магазина. Без инструментов он может
+                            только вежливо отвечать: «Ваш заказ обрабатывается, ожидайте». С инструментом
+                            доступа к CRM он проверяет конкретный заказ и отвечает: «Ваш заказ #4521
+                            отправлен вчера, трек-номер EX123456789, ожидаемая доставка — послезавтра».
+                        </p>
+                        <p>
+                            Клиент счастлив, оператор свободен, бизнес экономит. Разница — один инструмент.
+                        </p>
+                    </div>
+
+                    <table class="compare-table">
+                        <thead>
+                            <tr>
+                                <th>Без инструментов</th>
+                                <th>С инструментами</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Отвечает только на основе обучения</td>
+                                <td>Может проверить актуальные данные</td>
+                            </tr>
+                            <tr>
+                                <td>«Ваш заказ, вероятно, в пути»</td>
+                                <td>«Заказ #4521 доставят 15 марта»</td>
+                            </tr>
+                            <tr>
+                                <td>Считает в уме (с ошибками)</td>
+                                <td>Использует калькулятор (точно)</td>
+                            </tr>
+                            <tr>
+                                <td>Не знает текущий курс валют</td>
+                                <td>Запрашивает курс через API в реальном времени</td>
+                            </tr>
+                            <tr>
+                                <td>Генерирует общие советы</td>
+                                <td>Даёт конкретные ответы на основе ваших данных</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="lite-summary">
+                        <div class="lite-summary-title">Главное из этого урока</div>
+                        <ul>
+                            <li><strong>Tool расширяет возможности LLM.</strong> Калькулятор, поиск, API, база данных — любая функция может стать инструментом.</li>
+                            <li><strong>LLM решает КОГДА вызвать tool.</strong> Она сама определяет, нужен ли инструмент для конкретного запроса.</li>
+                            <li><strong>Код решает КАК выполнить.</strong> Вы контролируете, какие инструменты доступны и как они работают. LLM не может сделать ничего, что вы ей не разрешили.</li>
+                            <li><strong>Один инструмент = качественный скачок.</strong> Даже один tool превращает общительного бота в полезного помощника.</li>
+                        </ul>
+                    </div>
+
+                    <div class="key-insight">
+                        <strong>Ключевая мысль:</strong> Инструменты не делают LLM умнее — они делают
+                        её полезнее. LLM остаётся «мозгом», а tools становятся её «руками». Вместе
+                        они способны на гораздо большее, чем по отдельности.
+                    </div>
+                </div>
+            </div>
+        </div>
