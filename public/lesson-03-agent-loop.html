@@ -2669,7 +2669,7 @@ agentLoop("Какая погода в Москве и Анапе? И сколь�
                     fadeObserver.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
 
         document.querySelectorAll('.prep-card, .loop-diagram, .concept-header, .prep-header, .step-card').forEach((el, i) => {
             el.classList.add('fade-in-up');
