@@ -1795,6 +1795,35 @@
             /* already single-column */
         }
     }
+
+    @media (max-width: 640px) {
+        .lesson-page .step {
+            padding-left: 0;
+        }
+
+        .lesson-page .step::before {
+            display: none;
+        }
+
+        .lesson-page .step-number {
+            width: 1.6rem;
+            height: 1.6rem;
+            font-size: 0.65rem;
+            top: 0.6rem;
+        }
+
+        .lesson-page .step-card {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 0.5rem 0;
+            overflow: visible;
+        }
+
+        .lesson-page .step-header {
+            padding-left: 2.2rem;
+        }
+    }
 </style>
 
 </head>
