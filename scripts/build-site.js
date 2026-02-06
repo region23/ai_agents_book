@@ -416,6 +416,7 @@ function getStepMeta(stepHtml, id) {
     return {
         titleHtml,
         introHtml,
+        introText: stripTags(introHtml),
         titleText: stripTags(titleHtml),
         badgeText,
     };
@@ -496,7 +497,7 @@ function build() {
 <a class="book-outline-card" href="${lesson.file}">
     <div class="book-outline-meta">Урок ${lessonNumber}${lesson.badgeText ? ` · ${escapeHtml(lesson.badgeText)}` : ""}</div>
     <div class="book-outline-title">${lesson.titleHtml}</div>
-    <div class="book-outline-intro">${lesson.introHtml}</div>
+    <div class="book-outline-intro">${escapeHtml(lesson.introText)}</div>
 </a>`;
         })
         .join("\n");

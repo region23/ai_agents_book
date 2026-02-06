@@ -1719,49 +1719,49 @@
 <a class="book-outline-card" href="lesson-01-basic-call.html">
     <div class="book-outline-meta">Урок 01 · Начало</div>
     <div class="book-outline-title">Базовый <span class="term" data-tip="Большая языковая модель">LLM</span>-вызов</div>
-    <div class="book-outline-intro">Отправляем запрос в <span class="term" data-tip="Большая языковая модель">LLM</span>, получаем ответ. Просто чтобы убедиться что всё работает.</div>
+    <div class="book-outline-intro">Отправляем запрос в LLM , получаем ответ. Просто чтобы убедиться что всё работает.</div>
 </a>
 
 <a class="book-outline-card" href="lesson-02-with-tool.html">
     <div class="book-outline-meta">Урок 02 · Начало</div>
     <div class="book-outline-title">Добавляем первый Tool</div>
-    <div class="book-outline-intro">Даём модели возможность «действовать» — вызывать функции (<span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span>). Ключевой момент: модель не выдумывает данные, а просит нас выполнить функцию.</div>
+    <div class="book-outline-intro">Даём модели возможность «действовать» — вызывать функции ( tool ). Ключевой момент: модель не выдумывает данные, а просит нас выполнить функцию.</div>
 </a>
 
 <a class="book-outline-card" href="lesson-03-agent-loop.html">
     <div class="book-outline-meta">Урок 03 · Ключевой момент</div>
     <div class="book-outline-title">Agent Loop — замыкаем петлю</div>
-    <div class="book-outline-intro">Вот это и делает агента агентом. Модель вызывает <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tool</span> → мы выполняем → результат обратно в <span class="term" data-tip="Большая языковая модель">LLM</span> → repeat.</div>
+    <div class="book-outline-intro">Вот это и делает агента агентом. Модель вызывает tool → мы выполняем → результат обратно в LLM → repeat.</div>
 </a>
 
 <a class="book-outline-card" href="lesson-04-real-tools.html">
     <div class="book-outline-meta">Урок 04 · Практика</div>
     <div class="book-outline-title">Реальные Tools — bash и файловая система</div>
-    <div class="book-outline-intro">Заменяем фейковые данные настоящими инструментами. Агент теперь может выполнять команды и читать файлы через <span class="term" data-tip="Инструмент/функция, которую вызывает модель">tools</span>. Запусти и посмотри: 5 итераций, модель сама решила что делать на каждом шаге — <code>ls</code>, <code>read_file</code>, ошибка, обходной путь, ответ.</div>
+    <div class="book-outline-intro">Заменяем фейковые данные настоящими инструментами. Агент теперь может выполнять команды и читать файлы через tools . Запусти и посмотри: 5 итераций, модель сама решила что делать на каждом шаге — ls , read_file , ошибка, обходной путь, ответ.</div>
 </a>
 
 <a class="book-outline-card" href="lesson-05-skills.html">
     <div class="book-outline-meta">Урок 05 · Архитектура</div>
     <div class="book-outline-title">Skills — модульная архитектура по стандарту agentskills.io</div>
-    <div class="book-outline-intro">В уроке 04 tools были захардкожены прямо в коде. Добавить новый — значит переписать агента. <span class="term" data-tip="Пакет знаний: SKILL.md + tools + обработчики">Skill</span> решает эту проблему: это папка с файлом <code>SKILL.md</code>, которую агент подключает как плагин. Стандарт <a href="https://agentskills.io" target="_blank">agentskills.io</a> — открытый формат, чтобы разные агенты могли использовать одни и те же skills.</div>
+    <div class="book-outline-intro">В уроке 04 tools были захардкожены прямо в коде. Добавить новый — значит переписать агента. Skill решает эту проблему: это папка с файлом SKILL.md , которую агент подключает как плагин. Стандарт agentskills.io — открытый формат, чтобы разные агенты могли использовать одни и те же skills.</div>
 </a>
 
 <a class="book-outline-card" href="lesson-06-planning.html">
     <div class="book-outline-meta">Урок 06 · Продвинутый</div>
     <div class="book-outline-title">Multi-step Planning</div>
-    <div class="book-outline-intro">В уроке 5 мы собрали агента из skills. Но стратегия была одна — отпустить агента в свободный полёт. Теперь мы добавим два новых skill'а и покажем, что одни и те же skills поддерживают принципиально разные стратегии: <span class="term" data-tip="Сначала план, потом выполнение по шагам">Plan-then-Execute</span> и <span class="term" data-tip="Чередование рассуждений и действий">ReAct</span>. Разница не в tools, а в том, как agent loop их оркестрирует.</div>
+    <div class="book-outline-intro">В уроке 5 мы собрали агента из skills. Но стратегия была одна — отпустить агента в свободный полёт. Теперь мы добавим два новых skill&#39;а и покажем, что одни и те же skills поддерживают принципиально разные стратегии: Plan-then-Execute и ReAct . Разница не в tools, а в том, как agent loop их оркестрирует.</div>
 </a>
 
 <a class="book-outline-card" href="lesson-07-adaptive-agent.html">
     <div class="book-outline-meta">Урок 07 · Продвинутый</div>
     <div class="book-outline-title">Adaptive Agent — Plan + <span class="term" data-tip="Чередование рассуждений и действий">ReAct</span> + Replan</div>
-    <div class="book-outline-intro">Урок 6 показал две стратегии, но обе были фиксированы. Что если реальность отличается от плана? Мы добавляем <code>request_replan</code> — <strong>системный tool</strong> (не skill!), который позволяет агенту запросить перепланирование. Важное различие: skills — переиспользуемые способности; системные tools — механизмы архитектуры агента.</div>
+    <div class="book-outline-intro">Урок 6 показал две стратегии, но обе были фиксированы. Что если реальность отличается от плана? Мы добавляем request_replan — системный tool (не skill!), который позволяет агенту запросить перепланирование. Важное различие: skills — переиспользуемые способности; системные tools — механизмы архитектуры агента.</div>
 </a>
 
 <a class="book-outline-card" href="lesson-08-interactive-agent.html">
     <div class="book-outline-meta">Урок 08 · Финал</div>
     <div class="book-outline-title"><span class="term" data-tip="Пользователь участвует в принятии решений">Human-in-the-Loop</span> + <span class="term" data-tip="Пошаговый мастер/визард">Wizard</span></div>
-    <div class="book-outline-intro">У нас есть skills для файлов, bash и рассуждений. Теперь добавляем ещё один: <code>interaction</code> — три tool'а для общения с пользователем. Добавить human-in-the-loop = добавить ещё один skill. Agent loop не меняется.</div>
+    <div class="book-outline-intro">У нас есть skills для файлов, bash и рассуждений. Теперь добавляем ещё один: interaction — три tool&#39;а для общения с пользователем. Добавить human-in-the-loop = добавить ещё один skill. Agent loop не меняется.</div>
 </a>
     </div>
 </section>
