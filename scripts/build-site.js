@@ -965,6 +965,7 @@ ${footerSection}
         const lessonNumber = String(lesson.id).padStart(2, "0");
         const prevLesson = index > 0 ? lessons[index - 1] : null;
         const nextLesson = index < lessons.length - 1 ? lessons[index + 1] : null;
+        const liteCounterpart = liteLessons[index];
 
         const tocHtml = lessons
             .map((entry) => {
@@ -980,6 +981,7 @@ ${footerSection}
         <button class="sidebar-toggle" aria-label="Меню уроков">☰</button>
         <a href="index.html">← Оглавление</a>
         <div class="book-nav-title">Урок ${lessonNumber} из ${String(lessons.length).padStart(2, "0")}</div>
+        ${liteCounterpart ? `<a class="lite-crosslink" href="${liteCounterpart.file}">Без кода</a>` : ''}
         ${nextLesson ? `<a href="${nextLesson.file}">Следующий урок →</a>` : ''}
     </div>
 </nav>
@@ -1060,7 +1062,7 @@ ${ensureActiveStep(lesson.stepHtml)}
         <button class="sidebar-toggle" aria-label="Меню уроков">☰</button>
         <a href="index.html">← Оглавление</a>
         <div class="book-nav-title">Урок ${lessonNumber} из ${String(liteLessons.length).padStart(2, "0")} · Lite</div>
-        ${devCounterpart ? `<a class="lite-crosslink" href="${devCounterpart.file}">Версия с кодом →</a>` : ''}
+        ${devCounterpart ? `<a class="lite-crosslink" href="${devCounterpart.file}">Версия с кодом</a>` : ''}
         ${nextLesson ? `<a href="${nextLesson.file}">Следующий урок →</a>` : ''}
     </div>
 </nav>
