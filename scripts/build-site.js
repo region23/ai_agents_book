@@ -49,6 +49,9 @@ const EXTRA_STYLE = `
         border-radius: 999px;
         padding: 0.35rem 0.85rem;
         font-size: 0.88rem;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
         transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -98,10 +101,12 @@ const EXTRA_STYLE = `
     }
 
     .lesson-toc a {
-        display: block;
+        display: flex;
+        align-items: center;
         border: 1px solid var(--border);
         border-radius: var(--radius-sm, 8px);
         padding: 0.45rem 0.65rem;
+        min-height: 44px;
         color: var(--text-dim);
         text-decoration: none;
         line-height: 1.35;
@@ -164,6 +169,9 @@ const EXTRA_STYLE = `
         border-radius: 999px;
         padding: 0.45rem 0.9rem;
         font-size: 0.88rem;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
         transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -244,13 +252,66 @@ const EXTRA_STYLE = `
         line-height: 1.55;
     }
 
+    .sidebar-toggle {
+        display: none;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm, 8px);
+        color: var(--text);
+        font-size: 1.2rem;
+        cursor: pointer;
+        min-height: 44px;
+        min-width: 44px;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .sidebar-toggle:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent);
+    }
+
+    .sidebar-backdrop {
+        display: none;
+    }
+
     @media (max-width: 980px) {
+        .sidebar-toggle {
+            display: inline-flex;
+        }
+
         .lesson-shell {
             grid-template-columns: minmax(0, 1fr);
         }
 
         .lesson-sidebar {
-            position: static;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            max-width: 80vw;
+            z-index: 50;
+            border-radius: 0;
+            border-left: none;
+            border-top: none;
+            border-bottom: none;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            overflow-y: auto;
+        }
+
+        .lesson-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-backdrop.visible {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 45;
         }
     }
 
@@ -259,8 +320,21 @@ const EXTRA_STYLE = `
             padding: 0.65rem 0.8rem;
         }
 
+        .book-nav-title {
+            display: none;
+        }
+
         .lesson-shell {
             padding: 0.75rem;
+        }
+
+        .lesson-pager {
+            gap: 0.4rem;
+        }
+
+        .lesson-pager-link {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.7rem;
         }
 
         .book-outline-section {
@@ -542,11 +616,13 @@ ${footerSection}
         const lessonBody = `
 <nav class="book-nav">
     <div class="book-nav-inner">
+        <button class="sidebar-toggle" aria-label="Меню уроков">☰</button>
         <a href="index.html">← Оглавление</a>
         <div class="book-nav-title">Урок ${lessonNumber} из ${String(lessons.length).padStart(2, "0")}</div>
         ${nextLesson ? `<a href="${nextLesson.file}">Следующий урок →</a>` : '<a href="index.html">К оглавлению</a>'}
     </div>
 </nav>
+<div class="sidebar-backdrop"></div>
 <div class="lesson-shell lesson-page">
     <aside class="lesson-sidebar">
         <h2>Навигация по урокам</h2>
@@ -565,6 +641,31 @@ ${ensureActiveStep(lesson.stepHtml)}
         </div>
     </main>
 </div>
+<script>
+(function() {
+    const toggle = document.querySelector('.sidebar-toggle');
+    const sidebar = document.querySelector('.lesson-sidebar');
+    const backdrop = document.querySelector('.sidebar-backdrop');
+    if (!toggle || !sidebar || !backdrop) return;
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        backdrop.classList.add('visible');
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('visible');
+    }
+
+    toggle.addEventListener('click', () => {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    backdrop.addEventListener('click', closeSidebar);
+    sidebar.querySelectorAll('.lesson-toc a').forEach(link => {
+        link.addEventListener('click', closeSidebar);
+    });
+})();
+</script>
 `;
 
         const lessonHtml = buildDocument({

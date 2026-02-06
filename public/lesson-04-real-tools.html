@@ -3,7 +3,7 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
     <title>Урок 04 — Реальные Tools — bash и файловая система</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
@@ -46,12 +46,21 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow-x: hidden;
+            overscroll-behavior: none;
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.7;
             overflow-x: hidden;
+            overscroll-behavior: none;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: pan-y;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -156,7 +165,7 @@
         }
 
         .hero-emoji {
-            font-size: 4.5rem;
+            font-size: clamp(2.8rem, 8vw, 4.5rem);
             margin-bottom: 2rem;
             display: block;
             animation: float 4s ease-in-out infinite;
@@ -344,7 +353,7 @@
         }
 
         .concept-header h2 {
-            font-size: 2.4rem;
+            font-size: clamp(1.6rem, 5vw, 2.4rem);
             font-weight: 800;
             margin-bottom: 1rem;
             letter-spacing: -0.02em;
@@ -548,7 +557,7 @@
         }
 
         .step-title {
-            font-size: 1.4rem;
+            font-size: clamp(1.1rem, 3.5vw, 1.4rem);
             font-weight: 700;
             color: var(--text-bright);
             letter-spacing: -0.01em;
@@ -688,6 +697,8 @@
 
         .run-command code {
             color: var(--green);
+            word-break: break-all;
+            overflow-wrap: break-word;
         }
 
         .run-command .run-copy-btn {
@@ -696,6 +707,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 6px;
             padding: 0.35rem 0.6rem;
+            min-height: 44px;
             color: var(--text-dim);
             font-size: 0.7rem;
             cursor: pointer;
@@ -762,6 +774,7 @@
             border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md);
             padding: 1.25rem;
             overflow-x: auto;
+            max-width: 100%;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
             line-height: 1.7;
@@ -823,6 +836,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 6px;
             padding: 0.35rem 0.65rem;
+            min-height: 44px;
             color: var(--text-dim);
             font-size: 0.7rem;
             cursor: pointer;
@@ -883,7 +897,8 @@
         }
 
         .term:hover::after,
-        .term:focus-visible::after {
+        .term:focus-visible::after,
+        .term.tooltip-active::after {
             opacity: 1;
             transform: translateX(-50%) translateY(-4px);
         }
@@ -980,6 +995,7 @@
             border: 1px solid rgba(124, 127, 247, 0.25);
             color: var(--text);
             padding: 0.5rem 0.9rem;
+            min-height: 44px;
             border-radius: var(--radius-sm);
             font-size: 0.8rem;
             cursor: pointer;
@@ -1100,6 +1116,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: var(--radius-sm);
             padding: 0.4rem 0.8rem;
+            min-height: 44px;
             color: var(--text);
             font-size: 0.75rem;
             cursor: pointer;
@@ -1246,7 +1263,7 @@
         }
 
         .footer-title {
-            font-size: 2rem;
+            font-size: clamp(1.4rem, 4vw, 2rem);
             font-weight: 800;
             margin-bottom: 1rem;
             letter-spacing: -0.02em;
@@ -1304,11 +1321,25 @@
 
             .step-card {
                 padding: 1.25rem;
+                overflow: hidden;
             }
 
             pre {
                 font-size: 0.72rem;
                 padding: 1rem;
+            }
+
+            .code-block {
+                max-width: calc(100vw - 3rem);
+            }
+
+            .run-command {
+                font-size: 0.75rem;
+            }
+
+            .code-filename {
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .progress-map {
@@ -1348,12 +1379,79 @@
                 margin-bottom: 2.5rem;
             }
 
+            /* Step cards mobile layout */
+            .step-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .step-badge {
+                align-self: flex-start;
+            }
+
+            .step-intro,
+            .step-detail {
+                font-size: 0.9rem;
+            }
+
+            .key-insight,
+            .what-happens,
+            .mini-block {
+                padding: 0.8rem 1rem;
+            }
+
+            /* Demo player mobile layout */
+            .demo-player-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .demo-step-btn {
+                flex: 1;
+            }
+
+            .demo-step-label {
+                flex-basis: 100%;
+                text-align: center;
+                order: -1;
+            }
+
+            .chat-msg {
+                font-size: 0.75rem;
+            }
+
+            /* General mobile padding */
+            .hero {
+                padding: 4rem 1rem 3rem;
+            }
+
+            .concept-section {
+                padding: 3rem 1rem;
+            }
+
+            .steps-container {
+                padding: 2rem 0.5rem;
+            }
+
             .footer-inner {
                 gap: 1.5rem;
             }
 
             .footer {
                 padding: 3rem 1.25rem 2.5rem;
+            }
+
+            /* Touch tooltips mobile */
+            .term::after {
+                white-space: normal;
+                max-width: 200px;
+                left: 0;
+                transform: translateX(0);
+            }
+
+            .term:hover::after,
+            .term:focus-visible::after {
+                transform: translateX(0) translateY(-4px);
             }
         }
 
@@ -1401,6 +1499,9 @@
         border-radius: 999px;
         padding: 0.35rem 0.85rem;
         font-size: 0.88rem;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
         transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -1450,10 +1551,12 @@
     }
 
     .lesson-toc a {
-        display: block;
+        display: flex;
+        align-items: center;
         border: 1px solid var(--border);
         border-radius: var(--radius-sm, 8px);
         padding: 0.45rem 0.65rem;
+        min-height: 44px;
         color: var(--text-dim);
         text-decoration: none;
         line-height: 1.35;
@@ -1516,6 +1619,9 @@
         border-radius: 999px;
         padding: 0.45rem 0.9rem;
         font-size: 0.88rem;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
         transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -1596,13 +1702,66 @@
         line-height: 1.55;
     }
 
+    .sidebar-toggle {
+        display: none;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm, 8px);
+        color: var(--text);
+        font-size: 1.2rem;
+        cursor: pointer;
+        min-height: 44px;
+        min-width: 44px;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .sidebar-toggle:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent);
+    }
+
+    .sidebar-backdrop {
+        display: none;
+    }
+
     @media (max-width: 980px) {
+        .sidebar-toggle {
+            display: inline-flex;
+        }
+
         .lesson-shell {
             grid-template-columns: minmax(0, 1fr);
         }
 
         .lesson-sidebar {
-            position: static;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            max-width: 80vw;
+            z-index: 50;
+            border-radius: 0;
+            border-left: none;
+            border-top: none;
+            border-bottom: none;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            overflow-y: auto;
+        }
+
+        .lesson-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-backdrop.visible {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 45;
         }
     }
 
@@ -1611,8 +1770,21 @@
             padding: 0.65rem 0.8rem;
         }
 
+        .book-nav-title {
+            display: none;
+        }
+
         .lesson-shell {
             padding: 0.75rem;
+        }
+
+        .lesson-pager {
+            gap: 0.4rem;
+        }
+
+        .lesson-pager-link {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.7rem;
         }
 
         .book-outline-section {
@@ -1630,11 +1802,13 @@
 
 <nav class="book-nav">
     <div class="book-nav-inner">
+        <button class="sidebar-toggle" aria-label="Меню уроков">☰</button>
         <a href="index.html">← Оглавление</a>
         <div class="book-nav-title">Урок 04 из 08</div>
         <a href="lesson-05-skills.html">Следующий урок →</a>
     </div>
 </nav>
+<div class="sidebar-backdrop"></div>
 <div class="lesson-shell lesson-page">
     <aside class="lesson-sidebar">
         <h2>Навигация по урокам</h2>
@@ -1853,6 +2027,31 @@ agentLoop("Посмотри что за проект лежит в текуще�
         </div>
     </main>
 </div>
+<script>
+(function() {
+    const toggle = document.querySelector('.sidebar-toggle');
+    const sidebar = document.querySelector('.lesson-sidebar');
+    const backdrop = document.querySelector('.sidebar-backdrop');
+    if (!toggle || !sidebar || !backdrop) return;
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        backdrop.classList.add('visible');
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('visible');
+    }
+
+    toggle.addEventListener('click', () => {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    backdrop.addEventListener('click', closeSidebar);
+    sidebar.querySelectorAll('.lesson-toc a').forEach(link => {
+        link.addEventListener('click', closeSidebar);
+    });
+})();
+</script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
@@ -2577,9 +2776,21 @@ agentLoop("Посмотри что за проект лежит в текуще�
 
         document.querySelectorAll('[data-demo-chat]').forEach(initDemoPlayer);
 
-        // ====== Tooltip focus ======
+        // ====== Tooltip touch + focus ======
         document.querySelectorAll('.term').forEach(term => {
             term.setAttribute('tabindex', '0');
+            term.addEventListener('click', (e) => {
+                if (!('ontouchstart' in window)) return;
+                e.preventDefault();
+                const wasActive = term.classList.contains('tooltip-active');
+                document.querySelectorAll('.term.tooltip-active').forEach(t => t.classList.remove('tooltip-active'));
+                if (!wasActive) term.classList.add('tooltip-active');
+            });
+        });
+        document.addEventListener('touchstart', (e) => {
+            if (!e.target.closest('.term')) {
+                document.querySelectorAll('.term.tooltip-active').forEach(t => t.classList.remove('tooltip-active'));
+            }
         });
 
         // ====== Smooth Scroll for CTA ======
