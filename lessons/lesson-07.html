@@ -7,8 +7,10 @@
                     <span class="step-badge advanced">Продвинутый</span>
                 </div>
                 <p class="step-intro">
-                    Объединяем оба подхода: агент планирует, выполняет с рассуждениями, и может пересмотреть план если
-                    реальность не совпала с ожиданиями.
+                    Урок 6 показал две стратегии, но обе были фиксированы. Что если реальность отличается от плана?
+                    Мы добавляем <code>request_replan</code> — <strong>системный tool</strong> (не skill!),
+                    который позволяет агенту запросить перепланирование. Важное различие: skills — переиспользуемые
+                    способности; системные tools — механизмы архитектуры агента.
                 </p>
 
                 <div class="step-content">
@@ -37,177 +39,109 @@
                         <p><strong>Фаза 3: Replan</strong> — если агент вызвал <code>request_replan</code>, цикл
                             возвращается к планированию.
                             Но теперь планировщик знает: что уже сделано, что нового обнаружили, почему старый план не
-                            подходит.
-                            Это отличает адаптивного агента от тупого исполнителя.</p>
+                            подходит.</p>
+                    </div>
+
+                    <div class="step-detail">
+                        <h3>request_replan — системный tool, не skill</h3>
+                        <p>Почему <code>request_replan</code> — не skill? Потому что это <strong>механизм agent loop</strong>,
+                            а не переиспользуемая способность. Skill — это то, что агент <em>умеет делать</em>
+                            (читать файлы, искать в интернете, думать). <code>request_replan</code> — это то, как агент
+                            <em>управляет своим рабочим процессом</em>. Его нельзя переиспользовать в другом контексте
+                            без самого planning loop.</p>
+                        <p>Мы добавляем его через <code>extraTools</code> в <code>createAgent()</code> — именно для этого
+                            мы расширяли options в skill-utils.</p>
                     </div>
 
                     <div class="code-block">
-                        <div class="code-filename"><span class="dot"></span>request_replan tool</div>
-                        <pre>{
-    <span class="prop">name</span>: <span class="str">"request_replan"</span>,
-    <span class="prop">description</span>: <span class="str">"Вызови когда план нужно пересмотреть"</span>,
-    <span class="prop">parameters</span>: {
-        <span class="prop">reason</span>: <span class="str">"Почему нужен новый план"</span>,
-        <span class="prop">completed_steps</span>: [<span class="str">"Что уже сделано"</span>],
-        <span class="prop">discoveries</span>: [<span class="str">"Что нового узнали"</span>],
-    }
-}
+                        <div class="code-filename"><span class="dot"></span>Системный tool vs Skill</div>
+                        <pre><span class="cm">// Skill — переиспользуемая способность:</span>
+<span class="cm">//   skills/reasoning/SKILL.md → think tool</span>
+<span class="cm">//   skills/bash/SKILL.md      → run_bash tool</span>
+<span class="cm">//   Любой агент может их подключить</span>
 
-<span class="cm">// Главный цикл:</span>
-<span class="kw">while</span> (replanCount &lt;= MAX_REPLANS) {
-    <span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">executeWithReact</span>(task, plan);
-    <span class="kw">if</span> (result.status === <span class="str">"completed"</span>) <span class="kw">return</span>;
+<span class="cm">// Системный tool — механизм архитектуры:</span>
+<span class="cm">//   request_replan → управляет planning loop</span>
+<span class="cm">//   Существует только внутри createPlanningAgent()</span>
 
-    <span class="cm">// Реплан с контекстом того, что уже сделано</span>
-    plan = <span class="kw">await</span> <span class="fn">createPlan</span>(task, {
-        <span class="prop">previousPlan</span>: plan,
-        <span class="prop">completedSteps</span>: result.replanContext.completedSteps,
-        <span class="prop">discoveries</span>: result.replanContext.discoveries,
-    });
-}</pre>
+<span class="cm">// Добавляем через extraTools, не через SKILL.md</span>
+<span class="kw">const</span> agent = <span class="fn">createAgent</span>(skills, {
+    <span class="prop">extraTools</span>: [replanTool],
+    <span class="prop">extraHandlers</span>: { <span class="prop">request_replan</span>: () =&gt; <span class="str">"REPLAN_REQUESTED"</span> },
+});</pre>
                         <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                     </div>
+
+                    <div class="step-detail">
+                        <h3>Skills из предыдущих уроков</h3>
+                        <p>Новых SKILL.md файлов нет — мы переиспользуем те же skills из уроков 5 и 6:
+                            <code>filesystem</code>, <code>bash</code>, <code>reasoning</code>.
+                            Вся новая логика — в agent loop и system prompt.</p>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-filename"><span class="dot"></span>src/07-adaptive-agent.ts</div>
-                        <pre>// src/07-adaptive-agent.ts
-// Адаптивный агент: Plan → ReAct Execute → Replan если нужно
+                        <pre>// src/07-adaptive-agent.ts — Adaptive: Plan + ReAct + Replan
 import OpenAI from "openai";
-import { execSync } from "child_process";
-import { readFileSync, writeFileSync } from "fs";
-import dotenv from "dotenv";
+import {
+    discoverSkills, activateSkill, createAgent,
+    createFilesystemSkill, createBashSkill, createReasoningSkill,
+    Skill
+} from "./skill-utils";
 
+import dotenv from "dotenv";
 dotenv.config();
 
 const client = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey: process.env.OPENROUTER_API_KEY ?? "",
 });
-
 const MODEL = "anthropic/claude-sonnet-4.5";
 
-// ============================================================
-// TOOLS
-// ============================================================
-
-const executionTools: OpenAI.ChatCompletionTool[] = [
-    {
-        type: "function",
-        function: {
-            name: "think",
-            description:
-                "Внутренний блокнот. Используй перед действием чтобы обдумать следующий шаг, " +
-                "и после действия чтобы оценить результат.",
-            parameters: {
-                type: "object",
-                properties: {
-                    thought: { type: "string", description: "Рассуждение" },
+// === request_replan — СИСТЕМНЫЙ tool, не skill ===
+const replanTool: OpenAI.ChatCompletionTool = {
+    type: "function",
+    function: {
+        name: "request_replan",
+        description:
+            "Вызови когда план нужно пересмотреть: новая информация, " +
+            "провал шага, или лучший путь к цели.",
+        parameters: {
+            type: "object",
+            properties: {
+                reason: { type: "string", description: "Почему нужен новый план" },
+                completed_steps: {
+                    type: "array", items: { type: "string" },
+                    description: "Какие шаги уже выполнены",
                 },
-                required: ["thought"],
+                discoveries: {
+                    type: "array", items: { type: "string" },
+                    description: "Что нового узнали",
+                },
             },
+            required: ["reason", "completed_steps", "discoveries"],
         },
     },
-    {
-        type: "function",
-        function: {
-            name: "run_bash",
-            description: "Выполнить bash-команду",
-            parameters: {
-                type: "object",
-                properties: {
-                    command: { type: "string", description: "Команда" },
-                },
-                required: ["command"],
-            },
-        },
-    },
-    {
-        type: "function",
-        function: {
-            name: "read_file",
-            description: "Прочитать файл",
-            parameters: {
-                type: "object",
-                properties: {
-                    path: { type: "string", description: "Путь к файлу" },
-                },
-                required: ["path"],
-            },
-        },
-    },
-    {
-        type: "function",
-        function: {
-            name: "write_file",
-            description: "Записать содержимое в файл",
-            parameters: {
-                type: "object",
-                properties: {
-                    path: { type: "string", description: "Путь к файлу" },
-                    content: { type: "string", description: "Содержимое" },
-                },
-                required: ["path", "content"],
-            },
-        },
-    },
-    {
-        type: "function",
-        function: {
-            name: "request_replan",
-            description:
-                "Вызови когда план нужно пересмотреть: обнаружилась новая информация, " +
-                "шаг провалился, или появился лучший путь к цели.",
-            parameters: {
-                type: "object",
-                properties: {
-                    reason: { type: "string", description: "Почему нужен новый план" },
-                    completed_steps: {
-                        type: "array",
-                        items: { type: "string" },
-                        description: "Какие шаги уже выполнены",
-                    },
-                    discoveries: {
-                        type: "array",
-                        items: { type: "string" },
-                        description: "Что нового узнали",
-                    },
-                },
-                required: ["reason", "completed_steps", "discoveries"],
-            },
-        },
-    },
-];
-
-const toolHandlers: Record&lt;string, (args: any) =&gt; string&gt; = {
-    think: () =&gt; "OK",
-    run_bash: ({ command }) =&gt; {
-        try {
-            return execSync(command, { encoding: "utf-8", timeout: 10000 }).trim();
-        } catch (e: any) {
-            return `Ошибка: ${e.stderr || e.message}`;
-        }
-    },
-    read_file: ({ path }) =&gt; {
-        try {
-            return readFileSync(path, "utf-8");
-        } catch (e: any) {
-            return `Ошибка: ${e.message}`;
-        }
-    },
-    write_file: ({ path, content }) =&gt; {
-        try {
-            writeFileSync(path, content, "utf-8");
-            return `✅ Файл ${path} записан (${content.length} байт)`;
-        } catch (e: any) {
-            return `Ошибка: ${e.message}`;
-        }
-    },
-    request_replan: () =&gt; "REPLAN_REQUESTED",
 };
 
-// ============================================================
-// ФАЗА 1: ПЛАНИРОВАНИЕ
-// ============================================================
+// === Загрузка skills (те же что в уроке 6) ===
+function loadSkills(): Skill[] {
+    const discovered = discoverSkills("./skills");
+    console.log("\n🔌 Activation:");
+    const skills: Skill[] = [];
+    for (const d of discovered) {
+        const meta = activateSkill(d.location);
+        switch (meta.name) {
+            case "filesystem": skills.push(createFilesystemSkill(meta)); break;
+            case "bash":       skills.push(createBashSkill(meta)); break;
+            case "reasoning":  skills.push(createReasoningSkill(meta)); break;
+        }
+    }
+    console.log(`\n🚀 ${skills.length} skills: ${skills.map(s =&gt; s.name).join(", ")}`);
+    return skills;
+}
 
+// === ФАЗА 1: Планирование ===
 interface Plan {
     goal: string;
     steps: { id: number; action: string; tool: string; reason: string }[];
@@ -217,29 +151,17 @@ async function createPlan(
     task: string,
     context?: { previousPlan?: Plan; completedSteps?: string[]; discoveries?: string[] }
 ): Promise&lt;Plan&gt; {
-    let systemPrompt = `Ты стратегический планировщик. Составь пошаговый план выполнения задачи.
-
-Доступные инструменты: run_bash, read_file, write_file.
-
+    let systemPrompt = `Ты стратегический планировщик. Составь план.
+Доступные tools: run_bash, read_file, write_file, list_dir, think.
 Ответь ТОЛЬКО валидным JSON:
-{
-  "goal": "краткое описание цели",
-  "steps": [
-    { "id": 1, "action": "описание", "tool": "имя_tool", "reason": "зачем" }
-  ]
-}`;
+{ "goal": "цель", "steps": [{ "id": 1, "action": "...", "tool": "...", "reason": "..." }] }`;
 
-    // Если это реплан — добавляем контекст
     if (context?.previousPlan) {
-        systemPrompt += `
-
-КОНТЕКСТ РЕПЛАНА:
+        systemPrompt += `\n\nКОНТЕКСТ РЕПЛАНА:
 Предыдущий план: ${JSON.stringify(context.previousPlan)}
 Уже выполнено: ${context.completedSteps?.join(", ") || "ничего"}
 Новые данные: ${context.discoveries?.join("; ") || "нет"}
-
-Учти что уже сделано, не повторяй выполненные шаги.
-Скорректируй план с учётом новых данных.`;
+Учти что уже сделано, не повторяй выполненные шаги.`;
     }
 
     const response = await client.chat.completions.create({
@@ -251,158 +173,83 @@ async function createPlan(
     });
 
     const text = response.choices[0].message.content ?? "";
-    const cleanJson = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    return JSON.parse(cleanJson);
+    return JSON.parse(text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim());
 }
 
-function printPlan(plan: Plan, isReplan: boolean = false) {
-    const label = isReplan ? "🔄 НОВЫЙ ПЛАН" : "📋 ПЛАН";
-    console.log(`\n${label}: ${plan.goal}`);
-    console.log("─".repeat(50));
-    plan.steps.forEach((s) =&gt; {
-        console.log(`  ${s.id}. [${s.tool}] ${s.action}`);
-        console.log(`     └─ ${s.reason}`);
-    });
-    console.log("─".repeat(50));
-}
-
-// ============================================================
-// ФАЗА 2: ВЫПОЛНЕНИЕ с ReAct + возможностью реплана
-// ============================================================
-
+// === ФАЗА 2: Выполнение с ReAct + replan ===
 interface ExecutionResult {
     status: "completed" | "replan_requested";
-    replanContext?: {
-        reason: string;
-        completedSteps: string[];
-        discoveries: string[];
-    };
+    replanContext?: { reason: string; completedSteps: string[]; discoveries: string[] };
 }
 
-async function executeWithReact(
-    task: string,
-    plan: Plan
-): Promise&lt;ExecutionResult&gt; {
-    const messages: OpenAI.ChatCompletionMessageParam[] = [
-        {
-            role: "system",
-            content: `Ты исполнитель с аналитическим мышлением.
+async function executeWithReact(skills: Skill[], task: string, plan: Plan): Promise&lt;ExecutionResult&gt; {
+    // Специальный handler для request_replan
+    let replanData: ExecutionResult["replanContext"] | null = null;
+
+    const agent = createAgent(skills, {
+        systemPrompt: `Ты исполнитель с аналитическим мышлением.
 
 ТВОЙ ПЛАН:
 ${JSON.stringify(plan, null, 2)}
 
-МЕТОД РАБОТЫ:
-1. Перед каждым действием — вызови "think": обдумай шаг, проверь что он всё ещё актуален
-2. Выполни действие нужным tool
-3. После результата — снова "think": оцени, совпало ли с ожиданиями
-4. Если обнаружил что план нужно менять — вызови "request_replan"
+МЕТОД: think → act → think → act.
+Если план нужно менять — вызови request_replan.
+НЕ вызывай replan для мелочей — адаптируйся на лету.
 
-КОГДА ВЫЗЫВАТЬ request_replan:
-- Обнаружил что-то неожиданное (файлов больше/меньше чем думали)
-- Шаг провалился и обходной путь требует нового плана
-- Появилась информация, которая делает оставшиеся шаги неактуальными
-- Нашёл более эффективный путь к цели
-
-НЕ вызывай replan для мелких проблем — адаптируйся на лету.
-Вызывай только когда нужна существенная коррекция курса.`,
-        },
-        { role: "user", content: task },
-    ];
-
-    let iteration = 0;
-
-    while (iteration &lt; 20) {
-        iteration++;
-
-        const response = await client.chat.completions.create({
-            model: MODEL,
-            messages,
-            tools: executionTools,
-        });
-
-        const message = response.choices[0].message;
-        messages.push(message);
-
-        if (!message.tool_calls?.length) {
-            console.log(`\n✅ Выполнение завершено (${iteration} итераций)`);
-            console.log("Итог:", message.content?.slice(0, 300));
-            return { status: "completed" };
-        }
-
-        for (const toolCall of message.tool_calls) {
-            const name = toolCall.function.name;
-            const args = JSON.parse(toolCall.function.arguments);
-
-            // Форматированный вывод
-            if (name === "think") {
-                console.log(`\n  💭 ${args.thought}`);
-            } else if (name === "request_replan") {
-                console.log(`\n  🔄 РЕПЛАН: ${args.reason}`);
-                messages.push({
-                    role: "tool",
-                    tool_call_id: toolCall.id,
-                    content: "REPLAN_REQUESTED",
-                });
-                return {
-                    status: "replan_requested",
-                    replanContext: {
-                        reason: args.reason,
-                        completedSteps: args.completed_steps,
-                        discoveries: args.discoveries,
-                    },
+&lt;available_skills&gt;
+{{SKILLS}}
+&lt;/available_skills&gt;`,
+        maxIterations: 20,
+        extraTools: [replanTool],
+        extraHandlers: {
+            request_replan: (args: any) =&gt; {
+                replanData = {
+                    reason: args.reason,
+                    completedSteps: args.completed_steps,
+                    discoveries: args.discoveries,
                 };
-            } else {
-                const argsPreview =
-                    name === "write_file"
-                        ? `{path: "${args.path}", content: [${args.content.length} chars]}`
-                        : JSON.stringify(args);
-                console.log(`  🔧 ${name}(${argsPreview})`);
+                console.log(`\n  🔄 РЕПЛАН: ${args.reason}`);
+                return "REPLAN_REQUESTED";
+            },
+        },
+    });
 
-                const result = toolHandlers[name]?.(args) ?? `Tool "${name}" не найден`;
-                console.log(`     → ${result.slice(0, 120)}`);
-            }
+    await agent(task);
 
-            messages.push({
-                role: "tool",
-                tool_call_id: toolCall.id,
-                content: toolHandlers[name]?.(args) ?? "OK",
-            });
-        }
+    if (replanData) {
+        return { status: "replan_requested", replanContext: replanData };
     }
-
     return { status: "completed" };
 }
 
-// ============================================================
-// ГЛАВНЫЙ ЦИКЛ: Plan → Execute → Replan → Execute → ...
-// ============================================================
-
+// === Главный цикл: Plan → Execute → Replan? ===
 async function adaptiveAgent(task: string) {
     console.log("╔══════════════════════════════════════════════╗");
     console.log("║   ADAPTIVE AGENT: Plan + ReAct + Replan      ║");
     console.log("╚══════════════════════════════════════════════╝");
     console.log(`\n📌 Задача: ${task}\n`);
 
+    const skills = loadSkills();
+
     let plan = await createPlan(task);
-    printPlan(plan);
+    console.log(`\n📋 ПЛАН: ${plan.goal}`);
+    plan.steps.forEach(s =&gt; console.log(`  ${s.id}. [${s.tool}] ${s.action}`));
 
     const MAX_REPLANS = 3;
     let replanCount = 0;
 
     while (replanCount &lt;= MAX_REPLANS) {
         console.log(`\n⚡ ВЫПОЛНЕНИЕ (план v${replanCount + 1})\n`);
-
-        const result = await executeWithReact(task, plan);
+        const result = await executeWithReact(skills, task, plan);
 
         if (result.status === "completed") {
             console.log("\n🎉 Агент завершил задачу.");
             return;
         }
 
-        // Реплан
         replanCount++;
         if (replanCount &gt; MAX_REPLANS) {
-            console.log("\n⚠️  Достигнут лимит репланов. Завершаем с текущим результатом.");
+            console.log("\n⚠️  Лимит репланов. Завершаем.");
             return;
         }
 
@@ -412,23 +259,18 @@ async function adaptiveAgent(task: string) {
             completedSteps: result.replanContext?.completedSteps,
             discoveries: result.replanContext?.discoveries,
         });
-        printPlan(plan, true);
+        console.log(`🔄 НОВЫЙ ПЛАН: ${plan.goal}`);
+        plan.steps.forEach(s =&gt; console.log(`  ${s.id}. [${s.tool}] ${s.action}`));
     }
 }
 
-// ============================================================
-// ЗАПУСК
-// ============================================================
-
-const task =
-    process.argv[2] ||
+// === Запуск ===
+const task = process.argv[2] ||
     "Проанализируй все .ts файлы в директории src/. " +
-    "Найди дублирование кода между файлами (общие паттерны, " +
-    "повторяющиеся импорты, похожие функции). " +
-    "Создай файл REFACTORING.md с конкретными рекомендациями.";
+    "Найди дублирование кода между файлами. " +
+    "Создай файл REFACTORING.md с рекомендациями.";
 
-adaptiveAgent(task);
-</pre>
+adaptiveAgent(task);</pre>
                         <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                     </div>
 
@@ -457,19 +299,30 @@ adaptiveAgent(task);
 
                     <div class="mini-block expect">
                         <div class="mini-title">✅ Что должно получиться</div>
-                        Видно, что агент может перезапланировать, но не зацикливается: есть лимит на реплан.
+                        Видно три фазы: Discovery/Activation skills, планирование, пошаговое выполнение.
+                        Агент может запросить реплан, но не зацикливается (лимит MAX_REPLANS=3).
                     </div>
 
                     <div class="mini-block trouble">
                         <div class="mini-title">🧯 Если не работает</div>
-                        Проверь, что <code>request_replan</code> объявлен как tool и обрабатывается в цикле.
+                        Проверь, что <code>request_replan</code> передан через <code>extraTools</code>
+                        и что <code>extraHandlers</code> содержит его обработчик.
                     </div>
 
                     <div class="key-insight">
-                        <strong>💡 Это отличает адаптивного агента от тупого исполнителя:</strong>
-                        он не будет продолжать неактуальный план, но и не будет реплэнить на каждый чих.
-                        Планировщик при реплане знает: что уже сделано, что нового узнали, почему старый план не
-                        подходит.
+                        <strong>💡 Skill vs системный tool — не всё должно быть skill'ом.</strong>
+                        Skills — переиспользуемые способности (<code>filesystem</code>, <code>bash</code>,
+                        <code>reasoning</code>).
+                        Системные tools — механизмы архитектуры (<code>request_replan</code>).
+                        Разница: skill живёт в <code>SKILL.md</code> и работает в любом агенте.
+                        Системный tool существует только внутри конкретного agent loop.
+                        <br><br>
+                        <strong>Adaptive replanning:</strong> планировщик при реплане получает контекст —
+                        что уже сделано, что нового узнали, почему старый план не подходит.
+                        Это отличает адаптивного агента от тупого исполнителя.
+                        <br><br>
+                        <code>extraTools</code> в <code>createAgent()</code> — точка расширения.
+                        Мы не меняли skill-utils.ts — просто передали системный tool через options.
                     </div>
                 </div>
             </div>
@@ -479,15 +332,15 @@ adaptiveAgent(task);
 <script type="application/json" data-demo-steps="step7">
 [
     {
-        "label": "План",
+        "label": "Skills + План",
         "messages": [
             {
-                "role": "user",
-                "text": "Проанализируй все .ts файлы в директории src/. Найди дублирование кода между файлами (общие паттерны, повторяющиеся импорты, похожие функции). Создай файл REFACTORING.md с конкретными рекомендациями."
+                "role": "tool_result",
+                "text": "📋 Discovery: найдено 4 skill(s)\n  • bash: Execute shell commands...\n  • filesystem: Read, write, and list files...\n  • reasoning: Internal scratchpad for thinking...\n  • web-search: Search the web...\n\n🔌 Activation:\n  ✅ filesystem activated (384 chars)\n  ✅ bash activated (267 chars)\n  ✅ reasoning activated (412 chars)\n\n🚀 3 skills: filesystem, bash, reasoning"
             },
             {
                 "role": "llm",
-                "text": "📋 ПЛАН: Проанализировать все .ts файлы в директории src/, найти дублирование кода и создать файл REFACTORING.md с рекомендациями\n──────────────────────────────────────────────────\n  1. [run_bash] Найти все .ts файлы в директории src/ рекурсивно\n     └─ Получить полный список TypeScript файлов для анализа\n  2. [read_file] Прочитать содержимое каждого найденного .ts файла\n     └─ Получить исходный код всех файлов для анализа дублирования\n  3. [run_bash] Проанализировать импорты во всех файлах\n     └─ Извлечь все строки импортов для выявления повторяющихся паттернов\n  4. [read_file] Идентифицировать повторяющиеся паттерны кода, похожие функции и общие структуры\n     └─ Детальный анализ содержимого файлов для поиска дублирования логики\n  5. [write_file] Создать файл REFACTORING.md с структурированными рекомендациями по рефакторингу\n     └─ Сохранить результаты анализа с конкретными предложениями по устранению дублирования\n──────────────────────────────────────────────────"
+                "text": "📋 ПЛАН: Проанализировать .ts файлы, найти дублирование, создать REFACTORING.md\n  1. [run_bash] Найти все .ts файлы\n  2. [read_file] Прочитать содержимое каждого файла\n  3. [run_bash] Проанализировать импорты\n  4. [run_bash] Найти похожие паттерны\n  5. [write_file] Создать REFACTORING.md"
             }
         ]
     },
@@ -496,11 +349,11 @@ adaptiveAgent(task);
         "messages": [
             {
                 "role": "tool_call",
-                "text": "run_bash({\"command\":\"find src/ -name \\\"*.ts\\\" -type f 2>/dev/null | sort\"})"
+                "text": "run_bash({\"command\":\"find src/ -name \\\"*.ts\\\" -type f | sort\"})"
             },
             {
                 "role": "tool_result",
-                "text": "src/01-basic-call.ts\nsrc/02-with-tool.ts\nsrc/03-agent-loop.ts\nsrc/04-real-tools.ts\nsrc/05-skills.ts\nsrc/06-planning.ts\ns"
+                "text": "src/01-basic-call.ts\nsrc/02-with-tool.ts\nsrc/03-agent-loop.ts\nsrc/04-real-tools.ts\nsrc/05-skills.ts\nsrc/06-planning.ts\nsrc/07-adaptive-agent.ts\nsrc/skill-utils.ts"
             },
             {
                 "role": "tool_call",
@@ -508,7 +361,7 @@ adaptiveAgent(task);
             },
             {
                 "role": "tool_result",
-                "text": "// src/01-basic-call.ts\nimport OpenAI from \"openai\";\nimport dotenv from \"dotenv\";\n\ndotenv.config();\n\nconst client = new "
+                "text": "// src/01-basic-call.ts\nimport OpenAI from \"openai\";\nimport dotenv from \"dotenv\";\n..."
             }
         ]
     },
@@ -517,27 +370,15 @@ adaptiveAgent(task);
         "messages": [
             {
                 "role": "tool_call",
-                "text": "run_bash({\"command\":\"grep -n \\\"import OpenAI\\\" src/*.ts\"})"
-            },
-            {
-                "role": "tool_result",
-                "text": "src/01-basic-call.ts:2:import OpenAI from \"openai\";\nsrc/02-with-tool.ts:2:import OpenAI from \"openai\";\nsrc/03-agent-loop"
+                "text": "think({\"thought\":\"Я прочитал файлы 01-04. Все они дублируют инициализацию OpenAI клиента и определения tools. Файлы 06-07 уже используют skill-utils.ts — правильный подход. Нужно проверить масштаб дублирования.\"})"
             },
             {
                 "role": "tool_call",
-                "text": "run_bash({\"command\":\"grep -n \\\"run_bash:\\\" src/*.ts | head -20\"})"
+                "text": "run_bash({\"command\":\"grep -h \\\"^import\\\" src/*.ts | sort | uniq -c | sort -rn | head -10\"})"
             },
             {
                 "role": "tool_result",
-                "text": "src/04-real-tools.ts:52:    run_bash: ({ command }) => {\nsrc/05-skills.ts:108:        run_bash: ({ command }) => {\nsrc/0"
-            },
-            {
-                "role": "tool_call",
-                "text": "run_bash({\"command\":\"wc -l src/*.ts\"})"
-            },
-            {
-                "role": "tool_result",
-                "text": "23 src/01-basic-call.ts\n      61 src/02-with-tool.ts\n     118 src/03-agent-loop.ts\n     123 src/04-real-tools.ts\n     21"
+                "text": "      8 import dotenv from \"dotenv\";\n      8 import OpenAI from \"openai\";\n      5 import { execSync } from \"child_process\";\n      4 import { readFileSync, writeFileSync } from \"fs\";"
             }
         ]
     },
@@ -550,7 +391,7 @@ adaptiveAgent(task);
             },
             {
                 "role": "tool_result",
-                "text": "✅ Файл REFACTORING.md записан (14820 байт)"
+                "text": "Файл REFACTORING.md записан"
             }
         ]
     },
@@ -559,7 +400,7 @@ adaptiveAgent(task);
         "messages": [
             {
                 "role": "llm",
-                "text": "🎉 Агент завершил задачу.\n\n**Найдено дублирование:**\n- Инициализация OpenAI клиента — 8 файлов\n- Tool definitions (run_bash, read_file) — 5 файлов\n- Tool handlers — ~150 строк повторяющегося кода\n\n**Рекомендация:** вынести общие части в `src/lib/client.ts` и `src/lib/tools.ts`\n\nОтчёт записан в `REFACTORING.md`."
+                "text": "🎉 Агент завершил задачу.\n\n**Ключевые находки:**\n- Инициализация OpenAI клиента дублируется в 8 файлах\n- Tool definitions повторяются в файлах 04–06\n- Файлы 06–07 уже используют skill-utils.ts — верный паттерн\n\n**Рекомендация:** файлы 01–05 — учебные, дублирование допустимо для пошагового обучения. Файлы 06+ правильно используют shared модуль.\n\nОтчёт записан в REFACTORING.md.\n\n(request_replan не понадобился — план совпал с реальностью)"
             }
         ]
     }

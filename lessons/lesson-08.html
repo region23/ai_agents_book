@@ -8,10 +8,9 @@
                     <span class="step-badge advanced">Финал</span>
                 </div>
                 <p class="step-intro">
-                    Агент управляет потоком, но человек принимает решения. Три интерактивных tool'а превращают агент в
-                    умного помощника-визарда: агент анализирует, генерирует варианты, предлагает выбор — и так несколько
-                    шагов.
-                    Пользователю остаётся только выбрать из готовых оптимальных решений или ввести свой вариант.
+                    У нас есть skills для файлов, bash и рассуждений. Теперь добавляем ещё один:
+                    <code>interaction</code> — три tool'а для общения с пользователем.
+                    Добавить human-in-the-loop = добавить ещё один skill. Agent loop не меняется.
                 </p>
 
                 <div class="step-content">
@@ -52,443 +51,198 @@
 { <span class="prop">name</span>: <span class="str">"ask_user_confirm"</span> }  <span class="cm">// "Записать файл?"</span></pre>
                         <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                     </div>
+
+                    <div class="step-detail">
+                        <h3>Шаг 1. Создаём interaction skill</h3>
+                        <p>Три tool'а для общения с пользователем — это <strong>skill</strong>, такой же как filesystem или bash.
+                            Модель не знает, что tools интерактивные. Для неё <code>ask_user_choice</code> — обычный tool,
+                            который возвращает строку <code>"Пользователь выбрал: ..."</code>. Вся магия в handlers.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>Создаём структуру</div>
+                        <pre>mkdir -p skills/interaction</pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>skills/interaction/SKILL.md</div>
+                        <pre>---
+name: interaction
+description: Ask the user questions, offer choices, and request confirmations. Use when the agent needs human input or approval.
+metadata:
+  author: ai-agents-book
+  version: "1.0"
+---
+
+# Interaction Skill
+
+Ты можешь взаимодействовать с пользователем: задавать вопросы,
+предлагать варианты, запрашивать подтверждения.
+
+## Доступные инструменты
+- **ask_user_choice** — предложить выбор из нескольких вариантов
+- **ask_user_input** — запросить текстовый ввод
+- **ask_user_confirm** — запросить подтверждение да/нет
+
+## Правила
+- Предлагай 2-4 варианта с описаниями плюсов и минусов
+- Используй ask_user_confirm перед необратимыми действиями
+- Не делай предположений — спрашивай
+- Разбивай сложные решения на шаги (wizard-паттерн)</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="step-detail">
+                        <h3>Async handlers — ключевой момент</h3>
+                        <p>Handlers для interaction skill — <strong>асинхронные</strong>. Они блокируют выполнение
+                            и ждут ввод от пользователя через <code>readline</code>. Наш <code>createAgent()</code>
+                            из skill-utils уже поддерживает async handlers (помнишь <code>Promise&lt;string&gt;</code>
+                            в типе?). Поэтому agent loop не надо менять — он просто <code>await</code>'ит результат.</p>
+                    </div>
+
+                    <div class="step-detail">
+                        <h3>wrapWithConfirmation — паттерн композиции</h3>
+                        <p>Human-in-the-loop для <code>write_file</code> — это обёртка поверх существующего handler'а.
+                            Берём filesystem skill, оборачиваем его <code>write_file</code> handler:
+                            сначала показываем превью + спрашиваем подтверждение, потом вызываем оригинальный handler.
+                            Skill не меняется — меняется только handler.</p>
+                    </div>
+
                     <div class="code-block">
                         <div class="code-filename"><span class="dot"></span>src/08-interactive-agent.ts</div>
-                        <pre>// src/08-interactive-agent.ts
-// Интерактивный агент: Human-in-the-loop + Wizard-style guided flow
-import OpenAI from "openai";
-import { execSync } from "child_process";
-import { readFileSync, writeFileSync, existsSync } from "fs";
+                        <pre>// src/08-interactive-agent.ts — Human-in-the-loop + Wizard
+import {
+    discoverSkills, activateSkill, createAgent,
+    createFilesystemSkill, createBashSkill, createReasoningSkill,
+    createInteractionSkill, Skill,
+} from "./skill-utils";
+
 import * as readline from "readline";
-import dotenv from "dotenv";
 
-dotenv.config();
+// === Утилита для ввода ===
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+const ask = (q: string): Promise&lt;string&gt; =&gt;
+    new Promise(resolve =&gt; rl.question(q, answer =&gt; resolve(answer.trim())));
 
-const client = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: process.env.OPENROUTER_API_KEY ?? "",
-});
+// === wrapWithConfirmation: обёртка для human-in-the-loop ===
+function wrapWithConfirmation(skill: Skill, toolName: string): Skill {
+    const originalHandler = skill.handlers[toolName];
+    return {
+        ...skill,
+        handlers: {
+            ...skill.handlers,
+            [toolName]: async (args: any) =&gt; {
+                console.log("\n" + "═".repeat(50));
+                console.log(`⚠️  Агент хочет: ${toolName}(${JSON.stringify(args).slice(0, 80)})`);
 
-const MODEL = "anthropic/claude-sonnet-4.5";
+                // Превью содержимого для write_file
+                if (args.content) {
+                    console.log("─".repeat(50));
+                    const lines = args.content.split("\n");
+                    console.log(lines.slice(0, 12).join("\n"));
+                    if (lines.length &gt; 12) console.log(`... (ещё ${lines.length - 12} строк)`);
+                }
 
-// ============================================================
-// УТИЛИТА: ввод от пользователя
-// ============================================================
+                console.log("─".repeat(50));
+                const answer = await ask("Разрешить? [y/n]: ");
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
-
-function ask(question: string): Promise&lt;string&gt; {
-    return new Promise((resolve) =&gt; {
-        rl.question(question, (answer) =&gt; resolve(answer.trim()));
-    });
+                if (["y", "д", "да", "yes"].includes(answer.toLowerCase())) {
+                    const result = originalHandler(args);
+                    const output = result instanceof Promise ? await result : result;
+                    return `✅ ${output} (одобрено пользователем)`;
+                }
+                return `❌ Пользователь отклонил действие ${toolName}`;
+            },
+        },
+    };
 }
 
-// ============================================================
-// TOOLS: включая интерактивные
-// ============================================================
+// === Загрузка skills ===
+function loadSkills(): Skill[] {
+    const discovered = discoverSkills("./skills");
+    console.log("\n🔌 Activation:");
+    const skills: Skill[] = [];
 
-const tools: OpenAI.ChatCompletionTool[] = [
-    {
-        type: "function",
-        function: {
-            name: "think",
-            description: "Внутренний блокнот для рассуждений.",
-            parameters: {
-                type: "object",
-                properties: {
-                    thought: { type: "string", description: "Рассуждение" },
-                },
-                required: ["thought"],
-            },
-        },
-    },
-    {
-        type: "function",
-        function: {
-            name: "run_bash",
-            description: "Выполнить bash-команду (read-only, безопасные)",
-            parameters: {
-                type: "object",
-                properties: {
-                    command: { type: "string", description: "Команда" },
-                },
-                required: ["command"],
-            },
-        },
-    },
-    {
-        type: "function",
-        function: {
-            name: "read_file",
-            description: "Прочитать файл",
-            parameters: {
-                type: "object",
-                properties: {
-                    path: { type: "string", description: "Путь к файлу" },
-                },
-                required: ["path"],
-            },
-        },
-    },
-    // --- ОПАСНОЕ ДЕЙСТВИЕ: требует подтверждения ---
-    {
-        type: "function",
-        function: {
-            name: "write_file",
-            description:
-                "Записать файл. ВАЖНО: это изменяющее действие — " +
-                "будет запрошено подтверждение пользователя.",
-            parameters: {
-                type: "object",
-                properties: {
-                    path: { type: "string", description: "Путь к файлу" },
-                    content: { type: "string", description: "Содержимое" },
-                },
-                required: ["path", "content"],
-            },
-        },
-    },
-    // --- WIZARD: предложить варианты пользователю ---
-    {
-        type: "function",
-        function: {
-            name: "ask_user_choice",
-            description:
-                "Предложить пользователю выбор из нескольких вариантов. " +
-                "Используй когда есть несколько хороших решений и выбор зависит от предпочтений пользователя. " +
-                "Пользователь может выбрать номер варианта или ввести свой.",
-            parameters: {
-                type: "object",
-                properties: {
-                    question: {
-                        type: "string",
-                        description: "Вопрос или описание ситуации для пользователя",
-                    },
-                    options: {
-                        type: "array",
-                        items: {
-                            type: "object",
-                            properties: {
-                                label: { type: "string", description: "Краткое название варианта" },
-                                description: { type: "string", description: "Описание — плюсы, минусы, для кого" },
-                            },
-                            required: ["label", "description"],
-                        },
-                        description: "Варианты для выбора (2-5 штук)",
-                    },
-                    allow_custom: {
-                        type: "boolean",
-                        description: "Разрешить пользователю ввести свой вариант",
-                    },
-                },
-                required: ["question", "options"],
-            },
-        },
-    },
-    // --- WIZARD: запросить текстовый ввод ---
-    {
-        type: "function",
-        function: {
-            name: "ask_user_input",
-            description:
-                "Запросить у пользователя текстовый ввод. " +
-                "Используй когда нужна конкретная информация: имя, путь, описание.",
-            parameters: {
-                type: "object",
-                properties: {
-                    question: { type: "string", description: "Что спросить" },
-                    hint: { type: "string", description: "Подсказка или пример ответа" },
-                    default_value: { type: "string", description: "Значение по умолчанию (Enter чтобы принять)" },
-                },
-                required: ["question"],
-            },
-        },
-    },
-    // --- WIZARD: запросить подтверждение да/нет ---
-    {
-        type: "function",
-        function: {
-            name: "ask_user_confirm",
-            description:
-                "Запросить подтверждение да/нет. " +
-                "Используй перед необратимыми или важными действиями.",
-            parameters: {
-                type: "object",
-                properties: {
-                    question: { type: "string", description: "Что подтвердить" },
-                    details: { type: "string", description: "Детали для принятия решения" },
-                },
-                required: ["question"],
-            },
-        },
-    },
-];
-
-// ============================================================
-// TOOL HANDLERS (с интерактивностью)
-// ============================================================
-
-// Категории опасности для human-in-the-loop
-const DANGEROUS_TOOLS = new Set(["write_file"]);
-
-const toolHandlers: Record&lt;string, (args: any) =&gt; Promise&lt;string&gt; | string&gt; = {
-    think: () =&gt; "OK",
-
-    run_bash: ({ command }) =&gt; {
-        try {
-            return execSync(command, { encoding: "utf-8", timeout: 10000 }).trim();
-        } catch (e: any) {
-            return `Ошибка: ${e.stderr || e.message}`;
-        }
-    },
-
-    read_file: ({ path }) =&gt; {
-        try {
-            return readFileSync(path, "utf-8");
-        } catch (e: any) {
-            return `Ошибка: ${e.message}`;
-        }
-    },
-
-    // --- HUMAN-IN-THE-LOOP: подтверждение перед записью ---
-    write_file: async ({ path, content }) =&gt; {
-        const exists = existsSync(path);
-        const action = exists ? "перезаписать" : "создать";
-
-        console.log("\n" + "═".repeat(50));
-        console.log(`⚠️  Агент хочет ${action} файл: ${path}`);
-        console.log("─".repeat(50));
-
-        // Показываем превью содержимого
-        const lines = content.split("\n");
-        const preview = lines.slice(0, 15).join("\n");
-        console.log(preview);
-        if (lines.length &gt; 15) {
-            console.log(`... (ещё ${lines.length - 15} строк)`);
-        }
-        console.log("─".repeat(50));
-
-        const answer = await ask(`Разрешить? [y/n/edit]: `);
-
-        if (answer.toLowerCase() === "y" || answer.toLowerCase() === "д") {
-            try {
-                writeFileSync(path, content, "utf-8");
-                return `✅ Файл ${path} записан (одобрено пользователем)`;
-            } catch (e: any) {
-                return `Ошибка: ${e.message}`;
-            }
-        } else if (answer.toLowerCase() === "edit" || answer.toLowerCase() === "e") {
-            const newPath = await ask(`Новый путь (Enter = ${path}): `);
-            const finalPath = newPath || path;
-            try {
-                writeFileSync(finalPath, content, "utf-8");
-                return `✅ Файл ${finalPath} записан (путь изменён пользователем)`;
-            } catch (e: any) {
-                return `Ошибка: ${e.message}`;
-            }
-        } else {
-            return `❌ Пользователь отклонил запись файла ${path}`;
-        }
-    },
-
-    // --- WIZARD: выбор из вариантов ---
-    ask_user_choice: async ({ question, options, allow_custom }) =&gt; {
-        console.log("\n" + "═".repeat(50));
-        console.log(`🤔 ${question}`);
-        console.log("─".repeat(50));
-
-        options.forEach((opt: any, i: number) =&gt; {
-            console.log(`  ${i + 1}) ${opt.label}`);
-            console.log(`     ${opt.description}`);
-        });
-
-        if (allow_custom) {
-            console.log(`  ${options.length + 1}) Свой вариант...`);
-        }
-
-        console.log("─".repeat(50));
-        const answer = await ask(`Выбор [1-${options.length + (allow_custom ? 1 : 0)}]: `);
-
-        const num = parseInt(answer);
-
-        if (allow_custom &amp;&amp; num === options.length + 1) {
-            const custom = await ask("Введите свой вариант: ");
-            return `Пользователь выбрал свой вариант: "${custom}"`;
-        }
-
-        if (num &gt;= 1 &amp;&amp; num &lt;= options.length) {
-            const chosen = options[num - 1];
-            return `Пользователь выбрал: "${chosen.label}" — ${chosen.description}`;
-        }
-
-        // Если ввели текст вместо номера
-        return `Пользователь ответил: "${answer}"`;
-    },
-
-    // --- WIZARD: текстовый ввод ---
-    ask_user_input: async ({ question, hint, default_value }) =&gt; {
-        console.log("\n" + "═".repeat(50));
-        let prompt = `📝 ${question}`;
-        if (hint) prompt += `\n   💡 ${hint}`;
-        if (default_value) prompt += `\n   (Enter = "${default_value}")`;
-        console.log(prompt);
-        console.log("─".repeat(50));
-
-        const answer = await ask("&gt; ");
-        const result = answer || default_value || "";
-        return `Пользователь ввёл: "${result}"`;
-    },
-
-    // --- WIZARD: подтверждение ---
-    ask_user_confirm: async ({ question, details }) =&gt; {
-        console.log("\n" + "═".repeat(50));
-        console.log(`❓ ${question}`);
-        if (details) console.log(`   ${details}`);
-        console.log("─".repeat(50));
-
-        const answer = await ask("Да/Нет [y/n]: ");
-        const confirmed = ["y", "д", "да", "yes"].includes(answer.toLowerCase());
-        return confirmed ? "Пользователь подтвердил: ДА" : "Пользователь отказал: НЕТ";
-    },
-};
-
-// ============================================================
-// AGENT LOOP (с async handlers)
-// ============================================================
-
-async function interactiveAgent(task: string, systemPrompt?: string) {
-    const defaultSystem = `Ты умный ассистент-визард, который помогает пользователю решать задачи.
-
-СТИЛЬ РАБОТЫ:
-1. Сначала разберись в ситуации (read_file, run_bash, think)
-2. Проанализируй и подготовь варианты
-3. Предложи пользователю выбор через ask_user_choice
-4. На основе выбора — действуй или уточни детали через ask_user_input
-5. Перед изменяющими действиями — подтверди через ask_user_confirm или write_file
-
-ПРИНЦИПЫ:
-- Не делай предположений — спрашивай
-- Предлагай 2-4 варианта с понятными описаниями
-- Объясняй плюсы и минусы каждого варианта
-- Разбивай сложные решения на шаги (wizard)
-- Уважай выбор пользователя, не навязывай своё мнение`;
-
-    const messages: OpenAI.ChatCompletionMessageParam[] = [
-        { role: "system", content: systemPrompt || defaultSystem },
-        { role: "user", content: task },
-    ];
-
-    let iteration = 0;
-
-    while (iteration &lt; 30) {
-        iteration++;
-
-        const response = await client.chat.completions.create({
-            model: MODEL,
-            messages,
-            tools,
-        });
-
-        const message = response.choices[0].message;
-        messages.push(message);
-
-        // Если агент говорит текстом — показываем и продолжаем диалог
-        if (!message.tool_calls?.length) {
-            console.log(`\n🤖 ${message.content}`);
-
-            // Спрашиваем, хочет ли пользователь продолжить
-            const follow = await ask("\n&gt; (Enter чтобы завершить, или введите сообщение): ");
-            if (!follow) {
-                console.log("\n👋 Завершено.");
-                rl.close();
-                return;
-            }
-
-            messages.push({ role: "user", content: follow });
-            continue;
-        }
-
-        // Обрабатываем tool calls
-        for (const toolCall of message.tool_calls) {
-            const name = toolCall.function.name;
-            const args = JSON.parse(toolCall.function.arguments);
-
-            // Логирование (кроме интерактивных — они сами себя показывают)
-            if (name === "think") {
-                console.log(`\n  💭 ${args.thought}`);
-            } else if (!name.startsWith("ask_user") &amp;&amp; name !== "write_file") {
-                const preview = JSON.stringify(args).slice(0, 100);
-                console.log(`  🔧 ${name}(${preview})`);
-            }
-
-            const handler = toolHandlers[name];
-            let result: string;
-
-            if (handler) {
-                const output = handler(args);
-                result = output instanceof Promise ? await output : output;
-            } else {
-                result = `Tool "${name}" не найден`;
-            }
-
-            // Логируем результат (кроме интерактивных и think)
-            if (!name.startsWith("ask_user") &amp;&amp; name !== "write_file" &amp;&amp; name !== "think") {
-                console.log(`     → ${result.slice(0, 120)}`);
-            }
-
-            messages.push({
-                role: "tool",
-                tool_call_id: toolCall.id,
-                content: result,
-            });
+    for (const d of discovered) {
+        const meta = activateSkill(d.location);
+        switch (meta.name) {
+            case "filesystem":
+                // Оборачиваем write_file в human-in-the-loop
+                skills.push(wrapWithConfirmation(createFilesystemSkill(meta), "write_file"));
+                break;
+            case "bash":
+                skills.push(createBashSkill(meta));
+                break;
+            case "reasoning":
+                skills.push(createReasoningSkill(meta));
+                break;
+            case "interaction":
+                skills.push(createInteractionSkill(meta));
+                break;
         }
     }
 
+    console.log(`\n🚀 ${skills.length} skills: ${skills.map(s =&gt; s.name).join(", ")}`);
+    return skills;
+}
+
+// === Интерактивный агент ===
+async function interactiveAgent(task: string, systemPrompt?: string) {
+    const skills = loadSkills();
+
+    const defaultPrompt = `Ты умный ассистент-визард. Вот твои навыки:
+
+&lt;available_skills&gt;
+{{SKILLS}}
+&lt;/available_skills&gt;
+
+СТИЛЬ РАБОТЫ:
+1. Разберись в ситуации (read_file, run_bash, think)
+2. Подготовь варианты
+3. Предложи выбор через ask_user_choice
+4. Уточни детали через ask_user_input
+5. Перед изменениями — ask_user_confirm или write_file (с подтверждением)
+
+Не делай предположений — спрашивай. Предлагай 2-4 варианта.`;
+
+    const agent = createAgent(skills, {
+        systemPrompt: systemPrompt || defaultPrompt,
+        maxIterations: 30,
+    });
+
+    await agent(task);
     rl.close();
 }
 
-// ============================================================
-// СЦЕНАРИИ
-// ============================================================
-
+// === Сценарии ===
 async function main() {
     const scenario = process.argv[2] ?? "project";
 
     switch (scenario) {
-        // --- Сценарий 1: Wizard для инициализации проекта ---
         case "project":
             await interactiveAgent(
-                "Помоги мне создать новый TypeScript проект. " +
-                "Спроси что за проект, предложи варианты структуры, настрой всё."
+                "Помоги создать новый TypeScript проект. " +
+                "Спроси что за проект, предложи структуру, настрой всё."
             );
             break;
-
-        // --- Сценарий 2: Рефакторинг с подтверждениями ---
         case "refactor":
             await interactiveAgent(
                 "Проанализируй .ts файлы в src/ и предложи рефакторинг. " +
-                "Покажи мне варианты, дай выбрать что делать, и выполни с подтверждениями."
+                "Покажи варианты, дай выбрать, выполни с подтверждениями."
             );
             break;
-
-        // --- Сценарий 3: свободный режим ---
         case "free":
-            console.log("🤖 Интерактивный агент запущен. Введите задачу:\n");
+            console.log("🤖 Интерактивный агент. Введите задачу:\n");
             const task = await ask("&gt; ");
             await interactiveAgent(task);
             break;
-
         default:
             console.log("Сценарии: npx tsx src/08-interactive-agent.ts [project|refactor|free]");
             rl.close();
     }
 }
 
-main();
-</pre>
+main();</pre>
                         <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                     </div>
 
@@ -535,12 +289,15 @@ main();
 
                     <div class="mini-block expect">
                         <div class="mini-title">✅ Что должно получиться</div>
-                        Агент задаёт вопросы, ждёт ввод пользователя и просит подтверждение перед записью файлов.
+                        Агент задаёт вопросы (ask_user_choice, ask_user_input), ждёт ввод пользователя,
+                        и запрашивает подтверждение перед записью файлов (wrapWithConfirmation).
+                        Все 4 skills работают вместе: filesystem, bash, reasoning, interaction.
                     </div>
 
                     <div class="mini-block trouble">
                         <div class="mini-title">🧯 Если не работает</div>
-                        Запускай из терминала (не из браузера). Проверь, что readline/STDIN доступны.
+                        Запускай из терминала (не из браузера). Проверь, что <code>skills/interaction/SKILL.md</code>
+                        создан и что readline/STDIN доступны.
                     </div>
 
                     <div class="key-insight">
@@ -550,8 +307,12 @@ main();
                         Вся магия в handlers — они блокируют выполнение и ждут ввод через <code>readline</code>.
                         Модель думает, что просто вызвала функцию и получила результат.
                         <br><br>
-                        Это тот самый wizard-паттерн: агент подумал за пользователя, предложил оптимальные варианты —
-                        пользователю осталось только выбрать. Все современные AI-продукты работают именно так.
+                        <strong>wrapWithConfirmation</strong> — паттерн композиции. Берём существующий skill
+                        (filesystem), оборачиваем один handler (write_file) в подтверждение. Skill не меняется —
+                        меняется только обработчик. Это тот же принцип что и middleware в Express.
+                        <br><br>
+                        <strong>Async handlers</strong> — <code>createAgent()</code> поддерживает их из коробки.
+                        Добавить human-in-the-loop = добавить skill + обёртку. Agent loop остаётся тем же.
                     </div>
                 </div>
             </div>
@@ -565,11 +326,11 @@ main();
         "messages": [
             {
                 "role": "user",
-                "text": "Помоги мне создать новый TypeScript проект. Спроси что за проект, предложи варианты структуры, настрой всё."
+                "text": "Помоги создать новый TypeScript проект. Спроси что за проект, предложи структуру, настрой всё."
             },
             {
                 "role": "tool_call",
-                "text": "ask_user_input({ question: \"Какой проект ты хочешь создать?\", hint: \"Например: REST API, CLI утилита, библиотека, веб-приложение, бот и т.д.\" })"
+                "text": "ask_user_input({ question: \"Какой проект ты хочешь создать?\", hint: \"Например: REST API, CLI утилита, библиотека, веб-приложение\" })"
             },
             {
                 "role": "tool_result",
@@ -582,23 +343,23 @@ main();
         "messages": [
             {
                 "role": "tool_call",
-                "text": "ask_user_choice({ question: \"Какой подход к структуре проекта тебе больше подходит?\", options: [\"Express.js (классика) — Минималистичный фреймворк, гибкий и популярный. Подходит для проектов любого размера.\", \"Fastify (производительность) — Быстрый и современный фреймворк с отличной поддержкой TypeScript. Встроенная валидация через JSON Schema.\", \"NestJS (enterprise) — Полноценный фреймворк с архитектурой как в Angular. Dependency Injection, модульность.\", \"Минималистичный (без фреймворка) — Чистый Node.js http/https модуль. Полный контроль, но нужно многое делать вручную.\"] })"
+                "text": "ask_user_choice({ question: \"Какой фреймворк?\", options: [\"Express.js (классика) — гибкий и популярный\", \"Fastify (производительность) — быстрый, нативный TypeScript\", \"NestJS (enterprise) — DI, модульность, как Angular\"] })"
             },
             {
                 "role": "tool_result",
-                "text": "Пользователь выбрал: \"Express.js (классика)\" — Минималистичный фреймворк, гибкий и популярный. Подходит для проектов любого размера."
+                "text": "Пользователь выбрал: \"Express.js (классика)\" — гибкий и популярный"
             },
             {
                 "role": "tool_call",
-                "text": "ask_user_choice({ question: \"Какую структуру папок и архитектуру предпочитаешь?\", options: [\"Простая (Flat) — Минимальная структура: src/index.ts, routes, middleware. Подходит для быстрого старта, прототипов, маленьких API.\", \"Слоистая (Layered) — Controllers → Services → Models/DAL. Чёткое разделение ответственности.\", \"Модульная (Feature-based) — Папки по фичам (users/, posts/), каждая со своими routes/controller/service.\"] })"
+                "text": "ask_user_choice({ question: \"Структура проекта?\", options: [\"Простая (Flat) — src/index.ts, routes, middleware\", \"Слоистая (Layered) — Controllers → Services → Models\", \"Модульная (Feature-based) — папки по фичам\"] })"
             },
             {
                 "role": "tool_result",
-                "text": "Пользователь выбрал: \"Простая (Flat)\" — Минимальная структура: src/index.ts, routes, middleware. Подходит для быстрого старта, прототипов, маленьких API."
+                "text": "Пользователь выбрал: \"Простая (Flat)\""
             },
             {
                 "role": "tool_call",
-                "text": "ask_user_input({ question: \"Как назовём проект?\", hint: \"Например: my-api, user-service, blog-backend\", default_value: \"my-express-api\" })"
+                "text": "ask_user_input({ question: \"Как назовём проект?\", default_value: \"my-express-api\" })"
             },
             {
                 "role": "tool_result",
@@ -606,11 +367,11 @@ main();
             },
             {
                 "role": "tool_call",
-                "text": "ask_user_choice({ question: \"Какие дополнительные инструменты включить в проект?\", options: [\"Минимальный набор — TypeScript + Express + nodemon. Без лишнего, быстрый старт.\", \"Стандартный — + ESLint, Prettier, dotenv, cors, helmet. Хорошая база для реального проекта.\", \"Полный — + всё из стандартного + Jest (тесты), Zod (валидация), Winston (логи), Docker. Production-ready.\"] })"
+                "text": "ask_user_choice({ question: \"Доп. инструменты?\", options: [\"Минимальный — TS + Express + nodemon\", \"Стандартный — + ESLint, Prettier, dotenv, cors\", \"Полный — + Jest, Zod, Winston, Docker\"] })"
             },
             {
                 "role": "tool_result",
-                "text": "Пользователь выбрал: \"Минимальный набор\" — TypeScript + Express + nodemon. Без лишнего, быстрый старт."
+                "text": "Пользователь выбрал: \"Минимальный\""
             }
         ]
     },
@@ -619,7 +380,7 @@ main();
         "messages": [
             {
                 "role": "tool_call",
-                "text": "ask_user_confirm({ question: \"Создать проект в /Users/human/code/ai_agents_book/mini-api?\", details: \"Будет создана новая папка mini-api с полной структурой TypeScript + Express проекта\" })"
+                "text": "ask_user_confirm({ question: \"Создать проект mini-api?\", details: \"Express.js + TypeScript, простая структура, минимальный набор инструментов\" })"
             },
             {
                 "role": "tool_result",
@@ -640,7 +401,7 @@ main();
             },
             {
                 "role": "tool_call",
-                "text": "write_file({path: \"mini-api/package.json\", content: \"... (ещё 10 строк)\"})"
+                "text": "write_file({path: \"mini-api/package.json\", content: [520 chars]})"
             },
             {
                 "role": "tool_result",
@@ -648,7 +409,7 @@ main();
             },
             {
                 "role": "tool_call",
-                "text": "write_file({path: \"mini-api/tsconfig.json\", content: \"... (ещё 4 строк)\"})"
+                "text": "write_file({path: \"mini-api/tsconfig.json\", content: [280 chars]})"
             },
             {
                 "role": "tool_result",
@@ -656,7 +417,7 @@ main();
             },
             {
                 "role": "tool_call",
-                "text": "write_file({path: \"mini-api/src/index.ts\", content: \"... (ещё 23 строк)\"})"
+                "text": "write_file({path: \"mini-api/src/index.ts\", content: [890 chars]})"
             },
             {
                 "role": "tool_result",
@@ -664,35 +425,11 @@ main();
             },
             {
                 "role": "tool_call",
-                "text": "write_file({path: \"mini-api/src/routes/api.ts\", content: \"... (ещё 8 строк)\"})"
+                "text": "write_file({path: \"mini-api/src/routes/api.ts\", content: [420 chars]})"
             },
             {
                 "role": "tool_result",
                 "text": "✅ Файл mini-api/src/routes/api.ts записан (одобрено пользователем)"
-            },
-            {
-                "role": "tool_call",
-                "text": "write_file({path: \"mini-api/.gitignore\", content: \"... (ещё 19 строк)\"})"
-            },
-            {
-                "role": "tool_result",
-                "text": "✅ Файл mini-api/.gitignore записан (одобрено пользователем)"
-            },
-            {
-                "role": "tool_call",
-                "text": "write_file({path: \"mini-api/README.md\", content: \"... (ещё 72 строк)\"})"
-            },
-            {
-                "role": "tool_result",
-                "text": "✅ Файл mini-api/README.md записан (одобрено пользователем)"
-            },
-            {
-                "role": "tool_call",
-                "text": "write_file({path: \"mini-api/nodemon.json\", content: \"...\"})"
-            },
-            {
-                "role": "tool_result",
-                "text": "✅ Файл mini-api/nodemon.json записан (одобрено пользователем)"
             }
         ]
     },
@@ -701,7 +438,7 @@ main();
         "messages": [
             {
                 "role": "llm",
-                "text": "🤖 Идеально! 🎉 \n\n## ✅ Проект mini-api успешно создан!\n\n### 📁 Структура проекта:\n```\nmini-api/\n├── src/\n│   ├── index.ts          # Главный файл приложения\n│   ├── routes/\n│   │   └── api.ts        # Примеры API endpoints\n│   └── middleware/       # Папка для middleware (пуста)\n├── .gitignore\n├── package.json\n├── tsconfig.json\n├── nodemon.json\n└── README.md\n```\n\n### 🚀 Что дальше?\n\n**1. Установить зависимости:**\n```bash\ncd mini-api\nnpm install\n```\n\n**2. Запустить в режиме разработки:**\n```bash\nnpm run dev\n```\n\n**3. Проверить работу:**\n- Открой http://localhost:3000\n- Или `curl http://localhost:3000/api/hello?name=Alex`\n\n### 📝 Что уже настроено:\n\n✅ **TypeScript** с строгими проверками  \n✅ **Express** сервер с базовой настройкой  \n✅ **Nodemon** для авто-перезагрузки  \n✅ **Примеры endpoints** (GET /api/hello, POST /api/echo)  \n✅ **Health check** endpoint  \n✅ **404 обработчик**  \n✅ **.gitignore** для Git  \n✅ **README.md** с документацией  \n\n### 💡 Полезные команды:\n\n- `npm run dev` — разработка с hot-reload\n- `npm run build` — сборка в production\n- `npm start` — запуск собранного проекта\n\nВсё готово к разработке! Хочешь что-то добавить или изменить? 😊"
+                "text": "✅ Проект mini-api создан!\n\n📁 Структура:\n```\nmini-api/\n├── src/\n│   ├── index.ts\n│   ├── routes/api.ts\n│   └── middleware/\n├── package.json\n└── tsconfig.json\n```\n\n🚀 Запуск:\n```bash\ncd mini-api && npm install && npm run dev\n```\n\nВсе 4 skills работали вместе:\n• **interaction** — опрос пользователя (wizard-стиль)\n• **filesystem** — создание файлов (с подтверждением)\n• **bash** — создание директорий\n• **reasoning** — планирование структуры"
             }
         ]
     }
