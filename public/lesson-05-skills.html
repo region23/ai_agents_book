@@ -1667,6 +1667,492 @@
                 </p>
 
                 <div class="step-content">
+
+                    <div class="step-detail">
+                        <p>Ключевая идея — <strong>progressive disclosure</strong> (постепенное раскрытие).
+                            Агент не загружает все skills целиком. Вместо этого — три уровня:</p>
+                    </div>
+
+                    <div class="arch-diagram">
+                        <div class="arch-row">
+                            <span class="loop-node llm">1. Discovery</span>
+                            <span class="loop-arrow">→</span>
+                            <span class="loop-node tool">2. Activation</span>
+                            <span class="loop-arrow">→</span>
+                            <span class="loop-node output">3. Execution</span>
+                        </div>
+                        <div style="color: var(--text-dim); margin: 0.75rem 0; font-size: 0.9rem; line-height: 1.6;">
+                            <strong>Discovery</strong> (~100 токенов): только <code>name</code> + <code>description</code> из frontmatter<br>
+                            <strong>Activation</strong> (&lt;5000 токенов): полный текст <code>SKILL.md</code> с инструкциями<br>
+                            <strong>Execution</strong> (по запросу): файлы из <code>references/</code>, скрипты, ассеты
+                        </div>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>Зачем? Если у агента 50 skills, загрузить все instructions — это 250K токенов.
+                            С progressive disclosure агент сначала видит список из 50 коротких описаний (~5K токенов),
+                            активирует 2–3 нужных, и только потом погружается в детали.</p>
+                    </div>
+
+                    <div class="step-detail">
+                        <h3>Шаг 1. Создаём skill — filesystem</h3>
+                        <p>Каждый skill — это папка. Внутри — <code>SKILL.md</code> с YAML-frontmatter и инструкциями
+                            на естественном языке. Опционально — папка <code>references/</code> для детальной документации.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>Создаём структуру</div>
+                        <pre>mkdir -p skills/filesystem/references</pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>skills/filesystem/SKILL.md</div>
+                        <pre>---
+name: filesystem
+description: Read, write, and list files. Use when the agent needs to work with the file system.
+metadata:
+  author: ai-agents-book
+  version: "1.0"
+---
+
+# Filesystem Skill
+
+Ты умеешь работать с файлами: читать, записывать и просматривать директории.
+
+## Доступные инструменты
+- **read_file** — прочитать содержимое файла по пути
+- **write_file** — записать содержимое в файл
+- **list_dir** — получить список файлов в директории
+
+## Правила
+- Перед записью всегда проверяй, существует ли файл
+- Для больших директорий используй фильтрацию
+- Подробности по каждому инструменту — см. references/REFERENCE.md</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="step-detail">
+                        <p>Разберём frontmatter:</p>
+                        <ul>
+                            <li><code>name</code> — уникальный идентификатор skill'а</li>
+                            <li><code>description</code> — короткое описание для <strong>Discovery</strong>-уровня. Агент читает его, чтобы решить: <em>нужен ли этот skill?</em></li>
+                            <li><code>metadata</code> — автор, версия, любые дополнительные поля</li>
+                        </ul>
+                        <p>Тело после <code>---</code> — это <strong>Activation</strong>-уровень: полные инструкции, которые агент получает в system prompt при активации skill'а.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>skills/filesystem/references/REFERENCE.md</div>
+                        <pre># Filesystem Skill — Reference
+
+## read_file
+- **Параметры:** `path` (string) — путь к файлу
+- **Возвращает:** содержимое файла в UTF-8
+- **Ошибки:** если файл не найден — вернёт сообщение об ошибке
+
+## write_file
+- **Параметры:** `path` (string), `content` (string)
+- **Возвращает:** подтверждение записи
+- **Ошибки:** если нет прав на запись
+
+## list_dir
+- **Параметры:** `path` (string) — путь к директории
+- **Возвращает:** вывод `ls -la`</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="step-detail">
+                        <p><code>references/</code> — третий уровень disclosure. Агент заглядывает сюда
+                            только когда ему нужны детали конкретного tool. Это экономит токены: основной
+                            <code>SKILL.md</code> остаётся компактным.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>Проверяем структуру</div>
+                        <pre>tree skills/filesystem
+# skills/filesystem
+# ├── SKILL.md
+# └── references/
+#     └── REFERENCE.md</pre>
+                    </div>
+
+                    <div class="step-detail">
+                        <h3>Шаг 2. Создаём второй skill — web-search</h3>
+                        <p>Два skill'а — минимум, чтобы увидеть модульность в действии. Обрати внимание на <code>description</code>:
+                            формулировка <em>"Use when..."</em> помогает агенту понять, <strong>когда</strong> активировать этот skill.</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>Создаём структуру</div>
+                        <pre>mkdir -p skills/web-search</pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>skills/web-search/SKILL.md</div>
+                        <pre>---
+name: web-search
+description: Search the web for current information. Use when the agent needs up-to-date data, documentation, or facts beyond its training cutoff.
+metadata:
+  author: ai-agents-book
+  version: "1.0"
+---
+
+# Web Search Skill
+
+You can search the web to find current information.
+
+## Available Tools
+- **web_search** — perform a web search query and return top results
+
+## Rules
+- Use concise, specific search queries
+- Prefer official sources (documentation, GitHub, Wikipedia)
+- Always cite the source of information in your response</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>Два независимых skill'а</div>
+                        <pre>ls skills/
+# filesystem/  web-search/</pre>
+                    </div>
+
+                    <div class="step-detail">
+                        <h3>Шаг 3. Пишем загрузчик skills</h3>
+                        <p>Теперь — код. Нам нужно программно загружать <code>SKILL.md</code>,
+                            парсить frontmatter и отдавать агенту. Это реализация progressive disclosure в TypeScript:</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>src/05-skills.ts — часть 1: загрузчик</div>
+                        <pre>// src/05-skills.ts
+import OpenAI from "openai";
+import { execSync } from "child_process";
+import { readFileSync, writeFileSync, readdirSync, statSync } from "fs";
+import { join } from "path";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const client = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY ?? "",
+});
+
+// === Интерфейс Skill ===
+interface Skill {
+    name: string;
+    description: string;       // Discovery-уровень: когда использовать
+    instructions: string;      // Activation-уровень: полные инструкции
+    location: string;          // путь к папке skill'а
+    tools: OpenAI.ChatCompletionTool[];
+    handlers: Record&lt;string, (args: any) =&gt; string&gt;;
+}
+
+// === Парсер YAML frontmatter ===
+function parseFrontmatter(raw: string) {
+    const parts = raw.split("---");
+    if (parts.length &lt; 3) {
+        throw new Error("Invalid SKILL.md: no frontmatter found");
+    }
+    const frontmatter = parts[1].trim();
+    const body = parts.slice(2).join("---").trim();
+
+    const meta: Record&lt;string, string&gt; = {};
+    for (const line of frontmatter.split("\n")) {
+        const idx = line.indexOf(":");
+        if (idx &gt; 0 &amp;&amp; !line.startsWith(" ")) {
+            meta[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+        }
+    }
+
+    return { name: meta.name, description: meta.description, body };
+}
+
+// === Discovery: сканируем папку, извлекаем name + description ===
+function discoverSkills(dir: string) {
+    const entries = readdirSync(dir)
+        .filter(name =&gt; {
+            const fullPath = join(dir, name, "SKILL.md");
+            try { statSync(fullPath); return true; }
+            catch { return false; }
+        });
+
+    console.log(`\n📋 Discovery: найдено ${entries.length} skill(s)`);
+
+    return entries.map(name =&gt; {
+        const skillPath = join(dir, name);
+        const raw = readFileSync(join(skillPath, "SKILL.md"), "utf-8");
+        const { name: skillName, description } = parseFrontmatter(raw);
+        console.log(`  • ${skillName}: ${description}`);
+        return { name: skillName, description, location: skillPath };
+    });
+}
+
+// === Activation: загружаем полный SKILL.md ===
+function activateSkill(location: string) {
+    const raw = readFileSync(join(location, "SKILL.md"), "utf-8");
+    const { name, description, body } = parseFrontmatter(raw);
+    console.log(`  ✅ ${name} activated (${body.length} chars)`);
+    return { name, description, instructions: body, location };
+}</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="step-detail">
+                        <p><code>discoverSkills()</code> — это Discovery-уровень: быстрый скан папки,
+                            только name + description. <code>activateSkill()</code> — Activation: загружаем полные
+                            инструкции. Два вызова — два уровня раскрытия.</p>
+                    </div>
+
+                    <div class="step-detail">
+                        <h3>Шаг 4. Собираем агента с skills</h3>
+                        <p>Для каждого skill создаём tools + handlers, потом передаём в <code>createAgent()</code>.
+                            System prompt формируется по стандарту agentskills.io — с XML-блоком <code>&lt;available_skills&gt;</code>:</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-filename"><span class="dot"></span>src/05-skills.ts — часть 2: агент</div>
+                        <pre>// === Skill: filesystem — tools + handlers ===
+function createFilesystemSkill(meta: ReturnType&lt;typeof activateSkill&gt;): Skill {
+    return {
+        ...meta,
+        tools: [
+            {
+                type: "function",
+                function: {
+                    name: "read_file",
+                    description: "Прочитать файл",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            path: { type: "string", description: "Путь к файлу" },
+                        },
+                        required: ["path"],
+                    },
+                },
+            },
+            {
+                type: "function",
+                function: {
+                    name: "write_file",
+                    description: "Записать содержимое в файл",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            path: { type: "string", description: "Путь к файлу" },
+                            content: { type: "string", description: "Содержимое" },
+                        },
+                        required: ["path", "content"],
+                    },
+                },
+            },
+            {
+                type: "function",
+                function: {
+                    name: "list_dir",
+                    description: "Список файлов в директории",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            path: { type: "string", description: "Путь к директории" },
+                        },
+                        required: ["path"],
+                    },
+                },
+            },
+        ],
+        handlers: {
+            read_file: ({ path }) =&gt; {
+                try { return readFileSync(path, "utf-8"); }
+                catch (e: any) { return `Ошибка: ${e.message}`; }
+            },
+            write_file: ({ path, content }) =&gt; {
+                try { writeFileSync(path, content); return `Файл ${path} записан`; }
+                catch (e: any) { return `Ошибка: ${e.message}`; }
+            },
+            list_dir: ({ path }) =&gt; {
+                try { return execSync(`ls -la ${path}`, { encoding: "utf-8" }); }
+                catch (e: any) { return `Ошибка: ${e.message}`; }
+            },
+        },
+    };
+}
+
+// === Skill: web-search — tools + handler-заглушка ===
+function createWebSearchSkill(meta: ReturnType&lt;typeof activateSkill&gt;): Skill {
+    return {
+        ...meta,
+        tools: [
+            {
+                type: "function",
+                function: {
+                    name: "web_search",
+                    description: "Поиск в интернете",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            query: { type: "string", description: "Поисковый запрос" },
+                        },
+                        required: ["query"],
+                    },
+                },
+            },
+        ],
+        handlers: {
+            web_search: ({ query }) =&gt;
+                `[Заглушка] Результаты поиска по "${query}": ` +
+                `1. Official docs — https://example.com/docs\n` +
+                `2. Tutorial — https://example.com/tutorial`,
+        },
+    };
+}
+
+// === Создание агента из массива skills ===
+function createAgent(skills: Skill[]) {
+    const allTools = skills.flatMap(s =&gt; s.tools);
+    const allHandlers = Object.assign({}, ...skills.map(s =&gt; s.handlers));
+
+    // System prompt по стандарту agentskills.io: XML-блок available_skills
+    const skillsXml = skills.map(s =&gt;
+        `  &lt;skill name="${s.name}"&gt;\n${s.instructions}\n  &lt;/skill&gt;`
+    ).join("\n");
+
+    const systemPrompt = `Ты полезный ассистент. Вот твои навыки:
+
+&lt;available_skills&gt;
+${skillsXml}
+&lt;/available_skills&gt;
+
+Используй инструменты когда нужно. Отвечай на русском.`;
+
+    return async function run(userMessage: string) {
+        const messages: OpenAI.ChatCompletionMessageParam[] = [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+        ];
+
+        let iteration = 0;
+
+        while (iteration &lt; 10) {
+            iteration++;
+            console.log(`\n--- Итерация ${iteration} ---`);
+
+            const response = await client.chat.completions.create({
+                model: "anthropic/claude-sonnet-4.5",
+                messages,
+                tools: allTools,
+            });
+
+            const message = response.choices[0].message;
+            messages.push(message);
+
+            if (!message.tool_calls?.length) {
+                console.log("\nОтвет:", message.content);
+                return message.content;
+            }
+
+            for (const toolCall of message.tool_calls) {
+                const name = toolCall.function.name;
+                const args = JSON.parse(toolCall.function.arguments);
+                console.log(`Tool: ${name}(${JSON.stringify(args)})`);
+
+                const result = allHandlers[name]?.(args)
+                    ?? `Tool "${name}" не найден`;
+                console.log(`→ ${result.slice(0, 150)}`);
+
+                messages.push({
+                    role: "tool",
+                    tool_call_id: toolCall.id,
+                    content: result,
+                });
+            }
+        }
+    };
+}
+
+// === main: Discovery → Activation → Execution ===
+async function main() {
+    // 1. Discovery — сканируем все skills
+    const discovered = discoverSkills("./skills");
+
+    // 2. Activation — активируем нужные skills и создаём реализации
+    console.log("\n🔌 Activation:");
+    const fsMeta = activateSkill(discovered[0].location);
+    const wsMeta = activateSkill(discovered[1].location);
+
+    const skills = [
+        createFilesystemSkill(fsMeta),
+        createWebSearchSkill(wsMeta),
+    ];
+
+    // 3. Execution — запускаем агента
+    console.log(`\n🚀 Agent создан с ${skills.length} skills: ${skills.map(s =&gt; s.name).join(", ")}`);
+    const agent = createAgent(skills);
+
+    await agent(
+        "Посмотри файлы проекта в текущей директории, " +
+        "прочитай package.json и создай README.md с кратким описанием проекта."
+    );
+}
+
+main();</pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <div class="run-command">
+                        <span class="run-icon">▶</span>
+                        <code>npx tsx src/05-skills.ts</code>
+                    </div>
+
+                    <button class="demo-btn" data-demo="demo-step-5">▶ Запустить демо</button>
+
+                    <div class="demo-output demo-player" id="demo-step-5" data-demo-chat="step5" aria-live="polite">
+                        <div class="demo-player-header">
+                            <div class="demo-player-title">Демо в формате диалога</div>
+                            <div class="demo-player-count"><span data-demo-index>1</span>/<span data-demo-total>1</span>
+                            </div>
+                        </div>
+                        <div class="demo-chat-body" data-demo-chat-body></div>
+                        <div class="demo-player-controls">
+                            <button class="demo-step-btn" data-demo-prev>← Назад</button>
+                            <div class="demo-step-label" data-demo-label></div>
+                            <button class="demo-step-btn" data-demo-next>Далее →</button>
+                        </div>
+                    </div>
+                    <div class="output-note" data-demo-note="demo-step-5">Пример вывода. У тебя может быть иначе — это
+                        нормально.</div>
+
+                    <div class="mini-block expect">
+                        <div class="mini-title">✅ Что должно получиться</div>
+                        В консоли три фазы: <strong>Discovery</strong> (список skills), <strong>Activation</strong>
+                        (загрузка инструкций), <strong>Execution</strong> (итерации агента с tool calls).
+                        Агент использует <code>list_dir</code>, <code>read_file</code>, <code>write_file</code> —
+                        все из filesystem skill.
+                    </div>
+
+                    <div class="mini-block trouble">
+                        <div class="mini-title">🧯 Если не работает</div>
+                        Проверь структуру: в каждой папке <code>skills/*/</code> должен быть файл <code>SKILL.md</code>
+                        с корректным YAML-frontmatter (три дефиса <code>---</code> сверху и снизу).
+                        Если <code>discoverSkills()</code> находит 0 skills — проверь путь <code>./skills</code>.
+                    </div>
+
+                    <div class="key-insight">
+                        <strong>💡 Ключевая идея:</strong>
+                        <code>createAgent([...skills])</code> — модульность. Хочешь добавить работу с API — создаёшь
+                        папку с <code>SKILL.md</code> и подключаешь. Хочешь убрать web-search — просто не активируешь.
+                        <br><br>
+                        <strong>Progressive disclosure</strong> — экономия. Агент тратит ~100 токенов на Discovery
+                        каждого skill, а не ~5000 на полные инструкции. При 50 skills это разница между 5K и 250K токенов.
+                        <br><br>
+                        <strong>Стандарт agentskills.io</strong> — переносимость. Skill в формате <code>SKILL.md</code>
+                        можно переиспользовать между разными агентами и фреймворками. XML-блок <code>&lt;available_skills&gt;</code>
+                        в system prompt — каноничный способ передать инструкции модели.
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
         <div class="lesson-pager">
             <a class="lesson-pager-link" href="lesson-04-real-tools.html">← Предыдущий урок</a>
