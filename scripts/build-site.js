@@ -197,6 +197,26 @@ const EXTRA_STYLE = `
         pointer-events: none;
     }
 
+    .lesson-footer {
+        text-align: center;
+        padding: 2rem 0 0.5rem;
+        margin-top: 2rem;
+        border-top: 1px solid var(--border);
+        color: var(--text-dim);
+        font-size: 0.88rem;
+        line-height: 1.6;
+    }
+
+    .lesson-footer a {
+        color: var(--accent-secondary, #a78bfa);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .lesson-footer a:hover {
+        color: var(--accent);
+    }
+
     .book-outline-section {
         max-width: 1100px;
         margin: 0 auto;
@@ -1002,6 +1022,10 @@ ${ensureActiveStep(lesson.stepHtml)}
             <a class="lesson-pager-link" href="index.html">Оглавление</a>
             ${buildLessonPagerLink(nextLesson, "Следующий урок", "next")}
         </div>
+        <div class="lesson-footer">
+            Репозиторий проекта: <a href="https://github.com/region23/ai_agents_book" target="_blank" rel="noopener noreferrer">GitHub</a><br>
+            Учебник сделал <a href="https://t.me/pavlenkodev" target="_blank" rel="noopener noreferrer">Павел Павленко</a>
+        </div>
     </main>
 </div>
 <script>
@@ -1082,6 +1106,10 @@ ${ensureActiveStep(lesson.stepHtml)}
             ${buildLessonPagerLink(prevLesson, "Предыдущий урок", "prev")}
             <a class="lesson-pager-link" href="index.html">Оглавление</a>
             ${buildLessonPagerLink(nextLesson, "Следующий урок", "next")}
+        </div>
+        <div class="lesson-footer">
+            Репозиторий проекта: <a href="https://github.com/region23/ai_agents_book" target="_blank" rel="noopener noreferrer">GitHub</a><br>
+            Учебник сделал <a href="https://t.me/pavlenkodev" target="_blank" rel="noopener noreferrer">Павел Павленко</a>
         </div>
     </main>
 </div>
